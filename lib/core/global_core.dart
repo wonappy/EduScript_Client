@@ -1,5 +1,6 @@
 //변수
 
+//함수
 /// 반응형 폰트 크기 계산
 double getResponsiveFontSize(double screenWidth) {
   // 기본 폰트 크기를 화면 너비에 비례하여 계산
