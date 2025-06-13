@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'core/styles/colors_core.dart';
 import 'screens/preview_screen.dart';
 
 void main() {
@@ -13,12 +14,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: true, //디버깅 모드
       title: 'Onword Subtitle',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.black,
-          brightness: Brightness.dark,
-        ),
-      ),
+      theme: testTheme,
       home: const PreviewScreen(),
       // routes: {
       //   '/preview': (context) => const PreviewScreen(),
