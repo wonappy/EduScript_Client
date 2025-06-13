@@ -1,3 +1,4 @@
+import 'package:client/screens/shared_with_subtitles_screen.dart';
 import 'package:flutter/material.dart';
 import 'core/styles/colors_core.dart';
 import 'screens/preview_screen.dart';
@@ -15,10 +16,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: true, //디버깅 모드
       title: 'Onword Subtitle',
       theme: testTheme,
-      home: const PreviewScreen(),
-      // routes: {
-      //   '/preview': (context) => const PreviewScreen(),
-      // }
+      home: const SharedWithSubtitlesScreen(),
     );
   }
 }
