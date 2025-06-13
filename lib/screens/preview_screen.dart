@@ -15,8 +15,6 @@ class PreviewScreen extends StatelessWidget {
     final double screenWidth = screenSize.width;
     final double screenHeight = screenSize.height;
 
-    debugPrint('Screen Width: $screenWidth, Screen Height: $screenHeight');
-
     // 반응형 레이아웃을 위한 비율 계산
     final bool isWideScreen = screenWidth > screenHeight * 1.5;
 
