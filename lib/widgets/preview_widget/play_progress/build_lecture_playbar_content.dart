@@ -2,13 +2,14 @@
 library;
 
 import 'package:flutter/material.dart';
-
 import '../../../core/global_core.dart';
+import '../play_progress/time_manager.dart'; // TimerManager import
 
 class BuildLecturePlayBarContent extends StatefulWidget {
   final double screenWidth;
   final double screenHeight;
-  final int? counterValue;  //widget_test.dart
+  final int? counterValue;
+  
 
   const BuildLecturePlayBarContent({
     super.key,
@@ -22,23 +23,26 @@ class BuildLecturePlayBarContent extends StatefulWidget {
 }
 
 class _BuildLecturePlayBarContentState extends State<BuildLecturePlayBarContent> {
-  bool isPlaying = false;
-  String currentTime = "00:00:00";
+  void _updateUI() {
+    if (mounted) setState(() {});
+  }
 
-  // 카운터 값을 시간으로 변환하는 함수
-  String _formatTimeFromCounter(int seconds){
-    int hours = seconds ~/ 3600;
-    int minutes = (seconds % 3600) ~/ 60;
-    int secs = seconds % 60;
-    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  @override
+  void initState(){
+    super.initState();
+    TimerManager.addListener(_updateUI);
+  }
+
+  @override
+  void dispose() {
+    TimerManager.removeListener(_updateUI);
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // 외부 카운터 값이 있으면 사용, 없으면 기본값
-    String displayTime = widget.counterValue != null 
-        ? _formatTimeFromCounter(widget.counterValue!) 
-        : currentTime;
+    String displayTime = TimerManager.formattedTime;
+
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: widget.screenWidth * 0.04,
@@ -53,14 +57,11 @@ class _BuildLecturePlayBarContentState extends State<BuildLecturePlayBarContent>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // 닫기 버튼 (재생 중일 때만 표시)
-          if (isPlaying) ...[
+          if (TimerManager.isPlaying) ...[
             _buildControlIcon(
               icon: Icons.close,
               onTap: () {
-                setState(() {
-                  isPlaying = false;
-                  currentTime = "00:00:00";
-                });
+                TimerManager.reset();
                 debugPrint('강의 종료');
               },
             ),
@@ -70,15 +71,13 @@ class _BuildLecturePlayBarContentState extends State<BuildLecturePlayBarContent>
           // 메인 재생/일시정지 버튼
           GestureDetector(
             onTap: () {
-              setState(() {
-                if (!isPlaying) {
-                  isPlaying = true;
-                  currentTime = "00:40:00"; // 예시 시간
-                } else {
-                  // 일시정지/재생 토글
-                }
-              });
-              debugPrint(isPlaying ? '일시정지' : '강의 시작');
+              if (!TimerManager.isPlaying) {
+                TimerManager.start();
+                debugPrint('강의 시작');
+              } else {
+                TimerManager.pause();
+                debugPrint('일시정지');
+              }
             },
             child: Container(
               width: widget.screenWidth * 0.12,
@@ -88,7 +87,7 @@ class _BuildLecturePlayBarContentState extends State<BuildLecturePlayBarContent>
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                isPlaying ? Icons.pause : Icons.play_arrow,
+                TimerManager.isPlaying ? Icons.pause : Icons.play_arrow,
                 color: Colors.white,
                 size: widget.screenWidth * 0.06,
               ),
@@ -96,15 +95,12 @@ class _BuildLecturePlayBarContentState extends State<BuildLecturePlayBarContent>
           ),
           
           // 정지 버튼 (재생 중일 때만 표시)
-          if (isPlaying) ...[
+          if (TimerManager.isPlaying) ...[
             SizedBox(width: widget.screenWidth * 0.03),
             _buildControlIcon(
               icon: Icons.stop,
               onTap: () {
-                setState(() {
-                  isPlaying = false;
-                  currentTime = "00:00:00";
-                });
+                TimerManager.reset();
                 debugPrint('정지');
               },
             ),
