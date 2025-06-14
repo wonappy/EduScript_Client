@@ -69,7 +69,7 @@ class _SettingDropdownState extends State<SettingDropdown> {
           Text(
             widget.title,
             style: TextStyle(
-              fontSize: getResponsiveFontSize(widget.screenWidth) * 0.8,
+              fontSize: getResponsiveFontSize(widget.screenWidth) * 0.7,
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),
@@ -81,11 +81,11 @@ class _SettingDropdownState extends State<SettingDropdown> {
             style: MenuStyle(
               // [2-1] 메뉴 스타일
               // 배경색
-              backgroundColor: MaterialStateProperty.all(
+              backgroundColor: WidgetStateProperty.all(
                 dropdownMaterialColor[700],
               ),
               // 모양 (둥근 모서리)
-              shape: MaterialStateProperty.all(
+              shape: WidgetStateProperty.all(
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
             ),
@@ -94,26 +94,26 @@ class _SettingDropdownState extends State<SettingDropdown> {
                 widget.options.map((String option) {
                   return MenuItemButton(
                     style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                        (Set<MaterialState> states) {
-                          // 마우스 호버 시
-                          if (states.contains(MaterialState.hovered)) {
-                            return dropdownMaterialColor[600]!;
-                          }
-                          // 기본 상태 = 부모 색상
-                          return Colors.transparent;
-                        },
-                      ),
+                      backgroundColor: WidgetStateProperty.resolveWith<Color>((
+                        Set<WidgetState> states,
+                      ) {
+                        // 마우스 호버 시
+                        if (states.contains(WidgetState.hovered)) {
+                          return dropdownMaterialColor[600]!;
+                        }
+                        // 기본 상태 = 부모 색상
+                        return Colors.transparent;
+                      }),
                     ),
                     onPressed: () => _selectOption(option), // 🔴 선택 시 실행할 함수
-                    child: Container(
+                    child: SizedBox(
                       width: 120, // 메뉴 항목 너비
                       child: Text(
                         option, // 선택 항목
                         style: TextStyle(
                           color: Colors.white,
                           fontSize:
-                              getResponsiveFontSize(widget.screenWidth) * 0.75,
+                              getResponsiveFontSize(widget.screenWidth) * 0.65,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -150,7 +150,7 @@ class _SettingDropdownState extends State<SettingDropdown> {
                         style: TextStyle(
                           color: Colors.black,
                           fontSize:
-                              getResponsiveFontSize(widget.screenWidth) * 0.8,
+                              getResponsiveFontSize(widget.screenWidth) * 0.7,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

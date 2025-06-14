@@ -123,7 +123,7 @@ class _ColorSettingDropDownState extends State<ColorSettingDropDown> {
           Text(
             widget.title,
             style: TextStyle(
-              fontSize: getResponsiveFontSize(widget.screenWidth) * 0.8,
+              fontSize: getResponsiveFontSize(widget.screenWidth) * 0.7,
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),
@@ -131,8 +131,8 @@ class _ColorSettingDropDownState extends State<ColorSettingDropDown> {
           MenuAnchor(
             childFocusNode: _buttonFocusNode,
             style: MenuStyle(
-              backgroundColor: MaterialStateProperty.all(Colors.blueGrey[700]),
-              shape: MaterialStateProperty.all(
+              backgroundColor: WidgetStateProperty.all(Colors.blueGrey[700]),
+              shape: WidgetStateProperty.all(
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
             ),
@@ -140,17 +140,17 @@ class _ColorSettingDropDownState extends State<ColorSettingDropDown> {
                 widget.options.map((String option) {
                   return MenuItemButton(
                     style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                        (Set<MaterialState> states) {
-                          if (states.contains(MaterialState.hovered)) {
-                            return Colors.blueGrey[600]!;
-                          }
-                          return Colors.transparent;
-                        },
-                      ),
+                      backgroundColor: WidgetStateProperty.resolveWith<Color>((
+                        Set<WidgetState> states,
+                      ) {
+                        if (states.contains(WidgetState.hovered)) {
+                          return Colors.blueGrey[600]!;
+                        }
+                        return Colors.transparent;
+                      }),
                     ),
                     onPressed: () => _selectOption(option),
-                    child: Container(
+                    child: SizedBox(
                       width: 120,
                       child: Row(
                         children: [
@@ -181,7 +181,7 @@ class _ColorSettingDropDownState extends State<ColorSettingDropDown> {
                               color: Colors.white,
                               fontSize:
                                   getResponsiveFontSize(widget.screenWidth) *
-                                  0.75,
+                                  0.65,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -235,7 +235,7 @@ class _ColorSettingDropDownState extends State<ColorSettingDropDown> {
                         style: TextStyle(
                           color: Colors.black,
                           fontSize:
-                              getResponsiveFontSize(widget.screenWidth) * 0.8,
+                              getResponsiveFontSize(widget.screenWidth) * 0.7,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
