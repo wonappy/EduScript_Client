@@ -49,6 +49,14 @@ class _BuildSubtitleSettingContentState
               decoration: BoxDecoration(
                 color: Colors.black,
                 borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.5), // 그림자 색상 및 투명도
+                    spreadRadius: 5, // 그림자 확산 정도
+                    blurRadius: 7, // 그림자 흐림 정도
+                    offset: Offset(0, 3), // 그림자 위치 (x, y)
+                  ),
+                ],
               ),
               width: widget.screenWidth * 0.8,
               height: widget.screenHeight * 0.3,
@@ -92,7 +100,7 @@ class _BuildSubtitleSettingContentState
                                       getResponsiveFontSize(
                                         widget.screenWidth,
                                       ) *
-                                      0.9,
+                                      0.8,
                                   color: Colors.black,
                                 ),
                               ),
@@ -102,7 +110,7 @@ class _BuildSubtitleSettingContentState
                           ],
                         ),
                         SizedBox(height: 15),
-                        Container(
+                        SizedBox(
                           // Divider
                           width: double.infinity, // 부모 너비에 맞춤
                           child: Divider(
@@ -111,7 +119,7 @@ class _BuildSubtitleSettingContentState
                             height: 1,
                           ),
                         ),
-                        SizedBox(height: 15),
+                        SizedBox(height: 25),
 
                         // [2] 입력 언어 설정
                         Align(
@@ -122,33 +130,59 @@ class _BuildSubtitleSettingContentState
                               fontWeight: FontWeight.bold,
                               fontSize:
                                   getResponsiveFontSize(widget.screenWidth) *
-                                  0.9,
+                                  0.8,
                               color: Colors.black,
                             ),
                           ),
                         ),
                         SizedBox(height: 10),
+                        // 큰 컨테이너
                         Container(
                           padding: EdgeInsets.all(20),
                           decoration: BoxDecoration(
                             color: bigContainerColor,
                             borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(
+                                  0.2,
+                                ), // 그림자 색상 및 투명도
+                                blurRadius: 3, // 그림자 흐림 정도 (자연스러운 효과)
+                                offset: Offset(0, 4), // y값을 높이면 아래쪽에만 그림자
+                              ),
+                            ],
                           ),
-                          child: SettingDropdown(
-                            title: "언어",
-                            initialValue: "한국어",
-                            options: ["한국어", "영어", "일본어", "중국어"],
-                            onChanged: (String newLanguage) {
-                              setState(() {
-                                selectedLanguage = newLanguage;
-                              });
-                            },
-                            screenWidth: widget.screenWidth,
-                            screenHeight: widget.screenHeight,
+                          // 중간 컨테이너
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: dropdownWidgetColor,
+                              borderRadius: BorderRadius.circular(30),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(
+                                    0.2,
+                                  ), // 그림자 색상 및 투명도
+                                  blurRadius: 3, // 그림자 흐림 정도 (자연스러운 효과)
+                                  offset: Offset(0, 4), // y값을 높이면 아래쪽에만 그림자
+                                ),
+                              ],
+                            ),
+                            child: SettingDropdown(
+                              title: "언어",
+                              initialValue: "한국어",
+                              options: ["한국어", "영어", "일본어", "중국어"],
+                              onChanged: (String newLanguage) {
+                                setState(() {
+                                  selectedLanguage = newLanguage;
+                                });
+                              },
+                              screenWidth: widget.screenWidth,
+                              screenHeight: widget.screenHeight,
+                            ),
                           ),
                         ),
-                        SizedBox(height: 15),
-                        Container(
+                        SizedBox(height: 20),
+                        SizedBox(
                           // Divider
                           width: double.infinity, // 부모 너비에 맞춤
                           child: Divider(
@@ -157,7 +191,7 @@ class _BuildSubtitleSettingContentState
                             height: 1,
                           ),
                         ),
-                        SizedBox(height: 15),
+                        SizedBox(height: 25),
 
                         // [3] 출력 언어 설정
                         Align(
@@ -168,7 +202,7 @@ class _BuildSubtitleSettingContentState
                               fontWeight: FontWeight.bold,
                               fontSize:
                                   getResponsiveFontSize(widget.screenWidth) *
-                                  0.9,
+                                  0.8,
                               color: Colors.black,
                             ),
                           ),
@@ -181,20 +215,44 @@ class _BuildSubtitleSettingContentState
                           decoration: BoxDecoration(
                             color: bigContainerColor,
                             borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(
+                                  0.2,
+                                ), // 그림자 색상 및 투명도
+                                blurRadius: 3, // 그림자 흐림 정도 (자연스러운 효과)
+                                offset: Offset(0, 4), // y값을 높이면 아래쪽에만 그림자
+                              ),
+                            ],
                           ),
                           child: Column(
                             children: [
-                              SettingDropdown(
-                                title: "언어",
-                                initialValue: "한국어",
-                                options: ["한국어", "영어", "일본어", "중국어"],
-                                onChanged: (String newLanguage) {
-                                  setState(() {
-                                    selectedLanguage = newLanguage;
-                                  });
-                                },
-                                screenWidth: widget.screenWidth,
-                                screenHeight: widget.screenHeight,
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: dropdownWidgetColor,
+                                  borderRadius: BorderRadius.circular(30),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(
+                                        0.2,
+                                      ), // 그림자 색상 및 투명도
+                                      blurRadius: 3, // 그림자 흐림 정도 (자연스러운 효과)
+                                      offset: Offset(0, 4), // y값을 높이면 아래쪽에만 그림자
+                                    ),
+                                  ],
+                                ),
+                                child: SettingDropdown(
+                                  title: "언어",
+                                  initialValue: "한국어",
+                                  options: ["한국어", "영어", "일본어", "중국어"],
+                                  onChanged: (String newLanguage) {
+                                    setState(() {
+                                      selectedLanguage = newLanguage;
+                                    });
+                                  },
+                                  screenWidth: widget.screenWidth,
+                                  screenHeight: widget.screenHeight,
+                                ),
                               ),
                               SizedBox(height: 20),
                               // [3-2] 스타일
@@ -218,6 +276,15 @@ class _BuildSubtitleSettingContentState
                                 decoration: BoxDecoration(
                                   color: dropdownWidgetColor,
                                   borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(
+                                        0.2,
+                                      ), // 그림자 색상 및 투명도
+                                      blurRadius: 3, // 그림자 흐림 정도 (자연스러운 효과)
+                                      offset: Offset(0, 4), // y값을 높이면 아래쪽에만 그림자
+                                    ),
+                                  ],
                                 ),
                                 child: Column(
                                   children: [
@@ -271,6 +338,15 @@ class _BuildSubtitleSettingContentState
                                 decoration: BoxDecoration(
                                   color: dropdownWidgetColor,
                                   borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(
+                                        0.2,
+                                      ), // 그림자 색상 및 투명도
+                                      blurRadius: 3, // 그림자 흐림 정도 (자연스러운 효과)
+                                      offset: Offset(0, 4), // y값을 높이면 아래쪽에만 그림자
+                                    ),
+                                  ],
                                 ),
                                 child: Column(
                                   children: [
@@ -335,6 +411,15 @@ class _BuildSubtitleSettingContentState
                                 decoration: BoxDecoration(
                                   color: dropdownWidgetColor,
                                   borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(
+                                        0.2,
+                                      ), // 그림자 색상 및 투명도
+                                      blurRadius: 3, // 그림자 흐림 정도 (자연스러운 효과)
+                                      offset: Offset(0, 4), // y값을 높이면 아래쪽에만 그림자
+                                    ),
+                                  ],
                                 ),
                                 child: Column(
                                   children: [
