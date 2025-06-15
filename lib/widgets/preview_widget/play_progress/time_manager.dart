@@ -2,7 +2,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-//전역 타이머 상태 (사용자가 UI 줄일 때 재생버튼 초기화 방지)
+//전역 타이머 상태 (사용자가 UI 줄일 때 재생시간 초기화 방지)
 Timer? _globaltimer;
 bool _isGlobalPlaying = false;
 int _globalElapsedSeconds = 0;

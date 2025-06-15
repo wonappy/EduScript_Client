@@ -1,21 +1,22 @@
-/// 재생 부분 컨트롤 버튼 위젯
-library;
-
+// widgets/preview_widget/play_progress/lecture_playbar_content.dart
 import 'package:flutter/material.dart';
 import '../../../core/global_core.dart';
-import '../play_progress/time_manager.dart'; // TimerManager import
+import 'time_manager.dart';
+import '../../preview_widget/play_progress/lecture_playbar_content.dart';
+import '../../../screens/end_lecture_and_save_screen.dart';
 
 class BuildLecturePlayBarContent extends StatefulWidget {
   final double screenWidth;
   final double screenHeight;
+  final VoidCallback? onLectureEnd;
   final int? counterValue;
-  
 
   const BuildLecturePlayBarContent({
     super.key,
     required this.screenWidth,
     required this.screenHeight,
-    this.counterValue
+    this.onLectureEnd,
+    this.counterValue,
   });
 
   @override
@@ -28,7 +29,7 @@ class _BuildLecturePlayBarContentState extends State<BuildLecturePlayBarContent>
   }
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     TimerManager.addListener(_updateUI);
   }
@@ -41,101 +42,61 @@ class _BuildLecturePlayBarContentState extends State<BuildLecturePlayBarContent>
 
   @override
   Widget build(BuildContext context) {
-    String displayTime = TimerManager.formattedTime;
-
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: widget.screenWidth * 0.04,
-        vertical: widget.screenWidth * 0.02,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(widget.screenWidth * 0.02),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // 닫기 버튼 (재생 중일 때만 표시)
-          if (TimerManager.isPlaying) ...[
-            _buildControlIcon(
-              icon: Icons.close,
-              onTap: () {
-                TimerManager.reset();
-                debugPrint('강의 종료');
-              },
-            ),
-            SizedBox(width: widget.screenWidth * 0.03),
-          ],
-          
-          // 메인 재생/일시정지 버튼
-          GestureDetector(
-            onTap: () {
-              if (!TimerManager.isPlaying) {
-                TimerManager.start();
-                debugPrint('강의 시작');
-              } else {
-                TimerManager.pause();
-                debugPrint('일시정지');
-              }
-            },
-            child: Container(
-              width: widget.screenWidth * 0.12,
-              height: widget.screenWidth * 0.12,
-              decoration: const BoxDecoration(
-                color: Colors.black87,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                TimerManager.isPlaying ? Icons.pause : Icons.play_arrow,
-                color: Colors.white,
-                size: widget.screenWidth * 0.06,
-              ),
-            ),
-          ),
-          
-          // 정지 버튼 (재생 중일 때만 표시)
-          if (TimerManager.isPlaying) ...[
-            SizedBox(width: widget.screenWidth * 0.03),
-            _buildControlIcon(
-              icon: Icons.stop,
-              onTap: () {
-                TimerManager.reset();
-                debugPrint('정지');
-              },
-            ),
-          ],
-          
-          SizedBox(width: widget.screenWidth * 0.04),
-          
-          // 시간 표시
-          Text(
-            displayTime,
-            style: TextStyle(
-              fontSize: getResponsiveFontSize(widget.screenWidth) * 0.8,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
-            ),
-          ),
-        ],
-      ),
+    // LecturePlayBarComponents를 사용해서 UI 렌더링
+    return LecturePlayBarComponents.buildPlayBarContainer(
+      screenWidth: widget.screenWidth,
+      isPlaying: TimerManager.isPlaying,
+      displayTime: TimerManager.formattedTime,
+      onPlayPause: _handlePlayPause,
+      onCancel: _handleCancel,
+      onStop: _handleStop,
+      getResponsiveFontSize: _getResponsiveFontSize,
     );
   }
 
-  Widget _buildControlIcon({
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.all(widget.screenWidth * 0.02),
-        child: Icon(
-          icon,
-          color: Colors.black87,
-          size: widget.screenWidth * 0.05,
-        ),
-      ),
-    );
+  // ============================================================================
+  // 비즈니스 로직 메서드들
+  // ============================================================================
+
+  void _handlePlayPause() {
+    if (!TimerManager.isPlaying) {
+      TimerManager.start();
+      debugPrint('강의 시작');
+    } else {
+      TimerManager.pause();
+      debugPrint('일시정지');
+    }
+  }
+
+  void _handleCancel() {
+    TimerManager.reset();
+    debugPrint('취소');
+  }
+
+  void _handleStop() {
+    TimerManager.reset();
+    debugPrint('강의 종료');
+    
+    // 콜백 호출 (SaveConfirmDialog는 상위에서 처리)
+    _navigateToSaveDialog();
+  }
+
+  Future<void> _navigateToSaveDialog() async {
+  //대화상자로 표시
+  await showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return const SaveDialogScreen(); // 또는 SaveConfirmDialog
+    },
+  );
+  }
+
+  // 반응형 폰트 크기 계산
+  double _getResponsiveFontSize(double screenWidth) {
+    // global_core.dart의 getResponsiveFontSize 사용하거나
+    // 직접 계산
+    return getResponsiveFontSize(screenWidth);
+    // 또는 간단히: return screenWidth * 0.04;
   }
 }
