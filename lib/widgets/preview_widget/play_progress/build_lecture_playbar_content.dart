@@ -1,8 +1,10 @@
 /// title에 맞는 content 반환
 library;
 
+import 'package:client/screens/subtitles_only_screen.dart';
 import 'package:flutter/material.dart';
 
+import '../../../models/subtitles_model.dart';
 import 'build_control_button.dart';
 
 class BuildLecturePlayBarContent extends StatelessWidget {
@@ -40,6 +42,32 @@ class BuildLecturePlayBarContent extends StatelessWidget {
             onTap: () {
               // 강의 시작 기능 구현
               debugPrint('강의 시작 버튼 클릭');
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => SubtitlesOnlyScreen(
+                        subBackgroundColor: Colors.black,
+                        opacitySubBackground: 0.5,
+                        subWordColor: Colors.white,
+                        subWordFontSize: 25,
+                        subWordFont: "default",
+                        languages: [
+                          SubtitlesModel(
+                            country: "en",
+                            subtitle:
+                                "testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest",
+                          ),
+                          SubtitlesModel(
+                            country: "kr",
+                            subtitle: "테스트테스트테스테스트테스트테스트테스트테스트테스트테스트테스트테스트테스트",
+                          ),
+                        ],
+                        backgroundColor: Colors.black,
+                        subSpacing: 20,
+                      ),
+                ),
+              );
             },
           ),
           // 테스트 버튼

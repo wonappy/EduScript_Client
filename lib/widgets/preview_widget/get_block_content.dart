@@ -1,6 +1,7 @@
 /// title에 맞는 content 반환
 library;
 
+import 'package:client/models/subtitles_model.dart';
 import 'package:client/widgets/preview_widget/play_progress/build_lecture_playbar_content.dart';
 import 'package:client/widgets/preview_widget/preview_screen/build_lecture_preview_content.dart';
 import 'package:client/widgets/preview_widget/subtitle_setting/build_subtitle_setting_content.dart';
@@ -23,8 +24,17 @@ class GetBlockContent extends StatelessWidget {
     switch (title) {
       case '강의 화면 미리보기':
         return BuildLecturePreviewContent(
-          screenWidth: screenWidth,
-          screenHeight: screenHeight,
+          backgroundColor: Colors.black,
+          subBackgroundColor: Colors.white,
+          opacitySubBackground: 0.7,
+          subWordColor: Colors.black,
+          subWordFontSize: 15,
+          subWordFont: "default",
+          subSpacing: 15,
+          languages: [
+            SubtitlesModel(country: "kr", subtitle: "이것은 테스트 자막입니다.."),
+            SubtitlesModel(country: "en", subtitle: "This is test subtitle."),
+          ],
         );
       case '강의 시작':
         return BuildLecturePlayBarContent(
