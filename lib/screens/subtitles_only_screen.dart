@@ -1,14 +1,32 @@
 //자막 (프롬프트 느낌 ver)
+import 'package:client/models/subtitles_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../core/styles/colors_core.dart';
-import '../widgets/preview_widget/build_narrow_layout.dart';
-import '../widgets/preview_widget/build_wide_layout.dart';
-
 class SubtitlesOnlyScreen extends StatefulWidget {
-  //글자 크기, 배경 색상, 자막 배경 색상, 자막 배경 불투명도, 자막 글자 색상, 자막 글꼴, 자막 간 간격, 언어 리스트
+  final Color backgroundColor; // 배경 색상
 
-  const SubtitlesOnlyScreen({super.key});
+  final Color subBackgroundColor; //자막 배경 색상
+  final double opacitySubBackground; //자막 배경 불투명도
+
+  final Color subWordColor; //자막 글자 색상
+  final double subWordFontSize; //자막 글자 크기
+  final String subWordFont; //자막 글꼴
+  final double subSpacing; //자막 간 간격
+
+  final List<SubtitlesModel> languages; //언어 리스트
+
+  const SubtitlesOnlyScreen({
+    super.key,
+    required this.backgroundColor,
+    required this.subBackgroundColor,
+    required this.opacitySubBackground,
+    required this.subWordColor,
+    required this.subWordFontSize,
+    required this.subWordFont,
+    required this.subSpacing,
+    required this.languages,
+  });
 
   @override
   State<SubtitlesOnlyScreen> createState() => _SubtitlesOnlyScreenState();
@@ -16,15 +34,60 @@ class SubtitlesOnlyScreen extends StatefulWidget {
 
 class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
   @override
+  void initState() {
+    super.initState();
+    if (kDebugMode) {
+      print("자막 개수 : ${widget.languages.length}");
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     // 화면 크기 정보 가져오기
     final Size screenSize = MediaQuery.of(context).size;
     final double screenWidth = screenSize.width;
     final double screenHeight = screenSize.height;
 
-    // 반응형 레이아웃을 위한 비율 계산
-    final bool isWideScreen = screenWidth > screenHeight * 1.5;
-
-    return Scaffold();
+    return Scaffold(
+      body: Container(
+        width: screenWidth,
+        height: screenHeight,
+        color: widget.backgroundColor, //배경 색상 지정
+        child: Column(
+          children: [
+            for (int i = 0; i < widget.languages.length; i++)
+              Column(
+                children: [
+                  SizedBox(height: widget.subSpacing), //자막 간 간격 지정
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    width: screenWidth * 0.95,
+                    constraints: BoxConstraints(
+                      maxHeight: screenHeight * 0.5,
+                    ), //최대 자막 컨테이너 높이
+                    decoration: BoxDecoration(
+                      color: widget.subBackgroundColor.withValues(
+                        //자막 배경 색상 지정
+                        alpha: widget.opacitySubBackground, //자막 배경 불투명도 지정
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      widget.languages[i].subtitle, //자막 내용 지정
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: widget.subWordColor, //자막 글자 색상 지정
+                        fontSize: widget.subWordFontSize, //자막 글자 크기 지정
+                        fontWeight: FontWeight.w700,
+                        textBaseline: null,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
   }
 }
