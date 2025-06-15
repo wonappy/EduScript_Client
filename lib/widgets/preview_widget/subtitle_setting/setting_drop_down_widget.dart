@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/global_core.dart';
 
-/// 환경 설정 드롭다운 메뉴
+/// 환경 설정 드롭다운 메뉴 (1)
 
 class SettingDropdown extends StatefulWidget {
   final String title; // 제목
@@ -10,6 +10,7 @@ class SettingDropdown extends StatefulWidget {
   final Function(String) onChanged; // 상태가 바뀌었을 때
   final double screenWidth; // 너비
   final double screenHeight; // 높이
+  //final Widget Function(String)? customDisplay;
   final Color? backgroundColor; // 배경색
 
   const SettingDropdown({
@@ -20,6 +21,7 @@ class SettingDropdown extends StatefulWidget {
     required this.onChanged,
     required this.screenWidth,
     required this.screenHeight,
+    //this.customDisplay,
     this.backgroundColor,
   });
 
@@ -28,8 +30,8 @@ class SettingDropdown extends StatefulWidget {
 }
 
 class _SettingDropdownState extends State<SettingDropdown> {
-  MaterialColor dropdownMaterialColor = Colors.blueGrey;
-  late String selectedValue;
+  MaterialColor dropdownMaterialColor = Colors.blueGrey; // 드롭다운 항목 배경색
+  late String selectedValue; // 선택된 값
   final FocusNode _buttonFocusNode = FocusNode(
     debugLabel: 'Setting Dropdown Button',
   );
@@ -106,15 +108,21 @@ class _SettingDropdownState extends State<SettingDropdown> {
                       }),
                     ),
                     onPressed: () => _selectOption(option), // 🔴 선택 시 실행할 함수
-                    child: SizedBox(
-                      width: 120, // 메뉴 항목 너비
-                      child: Text(
-                        option, // 선택 항목
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize:
-                              getResponsiveFontSize(widget.screenWidth) * 0.65,
-                          fontWeight: FontWeight.w500,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      child: SizedBox(
+                        width:
+                            MediaQuery.of(context).size.width *
+                            0.07, // 메뉴 항목 너비
+                        child: Text(
+                          option, // 선택 항목
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize:
+                                getResponsiveFontSize(widget.screenWidth) *
+                                0.65,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),
