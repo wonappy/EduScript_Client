@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/global_core.dart';
 
+/// 환경 설정 드롭다운 메뉴 2 - 색상 & 불투명도
 class ColorSettingDropDown extends StatefulWidget {
   final String title; // 제목
   final String initialValue; // 초기값
@@ -150,42 +151,45 @@ class _ColorSettingDropDownState extends State<ColorSettingDropDown> {
                       }),
                     ),
                     onPressed: () => _selectOption(option),
-                    child: SizedBox(
-                      width: 120,
-                      child: Row(
-                        children: [
-                          // 색상/불투명도 미리보기 동그라미
-                          widget.isColorSelector
-                              ? Container(
-                                width: 16,
-                                height: 16,
-                                decoration: BoxDecoration(
-                                  color: _getColorFromName(option),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color:
-                                        option == '흰색'
-                                            ? Colors.grey[400]!
-                                            : Colors.transparent,
-                                    width: 1,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.07,
+                        child: Row(
+                          children: [
+                            // 색상/불투명도 미리보기 동그라미
+                            widget.isColorSelector
+                                ? Container(
+                                  width: 16,
+                                  height: 16,
+                                  decoration: BoxDecoration(
+                                    color: _getColorFromName(option),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color:
+                                          option == '흰색'
+                                              ? Colors.grey[400]!
+                                              : Colors.transparent,
+                                      width: 1,
+                                    ),
                                   ),
-                                ),
-                              )
-                              : _buildOpacityCircle(option),
+                                )
+                                : _buildOpacityCircle(option),
 
-                          SizedBox(width: 8),
-                          // 옵션 이름
-                          Text(
-                            option,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize:
-                                  getResponsiveFontSize(widget.screenWidth) *
-                                  0.65,
-                              fontWeight: FontWeight.w500,
+                            SizedBox(width: 8),
+                            // 옵션 이름
+                            Text(
+                              option,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize:
+                                    getResponsiveFontSize(widget.screenWidth) *
+                                    0.65,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   );
