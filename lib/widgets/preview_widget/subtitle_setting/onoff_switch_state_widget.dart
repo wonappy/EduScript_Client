@@ -1,4 +1,3 @@
-/// OnOffSwitch
 /// 화면 공유 on/off 시 사용하는 위젯
 
 import 'package:flutter/material.dart';

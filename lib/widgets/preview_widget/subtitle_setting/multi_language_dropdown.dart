@@ -52,7 +52,7 @@ class MultiLanguageDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      //padding: EdgeInsets.symmetric(horizontal: 15, vertical: 0),
       decoration: BoxDecoration(
         color: backgroundColor ?? Color(0xFFF6F6F6),
         borderRadius: BorderRadius.circular(30),
@@ -63,7 +63,7 @@ class MultiLanguageDropdown extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              fontSize: getResponsiveFontSize(screenWidth) * 0.7,
+              fontSize: getResponsiveFontSize(screenWidth) * 0.8,
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),
@@ -81,7 +81,7 @@ class MultiLanguageDropdown extends StatelessWidget {
                     _getDisplayText(),
                     style: TextStyle(
                       color: Colors.black,
-                      fontSize: getResponsiveFontSize(screenWidth) * 0.7,
+                      fontSize: getResponsiveFontSize(screenWidth) * 0.8,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
