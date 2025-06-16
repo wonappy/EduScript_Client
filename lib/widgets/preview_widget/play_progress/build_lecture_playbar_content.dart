@@ -1,87 +1,115 @@
-/// title에 맞는 content 반환
-library;
+// widgets/preview_widget/play_progress/lecture_playbar_content.dart
+// 로직 - 재생 관련 로직 돌리는 위젯 / TimeManger 연동, SaveDialog로 이동
 
-import 'package:client/screens/subtitles_only_screen.dart';
 import 'package:flutter/material.dart';
+import '../../../core/global_core.dart';
+import 'time_manager.dart';
+import '../../preview_widget/play_progress/lecture_playbar_content.dart';
+import '../../../screens/end_lecture_and_save_screen.dart';
 
-import '../../../models/subtitles_model.dart';
-import 'build_control_button.dart';
-
-class BuildLecturePlayBarContent extends StatelessWidget {
+class BuildLecturePlayBarContent extends StatefulWidget {
   final double screenWidth;
   final double screenHeight;
+  final VoidCallback? onLectureEnd;
+  final int? counterValue;
 
   const BuildLecturePlayBarContent({
     super.key,
     required this.screenWidth,
     required this.screenHeight,
+    this.onLectureEnd,
+    this.counterValue,
   });
 
   @override
+  State<BuildLecturePlayBarContent> createState() => _BuildLecturePlayBarContentState();
+}
+
+class _BuildLecturePlayBarContentState extends State<BuildLecturePlayBarContent> {
+  DateTime? _lastUpdate;
+  
+  void _updateUI() {
+    final now = DateTime.now();
+    if (mounted) setState(() {});
+    // 100ms마다 UI 업데이트
+    // 너무 자주 업데이트하지 않도록 제한
+    if (_lastUpdate == null || now.difference(_lastUpdate!).inMilliseconds > 100) {
+      if (mounted) {
+        setState(() {});
+        _lastUpdate = now;
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    TimerManager.addListener(_updateUI);
+  }
+
+  @override
+  void dispose() {
+    TimerManager.removeListener(_updateUI);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          // 설정 버튼
-          BuildControlButton(
-            icon: Icons.settings,
-            label: '설정',
-            screenWidth: screenWidth,
-            onTap: () {
-              // 설정 기능 구현
-              debugPrint('설정 버튼 클릭');
-            },
-          ),
-          // 강의 시작 버튼
-          BuildControlButton(
-            icon: Icons.play_circle_filled,
-            label: '강의 시작',
-            screenWidth: screenWidth,
-            isPrimary: true,
-            onTap: () {
-              // 강의 시작 기능 구현
-              debugPrint('강의 시작 버튼 클릭');
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (context) => SubtitlesOnlyScreen(
-                        subBackgroundColor: Colors.black,
-                        opacitySubBackground: 0.5,
-                        subWordColor: Colors.white,
-                        subWordFontSize: 25,
-                        subWordFont: "default",
-                        languages: [
-                          SubtitlesModel(
-                            country: "en",
-                            subtitle:
-                                "testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest",
-                          ),
-                          SubtitlesModel(
-                            country: "kr",
-                            subtitle: "테스트테스트테스테스트테스트테스트테스트테스트테스트테스트테스트테스트테스트",
-                          ),
-                        ],
-                        backgroundColor: Colors.black,
-                        subSpacing: 20,
-                      ),
-                ),
-              );
-            },
-          ),
-          // 테스트 버튼
-          BuildControlButton(
-            icon: Icons.mic_rounded,
-            label: '음성 테스트',
-            screenWidth: screenWidth,
-            onTap: () {
-              // 음성 테스트 기능 구현
-              debugPrint('음성 테스트 버튼 클릭');
-            },
-          ),
-        ],
-      ),
+    // LecturePlayBarComponents를 사용해서 UI 렌더링
+    return LecturePlayBarComponents.buildPlayBarContainer(
+      screenWidth: widget.screenWidth,
+      isPlaying: TimerManager.isPlaying,
+      displayTime: TimerManager.formattedTime,
+      onPlayPause: _handlePlayPause,
+      onCancel: _handleCancel,
+      onStop: _handleStop,
+      getResponsiveFontSize: _getResponsiveFontSize,
     );
+  }
+
+  // ============================================================================
+  // 비즈니스 로직 메서드들
+  // ============================================================================
+
+  void _handlePlayPause() {
+    if (!TimerManager.isPlaying) {
+      TimerManager.start();
+      debugPrint('강의 시작');
+    } else {
+      TimerManager.pause();
+      debugPrint('일시정지');
+    }
+  }
+
+  void _handleCancel() {
+    TimerManager.reset();
+    debugPrint('취소');
+  }
+
+  void _handleStop() {
+    TimerManager.reset();
+    debugPrint('강의 종료');
+    
+    // 콜백 호출 (SaveConfirmDialog는 상위에서 처리)
+    _navigateToSaveDialog();
+  }
+
+  Future<void> _navigateToSaveDialog() async {
+  //대화상자로 표시
+  await showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return const SaveDialogScreen(); // 또는 SaveConfirmDialog
+    },
+  );
+  }
+
+  // 반응형 폰트 크기 계산
+  double _getResponsiveFontSize(double screenWidth) {
+    // global_core.dart의 getResponsiveFontSize 사용하거나
+    // 직접 계산
+    return getResponsiveFontSize(screenWidth);
+    // 또는 간단히: return screenWidth * 0.04;
   }
 }
