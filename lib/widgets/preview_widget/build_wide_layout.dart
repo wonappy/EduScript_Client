@@ -51,7 +51,14 @@ class BuildWideLayout extends StatelessWidget {
             ],
           ),
         ),
-        SizedBox(width: screenWidth * 0.02), // 2% 간격
+        SizedBox(
+          height: screenHeight * 0.98, // 세로 길이
+          child: VerticalDivider(
+            color: Color(0xFF707070),
+            thickness: 2.0,
+            width: screenWidth * 0.04, // 선+좌우 간격 포함한 너비
+          ),
+        ),
         // 오른쪽 영역 (빈 공간)
         Expanded(
           flex: 4, // 전체의 40%

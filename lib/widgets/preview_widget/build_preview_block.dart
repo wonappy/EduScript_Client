@@ -41,9 +41,9 @@ class BuildPreviewBlock extends StatelessWidget {
             child: Text(
               title,
               style: TextStyle(
-                color: previewOnWord,
+                color: Colors.black,
                 fontSize: getResponsiveFontSize(screenWidth),
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ),
@@ -53,24 +53,18 @@ class BuildPreviewBlock extends StatelessWidget {
           child: Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color:
-                  (title == "강의 화면 미리보기")
-                      ? Colors.transparent
-                      : const Color(0xFFE0E0E0), // 연한 회색
+              color: Colors.transparent, // 연한 회색
               borderRadius: BorderRadius.circular(
                 screenWidth * 0.008,
               ), // 반응형 모서리
-              border:
-                  (title == "강의 화면 미리보기")
-                      ? Border.all(color: Colors.transparent)
-                      : Border.all(color: const Color(0xFFC0C0C0), width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 4,
-                  offset: const Offset(2, 2),
-                ),
-              ],
+              border: Border.all(color: Colors.transparent),
+              // boxShadow: [
+              //   BoxShadow(
+              //     color: Colors.black.withValues(alpha: 0.1),
+              //     blurRadius: 4,
+              //     offset: const Offset(2, 2),
+              //   ),
+              // ],
             ),
             child: GetBlockContent(
               title: title,

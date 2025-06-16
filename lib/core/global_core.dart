@@ -7,5 +7,5 @@ double getResponsiveFontSize(double screenWidth) {
   double baseFontSize = screenWidth * 0.015;
 
   // 최소, 최대 폰트 크기 제한
-  return baseFontSize.clamp(12.0, 24.0);
+  return baseFontSize.clamp(12.0, 20.0);
 }

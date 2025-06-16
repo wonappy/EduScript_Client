@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 
 class LecturePlayBarComponents {
-  
   // 메인 플레이바 컨테이너
   static Widget buildPlayBarContainer({
     required double screenWidth,
@@ -21,7 +20,7 @@ class LecturePlayBarComponents {
       ),
       decoration: BoxDecoration(
         color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(screenWidth * 0.02),
+        borderRadius: BorderRadius.circular(screenWidth * 0.01),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -36,14 +35,14 @@ class LecturePlayBarComponents {
             ),
             SizedBox(width: screenWidth * 0.03),
           ],
-          
+
           // 메인 재생/일시정지 버튼
           buildMainPlayButton(
             isPlaying: isPlaying,
             onTap: onPlayPause,
             screenWidth: screenWidth,
           ),
-          
+
           // 강의 종료 버튼 (재생 중일 때만 표시)
           if (isPlaying) ...[
             SizedBox(width: screenWidth * 0.03),
@@ -53,9 +52,9 @@ class LecturePlayBarComponents {
               screenWidth: screenWidth,
             ),
           ],
-          
+
           SizedBox(width: screenWidth * 0.04),
-          
+
           // 시간 표시
           buildTimeDisplay(
             displayTime: displayTime,
@@ -101,11 +100,7 @@ class LecturePlayBarComponents {
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.all(screenWidth * 0.02),
-        child: Icon(
-          icon,
-          color: Colors.black87,
-          size: screenWidth * 0.05,
-        ),
+        child: Icon(icon, color: Colors.black87, size: screenWidth * 0.05),
       ),
     );
   }
