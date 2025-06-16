@@ -1,4 +1,6 @@
 // widgets/preview_widget/play_progress/lecture_playbar_content.dart
+// 로직 - 재생 관련 로직 돌리는 위젯 / TimeManger 연동, SaveDialog로 이동
+
 import 'package:flutter/material.dart';
 import '../../../core/global_core.dart';
 import 'time_manager.dart';
@@ -24,8 +26,19 @@ class BuildLecturePlayBarContent extends StatefulWidget {
 }
 
 class _BuildLecturePlayBarContentState extends State<BuildLecturePlayBarContent> {
+  DateTime? _lastUpdate;
+  
   void _updateUI() {
+    final now = DateTime.now();
     if (mounted) setState(() {});
+    // 100ms마다 UI 업데이트
+    // 너무 자주 업데이트하지 않도록 제한
+    if (_lastUpdate == null || now.difference(_lastUpdate!).inMilliseconds > 100) {
+      if (mounted) {
+        setState(() {});
+        _lastUpdate = now;
+      }
+    }
   }
 
   @override

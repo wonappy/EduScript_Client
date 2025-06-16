@@ -1,17 +1,18 @@
 // lib/core/timer_manager.dart
+// 타이머만 관리하는 클래스
 import 'dart:async';
 import 'package:flutter/material.dart';
 
 //전역 타이머 상태 (사용자가 UI 줄일 때 재생시간 초기화 방지)
-Timer? _globaltimer;
-bool _isGlobalPlaying = false;
-int _globalElapsedSeconds = 0;
-DateTime? _globalStartTime;
-final List<VoidCallback> _globalTimerListeners = [];
+Timer? _globaltimer; //타이머 객체
+bool _isGlobalPlaying = false; //재생 상태
+int _globalElapsedSeconds = 0; //경과 시간 (초 단위)
+DateTime? _globalStartTime; //타이머 시작 시간
+final List<VoidCallback> _globalTimerListeners = []; //타이머 리스너 목록
 
 class TimerManager {
-  static bool get isPlaying => _isGlobalPlaying;
-  static int get elapsedSeconds => _globalElapsedSeconds;
+  static bool get isPlaying => _isGlobalPlaying; // 현재 재생 상태
+  static int get elapsedSeconds => _globalElapsedSeconds; 
 
   static String get formattedTime {
     int hours = _globalElapsedSeconds ~/ 3600;

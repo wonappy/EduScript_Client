@@ -1,20 +1,23 @@
+// 저장화면 컴포넌트들
+
 import 'package:flutter/material.dart';
 
 class SaveDialogComponents {
   
   static Widget buildMainSection({
-    required bool isContentFile,
-    required String selectedLocation,
-    required String? selectedFilePath,
-    required String emailAddress,
-    required String emailDomain,
-    required Function(bool) onContentFileChanged,
-    required Function(String) onLocationChanged,
-    required Function(String) onEmailAddressChanged,
-    required Function(String) onEmailDomainChanged,
-    required VoidCallback onSelectPath,
-    required VoidCallback onEmailSend,
-    required VoidCallback onFileSave,
+    required bool isContentFile,  // 내용 파일인지 요약 파일인지
+    required String selectedLocation, // 저장 위치
+    required String? selectedFilePath, // 선택된 파일 경로
+    required String emailAddress, // 이메일 주소
+    required String emailDomain, // 이메일 도메인
+    required Function(bool) onContentFileChanged, // 내용 파일 체크박스 변경 콜백
+    required Function(String) onLocationChanged, // 저장 위치 변경 콜백
+    required Function(String) onEmailAddressChanged, // 이메일 주소 변경 콜백
+    required Function(String) onEmailDomainChanged, // 이메일 도메인 변경 콜백
+    required VoidCallback onSelectPath, // 경로 선택 콜백
+    required VoidCallback onEmailSend, // 이메일 전송 콜백
+    required VoidCallback onFileSave, // 파일 저장 콜백
+    required BuildContext context, // BuildContext (X버튼 눌러서 다이얼로그 닫을 때 필요)
   }) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -23,7 +26,9 @@ class SaveDialogComponents {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFF999999), width: 1.5),
       ),
-      child: Column(
+      child: Stack(
+        children:[
+          Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -74,36 +79,56 @@ class SaveDialogComponents {
             ],
           ),
           
-          // 저장 경로 섹션 (조건부 표시 - 애니메이션 포함)
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            height: selectedLocation == 'email' ? 120 : 
-                   selectedLocation == 'computer' ? 100 : 0,
-            child: selectedLocation.isNotEmpty 
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 15),
-                    child: selectedLocation == 'email' 
-                        ? buildEmailSection(
-                            emailAddress: emailAddress,
-                            emailDomain: emailDomain,
-                            onEmailAddressChanged: onEmailAddressChanged,
-                            onEmailDomainChanged: onEmailDomainChanged,
-                            onEmailSend: onEmailSend,
-                          )
-                        : buildComputerSection(
-                            selectedFilePath: selectedFilePath,
-                            onSelectPath: onSelectPath,
-                            onFileSave: onFileSave,
-                          ),
-                  )
-                : const SizedBox.shrink(),
+          // 저장 경로 섹션 (애니메이션 제거 - 즉시 표시)
+              if (selectedLocation == 'email') ...[
+                const SizedBox(height: 15),
+                buildEmailSection(
+                  emailAddress: emailAddress,
+                  emailDomain: emailDomain,
+                  onEmailAddressChanged: onEmailAddressChanged,
+                  onEmailDomainChanged: onEmailDomainChanged,
+                  onEmailSend: onEmailSend,
+                ),
+              ] else if (selectedLocation == 'computer') ...[
+                const SizedBox(height: 15),
+                buildComputerSection(
+                  selectedFilePath: selectedFilePath,
+                  onSelectPath: onSelectPath,
+                  onFileSave: onFileSave,
+                ),
+              ],
+            ],
+          ),
+          // 우측 상단 X 버튼
+          Positioned(
+            top: 0,
+            right: 0,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.of(context).pop();
+                debugPrint('저장 취소');
+              },
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: Colors.grey[700],
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.close,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
+  // 체크박스 빌더
   static Widget buildCheckbox(String label, bool value, Function(bool) onChanged) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -127,6 +152,7 @@ class SaveDialogComponents {
     );
   }
 
+  // 위치 선택 버튼 빌더
   static Widget buildLocationButton({
     required String text,
     required String location,
@@ -155,6 +181,7 @@ class SaveDialogComponents {
     );
   }
 
+  // 이메일 섹션 빌더
   static Widget buildEmailSection({
     required String emailAddress,
     required String emailDomain,
@@ -232,6 +259,7 @@ class SaveDialogComponents {
     );
   }
 
+  // 파일 경로 선택 및 저장 섹션 빌더
   static Widget buildComputerSection({
     required String? selectedFilePath,
     required VoidCallback onSelectPath,

@@ -1,4 +1,4 @@
-// 재생 부분 컨트롤 버튼 위젯
+// UI - 재생, 취소, 일시정지 버튼 컴포넌트들
 
 import 'package:flutter/material.dart';
 
