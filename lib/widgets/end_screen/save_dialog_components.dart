@@ -5,12 +5,14 @@ import 'package:flutter/material.dart';
 class SaveDialogComponents {
   
   static Widget buildMainSection({
-    required bool isContentFile,  // 내용 파일인지 요약 파일인지
+    required bool isContentFileSelected,  // 내용 파일 선택 여부
+    required bool isSummaryFileSelected, // 요약 파일 체크박스 상태
     required String selectedLocation, // 저장 위치
     required String? selectedFilePath, // 선택된 파일 경로
     required String emailAddress, // 이메일 주소
     required String emailDomain, // 이메일 도메인
     required Function(bool) onContentFileChanged, // 내용 파일 체크박스 변경 콜백
+    required Function(bool) onSummaryFileChanged, // 요약 파일 체크박스 변경 콜백
     required Function(String) onLocationChanged, // 저장 위치 변경 콜백
     required Function(String) onEmailAddressChanged, // 이메일 주소 변경 콜백
     required Function(String) onEmailDomainChanged, // 이메일 도메인 변경 콜백
@@ -46,11 +48,9 @@ class SaveDialogComponents {
           // 체크박스들
           Row(
             children: [
-              buildCheckbox('내용 파일', isContentFile, onContentFileChanged),
+              buildCheckbox('내용 파일', isContentFileSelected, onContentFileChanged),
               const SizedBox(width: 24),
-              buildCheckbox('요약 파일', !isContentFile, (value) {
-                onContentFileChanged(!value);
-              }),
+              buildCheckbox('요약 파일', isSummaryFileSelected, onSummaryFileChanged),
             ],
           ),
           
