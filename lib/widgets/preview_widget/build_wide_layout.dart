@@ -26,7 +26,7 @@ class BuildWideLayout extends StatelessWidget {
       children: [
         // 왼쪽 영역 (강의 화면 미리보기 + 강의 시작)
         Expanded(
-          flex: 6, // 전체의 60%
+          flex: 7, // 전체의 60%
           child: Column(
             children: [
               // 강의 화면 미리보기
@@ -51,10 +51,17 @@ class BuildWideLayout extends StatelessWidget {
             ],
           ),
         ),
-        SizedBox(width: screenWidth * 0.02), // 2% 간격
+        SizedBox(
+          height: screenHeight * 0.98, // 세로 길이
+          child: VerticalDivider(
+            color: Color(0xFF707070),
+            thickness: 2.0,
+            width: screenWidth * 0.04, // 선+좌우 간격 포함한 너비
+          ),
+        ),
         // 오른쪽 영역 (빈 공간)
         Expanded(
-          flex: 4, // 전체의 40%
+          flex: 3, // 전체의 40%
           child: BuildPreviewBlock(
             title: '',
             screenWidth: screenWidth * 0.4,

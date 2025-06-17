@@ -1,8 +1,11 @@
 // widgets/preview_widget/play_progress/lecture_playbar_content.dart
 // 로직 - 재생 관련 로직 돌리는 위젯 / TimeManger 연동, SaveDialog로 이동
 
+import 'package:client/screens/subtitles_only_screen.dart';
 import 'package:flutter/material.dart';
 import '../../../core/global_core.dart';
+import '../../../models/subtitles_model.dart';
+import '../../../screens/shared_with_subtitles_screen.dart';
 import 'time_manager.dart';
 import '../../preview_widget/play_progress/lecture_playbar_content.dart';
 import '../../../screens/end_lecture_and_save_screen.dart';
@@ -22,18 +25,21 @@ class BuildLecturePlayBarContent extends StatefulWidget {
   });
 
   @override
-  State<BuildLecturePlayBarContent> createState() => _BuildLecturePlayBarContentState();
+  State<BuildLecturePlayBarContent> createState() =>
+      _BuildLecturePlayBarContentState();
 }
 
-class _BuildLecturePlayBarContentState extends State<BuildLecturePlayBarContent> {
+class _BuildLecturePlayBarContentState
+    extends State<BuildLecturePlayBarContent> {
   DateTime? _lastUpdate;
-  
+
   void _updateUI() {
     final now = DateTime.now();
     if (mounted) setState(() {});
     // 100ms마다 UI 업데이트
     // 너무 자주 업데이트하지 않도록 제한
-    if (_lastUpdate == null || now.difference(_lastUpdate!).inMilliseconds > 100) {
+    if (_lastUpdate == null ||
+        now.difference(_lastUpdate!).inMilliseconds > 100) {
       if (mounted) {
         setState(() {});
         _lastUpdate = now;
@@ -75,6 +81,32 @@ class _BuildLecturePlayBarContentState extends State<BuildLecturePlayBarContent>
     if (!TimerManager.isPlaying) {
       TimerManager.start();
       debugPrint('강의 시작');
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) => SubtitlesOnlyScreen(
+                subBackgroundColor: Colors.black,
+                opacitySubBackground: 0.5,
+                subWordColor: Colors.white,
+                subWordFontSize: 25,
+                subWordFont: "default",
+                languages: [
+                  SubtitlesModel(
+                    country: "en",
+                    subtitle:
+                        "testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest",
+                  ),
+                  SubtitlesModel(
+                    country: "kr",
+                    subtitle: "테스트테스트테스테스트테스트테스트테스트테스트테스트테스트테스트테스트테스트",
+                  ),
+                ],
+                backgroundColor: Colors.black,
+                subSpacing: 20,
+              ),
+        ),
+      );
     } else {
       TimerManager.pause();
       debugPrint('일시정지');
@@ -89,20 +121,20 @@ class _BuildLecturePlayBarContentState extends State<BuildLecturePlayBarContent>
   void _handleStop() {
     TimerManager.reset();
     debugPrint('강의 종료');
-    
+
     // 콜백 호출 (SaveConfirmDialog는 상위에서 처리)
     _navigateToSaveDialog();
   }
 
   Future<void> _navigateToSaveDialog() async {
-  //대화상자로 표시
-  await showDialog<void>(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext context) {
-      return const SaveDialogScreen(); // 또는 SaveConfirmDialog
-    },
-  );
+    //대화상자로 표시
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const SaveDialogScreen(); // 또는 SaveConfirmDialog
+      },
+    );
   }
 
   // 반응형 폰트 크기 계산

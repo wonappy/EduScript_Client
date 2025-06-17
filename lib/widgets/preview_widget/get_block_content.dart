@@ -23,19 +23,7 @@ class GetBlockContent extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (title) {
       case '강의 화면 미리보기':
-        return BuildLecturePreviewContent(
-          backgroundColor: Colors.black,
-          subBackgroundColor: Colors.white,
-          opacitySubBackground: 0.7,
-          subWordColor: Colors.black,
-          subWordFontSize: 15,
-          subWordFont: "default",
-          subSpacing: 15,
-          languages: [
-            SubtitlesModel(country: "kr", subtitle: "이것은 테스트 자막입니다.."),
-            SubtitlesModel(country: "en", subtitle: "This is test subtitle."),
-          ],
-        );
+        return BuildLecturePreviewContent();
       case '강의 시작':
         return BuildLecturePlayBarContent(
           screenWidth: screenWidth,
