@@ -1,4 +1,4 @@
-// 저장화면 컴포넌트들
+// 저장화면 컴포넌트들 - 깔끔한 폼 스타일
 
 import 'package:flutter/material.dart';
 
@@ -6,7 +6,7 @@ class SaveDialogComponents {
   
   static Widget buildMainSection({
     required bool isContentFileSelected,  // 내용 파일 선택 여부
-    required bool isSummaryFileSelected, // 요약 파일 체크박스 상태
+    required bool isSummaryFileSelected,  // 요약 파일 선택 여부
     required String selectedLocation, // 저장 위치
     required String? selectedFilePath, // 선택된 파일 경로
     required String emailAddress, // 이메일 주소
@@ -22,122 +22,128 @@ class SaveDialogComponents {
     required BuildContext context, // BuildContext (X버튼 눌러서 다이얼로그 닫을 때 필요)
   }) {
     return Container(
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFC8C8C8),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF999999), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Stack(
-        children:[
-          Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            '파일 유형 선택',
-            style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF2C2C2C),
-              fontWeight: FontWeight.w600,
-              letterSpacing: -0.2,           
-            ),
-          ),
-          const SizedBox(height: 16),
-          
-          // 체크박스들
-          Row(
-            children: [
-              buildCheckbox('내용 파일', isContentFileSelected, onContentFileChanged),
-              const SizedBox(width: 24),
-              buildCheckbox('요약 파일', isSummaryFileSelected, onSummaryFileChanged),
-            ],
-          ),
-          
-          const SizedBox(height: 24),
-          
-          const Text(
-            '저장 위치를 선택하세요',
-            style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF2C2C2C),
-              fontWeight: FontWeight.w600,
-              letterSpacing: -0.2,
-            ),
-          ),
-          const SizedBox(height: 12),
-          
-          // 위치 선택 버튼들
-          Row(
-            children: [
-              buildLocationButton(
-                text: '이메일',
-                location: 'email',
-                isSelected: selectedLocation == 'email',
-                onPressed: () => onLocationChanged('email'),
+          // 헤더
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
               ),
-              const SizedBox(width: 12),
-              buildLocationButton(
-                text: '내 컴퓨터',
-                location: 'computer',
-                isSelected: selectedLocation == 'computer',
-                onPressed: () {
-                  onLocationChanged('computer');
-                  Future.delayed(const Duration(milliseconds: 100), onSelectPath);
-                },
-              ),
-            ],
-          ),
-          
-          // 저장 경로 섹션 (애니메이션 제거 - 즉시 표시)
-              if (selectedLocation == 'email') ...[
-                const SizedBox(height: 20),
-                buildEmailSection(
-                  emailAddress: emailAddress,
-                  emailDomain: emailDomain,
-                  onEmailAddressChanged: onEmailAddressChanged,
-                  onEmailDomainChanged: onEmailDomainChanged,
-                  onEmailSend: onEmailSend,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  '파일 저장',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF111827),
+                  ),
                 ),
-              ] else if (selectedLocation == 'computer') ...[
-                const SizedBox(height: 20),
-                buildComputerSection(
-                  selectedFilePath: selectedFilePath,
-                  onSelectPath: onSelectPath,
-                  onFileSave: onFileSave,
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    debugPrint('저장 취소');
+                  },
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Color(0xFF6B7280),
+                      size: 20,
+                    ),
+                  ),
                 ),
               ],
-            ],
+            ),
           ),
-          // 우측 상단 X 버튼
-          Positioned(
-            top: 0,
-            right: 0,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.of(context).pop();
-                debugPrint('저장 취소');
-              },
-              child: Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF757575),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
+          
+          // 폼 내용
+          Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 파일 유형 선택
+                _buildFormSection(
+                  title: '파일 유형 선택',
+                  isRequired: true,
+                  child: Column(
+                    children: [
+                      buildCheckbox('내용 파일', isContentFileSelected, onContentFileChanged),
+                      const SizedBox(height: 12),
+                      buildCheckbox('요약 파일', isSummaryFileSelected, onSummaryFileChanged),
+                    ],
+                  ),
                 ),
-                child: const Icon(
-                  Icons.close,
-                  color: Colors.white,
-                  size: 18,
+                
+                const SizedBox(height: 24),
+                
+                // 저장 위치 선택
+                _buildFormSection(
+                  title: '저장 위치 선택',
+                  isRequired: true,
+                  child: Row(
+                    children: [
+                      buildLocationButton(
+                        text: '이메일',
+                        location: 'email',
+                        isSelected: selectedLocation == 'email',
+                        onPressed: () => onLocationChanged('email'),
+                      ),
+                      const SizedBox(width: 12),
+                      buildLocationButton(
+                        text: '내 컴퓨터',
+                        location: 'computer',
+                        isSelected: selectedLocation == 'computer',
+                        onPressed: () {
+                          onLocationChanged('computer');
+                          Future.delayed(const Duration(milliseconds: 100), onSelectPath);
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+                
+                // 저장 상세 설정
+                if (selectedLocation == 'email') ...[
+                  const SizedBox(height: 24),
+                  buildEmailSection(
+                    emailAddress: emailAddress,
+                    emailDomain: emailDomain,
+                    onEmailAddressChanged: onEmailAddressChanged,
+                    onEmailDomainChanged: onEmailDomainChanged,
+                    onEmailSend: onEmailSend,
+                  ),
+                ] else if (selectedLocation == 'computer') ...[
+                  const SizedBox(height: 24),
+                  buildComputerSection(
+                    selectedFilePath: selectedFilePath,
+                    onSelectPath: onSelectPath,
+                    onFileSave: onFileSave,
+                  ),
+                ],
+              ],
             ),
           ),
         ],
@@ -145,37 +151,89 @@ class SaveDialogComponents {
     );
   }
 
+  // 폼 섹션 빌더
+  static Widget _buildFormSection({
+    required String title,
+    bool isRequired = false,
+    required Widget child,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF374151),
+              ),
+            ),
+            if (isRequired)
+              const Text(
+                ' *',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFFEF4444),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        child,
+      ],
+    );
+  }
+
   // 체크박스 빌더
   static Widget buildCheckbox(String label, bool value, Function(bool) onChanged) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          width: 18,
-          height: 18,
-          child: Checkbox(
-            value: value,
-            onChanged: (newValue) => onChanged(newValue ?? false),
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            visualDensity: VisualDensity.compact,
-            activeColor: const Color(0xFF555555),
-            checkColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(3),
-            ), 
+    return InkWell(
+      onTap: () => onChanged(!value),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: value ? const Color(0xFF3B82F6) : const Color(0xFFD1D5DB),
+            width: 1.5,
           ),
+          borderRadius: BorderRadius.circular(8),
+          color: value ? const Color(0xFF3B82F6).withOpacity(0.05) : Colors.transparent,
         ),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 13, 
-            color: Color(0xFF424242),
-            fontWeight: FontWeight.w400,
-            letterSpacing: -0.1,
-          ),
+        child: Row(
+          children: [
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: value ? const Color(0xFF3B82F6) : Colors.white,
+                border: Border.all(
+                  color: value ? const Color(0xFF3B82F6) : const Color(0xFFD1D5DB),
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: value
+                  ? const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 14,
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                color: value ? const Color(0xFF1F2937) : const Color(0xFF6B7280),
+                fontWeight: value ? FontWeight.w500 : FontWeight.w400,
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -186,29 +244,29 @@ class SaveDialogComponents {
     required bool isSelected,
     required VoidCallback onPressed,
   }) {
-    return SizedBox(
-      height: 28,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isSelected ? const Color(0xFF3C3C3C) : const Color(0xFF757575),
-          foregroundColor: Colors.white,
-          elevation: isSelected ? 2 : 0,
-          shadowColor: Colors.black.withValues(alpha: 0.2),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          minimumSize: const Size(70, 32),
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-        child: Text(
-          text,
-          style: const TextStyle(
-            fontSize: 12, 
-            fontWeight: FontWeight.w500,
-            letterSpacing: -0.1,
+    return Expanded(
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF3B82F6) : Colors.white,
+            border: Border.all(
+              color: isSelected ? const Color(0xFF3B82F6) : const Color(0xFFD1D5DB),
+              width: 1.5,
             ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: isSelected ? Colors.white : const Color(0xFF6B7280),
+            ),
+          ),
         ),
       ),
     );
@@ -222,63 +280,41 @@ class SaveDialogComponents {
     required Function(String) onEmailDomainChanged,
     required VoidCallback onEmailSend,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
-      ),
+    return _buildFormSection(
+      title: '이메일 주소',
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '이메일 주소',
-            style: TextStyle(
-              fontSize: 12, 
-              color: Color(0xFF424242),
-              fontWeight: FontWeight.w500,
-              letterSpacing: -0.1,
-            ),
-          ),
-          const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
-                child: SizedBox(
-                  height: 32,
+                flex: 2,
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: const Color(0xFFD1D5DB)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   child: TextField(
                     onChanged: onEmailAddressChanged,
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF2C2C2C)),
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                        borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                        borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                        borderSide: const BorderSide(color: Color(0xFF757575)),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      isDense: true,
-                      filled: true,
-                      fillColor: Colors.white,
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      hintText: '이메일 주소',
+                      hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Text('@', style: TextStyle(fontSize: 16, color: Color(0xFF6B7280))),
+              ),
               Container(
-                height: 32,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFFD0D0D0)),
-                  borderRadius: BorderRadius.circular(4),
-                  color: Colors.white,
+                  border: Border.all(color: const Color(0xFFD1D5DB)),
+                  borderRadius: BorderRadius.circular(8),
+                  color: const Color(0xFFF9FAFB),
                 ),
                 child: DropdownButton<String>(
                   value: emailDomain,
@@ -288,40 +324,31 @@ class SaveDialogComponents {
                     DropdownMenuItem(value: 'daum.net', child: Text('daum.net')),
                   ],
                   onChanged: (value) => onEmailDomainChanged(value ?? 'naver.com'),
-                  style: const TextStyle(
-                    fontSize: 12, 
-                    color: Color(0xFF2C2C2C),
-                    fontWeight: FontWeight.w400,
-                  ),
+                  style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
                   underline: Container(),
                   isDense: true,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           SizedBox(
-            height: 32,
+            width: double.infinity,
             child: ElevatedButton(
               onPressed: emailAddress.isNotEmpty ? onEmailSend : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF555555),
+                backgroundColor: const Color(0xFF1F2937),
                 foregroundColor: Colors.white,
-                disabledBackgroundColor: const Color(0xFFBDBDBD),
-                elevation: 1,
+                disabledBackgroundColor: const Color(0xFFD1D5DB),
+                elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                minimumSize: const Size(60, 32),
+                padding: const EdgeInsets.symmetric(vertical: 12),
               ),
               child: const Text(
-                '전송',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: -0.1,
-                ),
+                '이메일 전송',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -336,99 +363,64 @@ class SaveDialogComponents {
     required VoidCallback onSelectPath,
     required VoidCallback onFileSave,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
-      ),
+    return _buildFormSection(
+      title: '저장 경로',
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '저장 경로',
-            style: TextStyle(
-              fontSize: 12, 
-              color: Color(0xFF424242),
-              fontWeight: FontWeight.w500,
-              letterSpacing: -0.1,
-            ),
-          ),
-          const SizedBox(height: 8),
           Container(
             width: double.infinity,
-            height: 36,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
             decoration: BoxDecoration(
-              color: const Color(0xFFFAFAFA),
-              border: Border.all(color: const Color(0xFFD0D0D0)),
-              borderRadius: BorderRadius.circular(4),
+              color: const Color(0xFFF9FAFB),
+              border: Border.all(color: const Color(0xFFD1D5DB)),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                selectedFilePath ?? '저장 경로를 선택해주세요',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: selectedFilePath != null ? const Color(0xFF2C2C2C) : const Color(0xFF757575),
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: -0.1,
-                ),
-                overflow: TextOverflow.ellipsis,
+            child: Text(
+              selectedFilePath ?? '저장 경로를 선택해주세요',
+              style: TextStyle(
+                fontSize: 14,
+                color: selectedFilePath != null ? const Color(0xFF111827) : const Color(0xFF9CA3AF),
               ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Row(
             children: [
-              SizedBox(
-                height: 32,
-                child: ElevatedButton(
+              Expanded(
+                child: OutlinedButton(
                   onPressed: onSelectPath,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF757575),
-                    foregroundColor: Colors.white,
-                    elevation: 1,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF6B7280),
+                    side: const BorderSide(color: Color(0xFFD1D5DB)),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    minimumSize: const Size(70, 32),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   child: const Text(
                     '경로 선택',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: -0.1,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
-              SizedBox(
-                height: 32,
+              Expanded(
                 child: ElevatedButton(
                   onPressed: selectedFilePath != null ? onFileSave : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF555555),
+                    backgroundColor: const Color(0xFF1F2937),
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: const Color(0xFFBDBDBD),
-                    elevation: 1,
+                    disabledBackgroundColor: const Color(0xFFD1D5DB),
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    minimumSize: const Size(60, 32),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   child: const Text(
-                    '저장',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: -0.1,
-                    ),
+                    '파일 저장',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                   ),
                 ),
               ),

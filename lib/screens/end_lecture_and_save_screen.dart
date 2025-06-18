@@ -32,7 +32,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      backgroundColor: const Color(0xFFE5E5E5),
+      backgroundColor: Colors.transparent,
       child: Container(
         width: 450,
         padding: const EdgeInsets.all(25),
