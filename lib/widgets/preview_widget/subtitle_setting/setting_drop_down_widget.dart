@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/global_core.dart';
 
-/// 환경 설정 드롭다운 메뉴 (1)
+/// 환경 설정 드롭다운 메뉴 (1) - 위치, 스타일, 크기
 
 class SettingDropdown extends StatefulWidget {
   final String title; // 제목
@@ -59,7 +59,7 @@ class _SettingDropdownState extends State<SettingDropdown> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      //padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
       decoration: BoxDecoration(
         color: widget.backgroundColor ?? Color(0xFFF6F6F6),
         borderRadius: BorderRadius.circular(30),
@@ -71,7 +71,7 @@ class _SettingDropdownState extends State<SettingDropdown> {
           Text(
             widget.title,
             style: TextStyle(
-              fontSize: getResponsiveFontSize(widget.screenWidth) * 0.7,
+              fontSize: getResponsiveFontSize(widget.screenWidth) * 0.8,
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),
@@ -88,7 +88,7 @@ class _SettingDropdownState extends State<SettingDropdown> {
               ),
               // 모양 (둥근 모서리)
               shape: WidgetStateProperty.all(
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
             ),
             // [2-2] 메뉴 아이템 생성
@@ -109,18 +109,18 @@ class _SettingDropdownState extends State<SettingDropdown> {
                     ),
                     onPressed: () => _selectOption(option), // 🔴 선택 시 실행할 함수
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      padding: EdgeInsets.all(10),
                       child: SizedBox(
                         width:
                             MediaQuery.of(context).size.width *
-                            0.07, // 메뉴 항목 너비
+                            0.05, // 메뉴 항목 너비
                         child: Text(
                           option, // 선택 항목
                           style: TextStyle(
                             color: Colors.white,
                             fontSize:
                                 getResponsiveFontSize(widget.screenWidth) *
-                                0.65,
+                                0.8,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -149,7 +149,7 @@ class _SettingDropdownState extends State<SettingDropdown> {
                 },
                 borderRadius: BorderRadius.circular(5),
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: EdgeInsets.symmetric(horizontal: 5, vertical: 4),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -158,7 +158,7 @@ class _SettingDropdownState extends State<SettingDropdown> {
                         style: TextStyle(
                           color: Colors.black,
                           fontSize:
-                              getResponsiveFontSize(widget.screenWidth) * 0.7,
+                              getResponsiveFontSize(widget.screenWidth) * 0.8,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

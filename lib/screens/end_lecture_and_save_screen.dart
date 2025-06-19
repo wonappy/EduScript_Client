@@ -5,7 +5,7 @@ import '../widgets/end_screen/save_dialog_components.dart';
 import 'package:file_picker/file_picker.dart';
 
 class SaveDialogScreen extends StatefulWidget {
-  const SaveDialogScreen({Key? key}) : super(key: key);
+  SaveDialogScreen({Key? key}) : super(key: key);
 
   @override
   State<SaveDialogScreen> createState() => _SaveDialogScreenState();
@@ -13,17 +13,28 @@ class SaveDialogScreen extends StatefulWidget {
 
 class _SaveDialogScreenState extends State<SaveDialogScreen> {
   // 상태 변수들
-  bool isContentFile = false; //내용 파일인지 요약 파일인지
+  bool isContentFile = false;
+  bool isSummaryFile = false; //내용 파일인지 요약 파일인지
+  bool isMajorFile = false; //주요 파일인지 여부
   String selectedLocation = ''; //저장 위치
   String? selectedFilePath; //선택된 파일 경로
   String emailAddress = ''; //이메일 주소
   String emailDomain = 'naver.com'; //이메일 도메인 기본값
 
   @override
+  void initState() {
+    super.initState();
+    debugPrint('=== SaveDialogScreen initState ===');
+    debugPrint('초기 isContentFile: $isContentFile');
+    debugPrint('초기 isSummaryFile: $isSummaryFile');
+    debugPrint('초기 isMajorFile: $isMajorFile');
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      backgroundColor: const Color(0xFFE5E5E5),
+      backgroundColor: Colors.transparent,
       child: Container(
         width: 450,
         padding: const EdgeInsets.all(25),
@@ -32,7 +43,9 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
           children: [
             // SaveDialogComponents에서 빌드한 메인 섹션
             SaveDialogComponents.buildMainSection(
-              isContentFile: isContentFile,
+              isContentFileSelected: isContentFile,
+              isSummaryFileSelected: isSummaryFile,
+              isMajorFileSelected: isMajorFile,
               selectedLocation: selectedLocation,
               selectedFilePath: selectedFilePath,
               emailAddress: emailAddress,
@@ -43,6 +56,16 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
               onContentFileChanged: (value) {
                 setState(() {
                   isContentFile = value;
+                });
+              },
+              onSummaryFileChanged: (value) {
+                setState(() {
+                  isSummaryFile = value;
+                });
+              },
+              onMajorFileChanged: (value) {
+                setState(() {
+                  isMajorFile = value;
                 });
               },
               onLocationChanged: (location) {

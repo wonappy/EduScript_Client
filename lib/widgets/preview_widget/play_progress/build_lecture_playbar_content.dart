@@ -117,7 +117,9 @@ class _BuildLecturePlayBarContentState
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return const SaveDialogScreen(); // 또는 SaveConfirmDialog
+        return SaveDialogScreen(); 
+        // const 키워드 사용시 Flutter가 위젯을 재사용할 수 있어 이전 상태가 남아버림
+        // 따라서 const 키워드를 사용하지 않음
       },
     );
   }
