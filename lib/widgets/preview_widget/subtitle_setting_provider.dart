@@ -110,14 +110,14 @@ class SubtitleSettingsProvider extends ChangeNotifier {
     double baseSize = getResponsiveFontSize(screenWidth);
     switch (_selectedFontSize) {
       case '작게':
-        return baseSize * 0.6;
+        return baseSize * 1.0;
       case '크게':
-        return baseSize * 1.2;
+        return baseSize * 1.4;
       case '매우 크게':
-        return baseSize * 1.5;
+        return baseSize * 1.7;
       case '중간':
       default:
-        return baseSize * 0.8;
+        return baseSize * 1.2;
     }
   }
 
