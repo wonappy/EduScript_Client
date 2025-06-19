@@ -12,6 +12,7 @@ class LecturePlayBarComponents {
     required VoidCallback onCancel,
     required VoidCallback onStop,
     required double Function(double) getResponsiveFontSize,
+    bool hasStarted = false, // 강의가 시작되었는지 여부
   }) {
     return Container(
       padding: EdgeInsets.symmetric(
@@ -26,8 +27,8 @@ class LecturePlayBarComponents {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // 취소 버튼 (재생 중일 때만 표시)
-          if (isPlaying) ...[
+          //취소 버튼 (재생 중일 때만 표시)
+          if (hasStarted) ...[
             buildControlIcon(
               icon: Icons.close,
               onTap: onCancel,
@@ -43,8 +44,8 @@ class LecturePlayBarComponents {
             screenWidth: screenWidth,
           ),
 
-          // 강의 종료 버튼 (재생 중일 때만 표시)
-          if (isPlaying) ...[
+          // 강의 종료 버튼 (재생이 시작된 후에는 항상 표시)
+          if (hasStarted) ...[
             SizedBox(width: screenWidth * 0.03),
             buildControlIcon(
               icon: Icons.stop,
