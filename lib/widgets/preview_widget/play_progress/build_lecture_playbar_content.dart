@@ -32,6 +32,7 @@ class BuildLecturePlayBarContent extends StatefulWidget {
 class _BuildLecturePlayBarContentState
     extends State<BuildLecturePlayBarContent> {
   DateTime? _lastUpdate;
+  bool hasStarted = false;
 
   void _updateUI() {
     final now = DateTime.now();
@@ -65,6 +66,7 @@ class _BuildLecturePlayBarContentState
     return LecturePlayBarComponents.buildPlayBarContainer(
       screenWidth: widget.screenWidth,
       isPlaying: TimerManager.isPlaying,
+      hasStarted: hasStarted,
       displayTime: TimerManager.formattedTime,
       onPlayPause: _handlePlayPause,
       onCancel: _handleCancel,
@@ -80,6 +82,9 @@ class _BuildLecturePlayBarContentState
   void _handlePlayPause() {
     if (!TimerManager.isPlaying) {
       TimerManager.start();
+      setState(() {
+        hasStarted = true; // 재생 시작했음을 표시
+      });
       debugPrint('강의 시작');
       Navigator.push(
         context,
@@ -115,6 +120,9 @@ class _BuildLecturePlayBarContentState
 
   void _handleCancel() {
     TimerManager.reset();
+    setState(() {
+      hasStarted = false; // 초기 상태로 돌림
+    });
     debugPrint('취소');
   }
 
