@@ -38,7 +38,9 @@ class BuildLecturePlayBarContent extends StatefulWidget {
 class _BuildLecturePlayBarContentState
     extends State<BuildLecturePlayBarContent> {
   DateTime? _lastUpdate;
+
   final WebSocketSTTService _sttService = WebSocketSTTService(); // 서비스 등록 
+  bool hasStarted = false;
 
   void _updateUI() {
     final now = DateTime.now();
@@ -100,6 +102,7 @@ class _BuildLecturePlayBarContentState
     return LecturePlayBarComponents.buildPlayBarContainer(
       screenWidth: widget.screenWidth,
       isPlaying: TimerManager.isPlaying,
+      hasStarted: hasStarted,
       displayTime: TimerManager.formattedTime,
       onPlayPause: _handlePlayPause,
       onCancel: _handleCancel,
@@ -117,6 +120,9 @@ class _BuildLecturePlayBarContentState
   void _handlePlayPause() async {
     if (!TimerManager.isPlaying) {
       TimerManager.start();
+      setState(() {
+        hasStarted = true; // 재생 시작했음을 표시
+      });
       debugPrint('강의 시작');
 
       await _startSTTService(); // [STT 서비스 호출] - 녹음 시작 
@@ -126,22 +132,7 @@ class _BuildLecturePlayBarContentState
         MaterialPageRoute(
           builder:
               (context) => SubtitlesOnlyScreen(
-                subBackgroundColor: Colors.black,
-                opacitySubBackground: 0.5,
-                subWordColor: Colors.white,
-                subWordFontSize: 25,
                 subWordFont: "default",
-                languages: [
-                  SubtitlesModel(
-                    country: "en",
-                    subtitle:
-                        "testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest",
-                  ),
-                  SubtitlesModel(
-                    country: "kr",
-                    subtitle: "테스트테스트테스테스트테스트테스트테스트테스트테스트테스트테스트테스트테스트",
-                  ),
-                ],
                 backgroundColor: Colors.black,
                 subSpacing: 20,
               ),
@@ -157,6 +148,9 @@ class _BuildLecturePlayBarContentState
   // [2] 취소 -> 타이머 리셋
   void _handleCancel() {
     TimerManager.reset();
+    setState(() {
+      hasStarted = false; // 초기 상태로 돌림
+    });
     debugPrint('취소');
   }
 
