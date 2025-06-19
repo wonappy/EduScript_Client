@@ -86,22 +86,7 @@ class _BuildLecturePlayBarContentState
         MaterialPageRoute(
           builder:
               (context) => SubtitlesOnlyScreen(
-                subBackgroundColor: Colors.black,
-                opacitySubBackground: 0.5,
-                subWordColor: Colors.white,
-                subWordFontSize: 25,
                 subWordFont: "default",
-                languages: [
-                  SubtitlesModel(
-                    country: "en",
-                    subtitle:
-                        "testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest",
-                  ),
-                  SubtitlesModel(
-                    country: "kr",
-                    subtitle: "테스트테스트테스테스트테스트테스트테스트테스트테스트테스트테스트테스트테스트",
-                  ),
-                ],
                 backgroundColor: Colors.black,
                 subSpacing: 20,
               ),
