@@ -6,7 +6,9 @@ import FlutterMacOS
 import Foundation
 
 import file_picker
+import record_darwin
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   FilePickerPlugin.register(with: registry.registrar(forPlugin: "FilePickerPlugin"))
+  RecordPlugin.register(with: registry.registrar(forPlugin: "RecordPlugin"))
 }
