@@ -7,12 +7,14 @@ class SaveDialogComponents {
   static Widget buildMainSection({
     required bool isContentFileSelected,  // 내용 파일 선택 여부
     required bool isSummaryFileSelected,  // 요약 파일 선택 여부
+    required bool isMajorFileSelected, // 주요 내용 파일 선택 여부
     required String selectedLocation, // 저장 위치
     required String? selectedFilePath, // 선택된 파일 경로
     required String emailAddress, // 이메일 주소
     required String emailDomain, // 이메일 도메인
     required Function(bool) onContentFileChanged, // 내용 파일 체크박스 변경 콜백
     required Function(bool) onSummaryFileChanged, // 요약 파일 체크박스 변경 콜백
+    required Function(bool) onMajorFileChanged, // 주요 파일 체크박스 변경 콜백
     required Function(String) onLocationChanged, // 저장 위치 변경 콜백
     required Function(String) onEmailAddressChanged, // 이메일 주소 변경 콜백
     required Function(String) onEmailDomainChanged, // 이메일 도메인 변경 콜백
@@ -90,9 +92,11 @@ class SaveDialogComponents {
                   isRequired: true,
                   child: Column(
                     children: [
-                      buildCheckbox('내용 파일', isContentFileSelected, onContentFileChanged),
+                      buildCheckbox('정제된 발화 내용 파일', isContentFileSelected, onContentFileChanged),
                       const SizedBox(height: 12),
-                      buildCheckbox('요약 파일', isSummaryFileSelected, onSummaryFileChanged),
+                      buildCheckbox('강의 내용 요약 파일', isSummaryFileSelected, onSummaryFileChanged),
+                      const SizedBox(height: 12),
+                      buildCheckbox('주요 내용 파일 (과제 마감일 혹은 학사일정에 관련된 내용입니다.)', isMajorFileSelected, onMajorFileChanged),
                     ],
                   ),
                 ),
@@ -223,12 +227,16 @@ class SaveDialogComponents {
                   : null,
             ),
             const SizedBox(width: 12),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                color: value ? const Color(0xFF1F2937) : const Color(0xFF6B7280),
-                fontWeight: value ? FontWeight.w500 : FontWeight.w400,
+            Expanded( // 텍스트가 넘치지 않도록 Expanded 추가
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: value ? const Color(0xFF1F2937) : const Color(0xFF6B7280),
+                  fontWeight: value ? FontWeight.w500 : FontWeight.w400,
+                  height: 1.4, // 줄간격 조정
+                ),
+                softWrap: true, // 자동 줄바꿈 허용
               ),
             ),
           ],

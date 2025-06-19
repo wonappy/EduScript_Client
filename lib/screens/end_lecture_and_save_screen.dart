@@ -15,6 +15,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
   // 상태 변수들
   bool isContentFile = false;
   bool isSummaryFile = false; //내용 파일인지 요약 파일인지
+  bool isMajorFile = false; //주요 파일인지 여부
   String selectedLocation = ''; //저장 위치
   String? selectedFilePath; //선택된 파일 경로
   String emailAddress = ''; //이메일 주소
@@ -26,6 +27,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
     debugPrint('=== SaveDialogScreen initState ===');
     debugPrint('초기 isContentFile: $isContentFile');
     debugPrint('초기 isSummaryFile: $isSummaryFile');
+    debugPrint('초기 isMajorFile: $isMajorFile');
   }
 
   @override
@@ -43,6 +45,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
             SaveDialogComponents.buildMainSection(
               isContentFileSelected: isContentFile,
               isSummaryFileSelected: isSummaryFile,
+              isMajorFileSelected: isMajorFile,
               selectedLocation: selectedLocation,
               selectedFilePath: selectedFilePath,
               emailAddress: emailAddress,
@@ -58,6 +61,11 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
               onSummaryFileChanged: (value) {
                 setState(() {
                   isSummaryFile = value;
+                });
+              },
+              onMajorFileChanged: (value) {
+                setState(() {
+                  isMajorFile = value;
                 });
               },
               onLocationChanged: (location) {
