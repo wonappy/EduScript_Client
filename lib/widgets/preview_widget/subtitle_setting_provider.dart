@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/global_core.dart';
+import '../../models/language_mapping_model.dart';
 
 class SubtitleSettingsProvider extends ChangeNotifier {
   // init
@@ -15,6 +16,124 @@ class SubtitleSettingsProvider extends ChangeNotifier {
   String _selectedBackgroundColor = '흰색';
   String _selectedBackgroundOpacity = '50%';
 
+  // 🌐 언어 매핑 테이블
+  static final Map<String, LanguageMappingModel> _languageMappings = {
+    '한국어': LanguageMappingModel(
+      displayName: '한국어',
+      speechCode: 'ko-KR',
+      translationCode: 'ko',
+      previewText: '안녕하세요! 테스트 자막입니다.',
+    ),
+    '영어': LanguageMappingModel(
+      displayName: '영어',
+      speechCode: 'en-US',
+      translationCode: 'en',
+      previewText: 'Hello! This is a test subtitle.',
+    ),
+    '일본어': LanguageMappingModel(
+      displayName: '일본어',
+      speechCode: 'ja-JP',
+      translationCode: 'ja',
+      previewText: 'こんにちは！テスト字幕です。',
+    ),
+    '중국어': LanguageMappingModel(
+      displayName: '중국어',
+      speechCode: 'zh-CN',
+      translationCode: 'zh-CN',
+      previewText: '你好！这是测试字幕。',
+    ),
+    '독일어': LanguageMappingModel(
+      displayName: '독일어',
+      speechCode: 'de-DE',
+      translationCode: 'de',
+      previewText: 'Hallo! Dies ist ein Test-Untertitel.',
+    ),
+    '프랑스어': LanguageMappingModel(
+      displayName: '프랑스어',
+      speechCode: 'fr-FR',
+      translationCode: 'fr',
+      previewText: 'Bonjour! Ceci est un sous-titre de test.',
+    ),
+    '스페인어': LanguageMappingModel(
+      displayName: '스페인어',
+      speechCode: 'es-ES',
+      translationCode: 'es',
+      previewText: '¡Hola! Este es un subtítulo de prueba.',
+    ),
+    '이탈리아어': LanguageMappingModel(
+      displayName: '이탈리아어',
+      speechCode: 'it-IT',
+      translationCode: 'it',
+      previewText: 'Ciao! Questo è un sottotitolo di prova.',
+    ),
+    '러시아어': LanguageMappingModel(
+      displayName: '러시아어',
+      speechCode: 'ru-RU',
+      translationCode: 'ru',
+      previewText: 'Привет! Это тестовые субтитры.',
+    ),
+    '포르투갈어': LanguageMappingModel(
+      displayName: '포르투갈어',
+      speechCode: 'pt-BR',
+      translationCode: 'pt',
+      previewText: 'Olá! Esta é uma legenda de teste.',
+    ),
+    '아랍어': LanguageMappingModel(
+      displayName: '아랍어',
+      speechCode: 'ar-SA',
+      translationCode: 'ar',
+      previewText: 'مرحبا! هذه ترجمة تجريبية.',
+    ),
+    '힌디어': LanguageMappingModel(
+      displayName: '힌디어',
+      speechCode: 'hi-IN',
+      translationCode: 'hi',
+      previewText: 'नमस्ते! यह एक परीक्षण उपशीर्षक है।',
+    ),
+    '태국어': LanguageMappingModel(
+      displayName: '태국어',
+      speechCode: 'th-TH',
+      translationCode: 'th',
+      previewText: 'สวัสดี! นี่คือคำบรรยายทดสอบ',
+    ),
+    '인도네시아어': LanguageMappingModel(
+      displayName: '인도네시아어',
+      speechCode: 'id-ID',
+      translationCode: 'id',
+      previewText: 'Halo! Ini adalah subtitle uji coba.',
+    ),
+    '네덜란드어': LanguageMappingModel(
+      displayName: '네덜란드어',
+      speechCode: 'nl-NL',
+      translationCode: 'nl',
+      previewText: 'Hallo! Dit is een test ondertitel.',
+    ),
+    '폴란드어': LanguageMappingModel(
+      displayName: '폴란드어',
+      speechCode: 'pl-PL',
+      translationCode: 'pl',
+      previewText: 'Cześć! To jest testowy napis.',
+    ),
+    '스웨덴어': LanguageMappingModel(
+      displayName: '스웨덴어',
+      speechCode: 'sv-SE',
+      translationCode: 'sv',
+      previewText: 'Hej! Detta är en testundertext.',
+    ),
+    '핀란드어': LanguageMappingModel(
+      displayName: '핀란드어',
+      speechCode: 'fi-FI',
+      translationCode: 'fi',
+      previewText: 'Hei! Tämä on testi tekstitys.',
+    ),
+    '덴마크어': LanguageMappingModel(
+      displayName: '덴마크어',
+      speechCode: 'da-DK',
+      translationCode: 'da',
+      previewText: 'Hej! Dette er en test undertekst.',
+    ),
+  };
+
   // getter
   bool get screenSharedEnabled => _screenSharedEnabled;
   List<String> get selectedInputLanguages => _selectedInputLanguages;
@@ -25,6 +144,41 @@ class SubtitleSettingsProvider extends ChangeNotifier {
   String get selectedFontColor => _selectedFontColor;
   String get selectedBackgroundColor => _selectedBackgroundColor;
   String get selectedBackgroundOpacity => _selectedBackgroundOpacity;
+
+  //지원 언어 목록
+  static List<String> get supportedLanguages => _languageMappings.keys.toList();
+
+  // 표시명 -> 언어 코드
+  String getInputLanguageCode() {
+    if (_selectedInputLanguages.isEmpty) return 'ko-KR'; //디폴트 한국어
+    final mapping = _languageMappings[_selectedInputLanguages.first];
+    return mapping?.speechCode ?? 'ko-KR';
+  }
+
+  List<String> getOutputLanguageCodes() {
+    return _selectedOutputLanguages
+        .map((lang) => _languageMappings[lang]?.translationCode ?? 'ko')
+        .toList();
+  }
+
+  // 언어 코드 -> 표시명
+  String getDisplayNameFromAzureCode(String azureCode) {
+    for (final entry in _languageMappings.entries) {
+      if (entry.value.speechCode == azureCode) {
+        return entry.key;
+      }
+    }
+    return azureCode;
+  }
+
+  String getDisplayNameFromGoogleCode(String googleCode) {
+    for (final entry in _languageMappings.entries) {
+      if (entry.value.translationCode == googleCode) {
+        return entry.key;
+      }
+    }
+    return googleCode;
+  }
 
   // update
   void updateScreenSharedEnabled(bool enabled) {
