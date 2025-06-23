@@ -220,6 +220,7 @@ class WebSocketSTTService {
       _webSocketChannel!.sink.add(jsonEncode(configMessage.toJson()));
 
       if (newInputLanguage != null) _currentInputLanguage = newInputLanguage;
+
       if (newTargetLanguages != null) {
         _currentTargetLanguages = newTargetLanguages;
       }
@@ -342,6 +343,10 @@ class WebSocketSTTService {
       String? originalText;
 
       // 나라별 번역 결과 저장
+      onTranslationReceived?.call(response.translations); // 콜백
+
+      // 로그 출력
+      print("=== 번역 결과 ===");
       response.translations.forEach((lang, result) {
         _currentTranslations[lang] = result.resultText;
 
@@ -381,12 +386,14 @@ class WebSocketSTTService {
   // 상태 업데이트 헬퍼 (콜백)
   void _updateStatus(String status) {
     debugPrint("Status: $status");
+    print("Status: $status");
     onStatusUpdate?.call(status); // 콜백
   }
 
   // 에러 처리 헬퍼 (콜백)
   void _handleError(String message, String? errorCode) {
     debugPrint("Error: $message ${errorCode != null ? '($errorCode)' : ''}");
+    print("Error: $message ${errorCode != null ? '($errorCode)' : ''}");
     onError?.call(message, errorCode); // 콜백
   }
 
