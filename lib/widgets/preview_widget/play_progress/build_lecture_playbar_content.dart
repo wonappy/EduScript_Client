@@ -1,20 +1,19 @@
 // [widgets/preview_widget/play_progress/lecture_playbar_content.dart]
 /// [로직]
-/// 1) 재생 관련 로직 돌리는 위젯 
+/// 1) 재생 관련 로직 돌리는 위젯
 /// 2) TimeManger 연동
 /// 3) SaveDialog로 이동
-import 'dart:io';
+library;
 
-import 'package:client/core/enum_core.dart';
 import 'package:client/screens/subtitles_only_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/global_core.dart';
-import '../../../models/subtitles_model.dart';
+import '../subtitle_setting_provider.dart';
 import 'time_manager.dart';
 import '../../preview_widget/play_progress/lecture_playbar_content.dart';
 import '../../../screens/end_lecture_and_save_screen.dart';
 import '../../../services/websocket_stt_service.dart';
-import '../../../screens/shared_with_subtitles_screen.dart';
 
 class BuildLecturePlayBarContent extends StatefulWidget {
   final double screenWidth;
@@ -39,7 +38,7 @@ class _BuildLecturePlayBarContentState
     extends State<BuildLecturePlayBarContent> {
   DateTime? _lastUpdate;
 
-  final WebSocketSTTService _sttService = WebSocketSTTService(); // 서비스 등록 
+  final WebSocketSTTService _sttService = WebSocketSTTService(); // 서비스 등록
   bool hasStarted = false;
 
   void _updateUI() {
@@ -73,26 +72,24 @@ class _BuildLecturePlayBarContentState
   // [콜백] stt 서비스 초기화
   void _initializeSTTService() {
     _sttService.onTranslationReceived = (translations) {
-      // 1) 번역 결과 처리 
-      setState(() {        
-        print("번역 결과 처리");
-        translations.forEach((language, result) { // forEach : 번역 결과 순회하면 출력 
-          print(">> UI [$language] ${result.resultText}"); // UI 로그
-        });
-
-        // >> UI 업데이트 
-        // 번역 결과 출력 
+      // 1) 번역 결과 처리
+      debugPrint("번역 결과 처리");
+      translations.forEach((language, result) {
+        // forEach : 번역 결과 순회하면 출력
+        debugPrint(">> UI [$language] ${result.resultText}"); // UI 로그
       });
     };
 
-    // 2) 상태 변화 콜백 
+    // 2) 상태 변화 콜백
     _sttService.onStatusUpdate = (status) {
-      //print("STT Status : $status");
+      debugPrint("STT Status : $status");
     };
 
-    // 3) 에러 코드 콜백 
+    // 3) 에러 코드 콜백
     _sttService.onError = (message, errorCode) {
-      //print("STT Error : $message ${errorCode != null ? '($errorCode)': ''}");
+      debugPrint(
+        "STT Error : $message ${errorCode != null ? '($errorCode)' : ''}",
+      );
     };
   }
 
@@ -116,7 +113,7 @@ class _BuildLecturePlayBarContentState
   // ============================================================================
 
   // [Button 처리]
-  // [1] 재생/일시정지 
+  // [1] 재생/일시정지
   void _handlePlayPause() async {
     if (!TimerManager.isPlaying) {
       TimerManager.start();
@@ -125,19 +122,37 @@ class _BuildLecturePlayBarContentState
       });
       debugPrint('강의 시작');
 
-      await _startSTTService(); // [STT 서비스 호출] - 녹음 시작 
+      // Provider에서 언어 설정 가져오기
+      final subtitleSettings = context.read<SubtitleSettingsProvider>();
+      final inputLanguageCode = subtitleSettings.getInputLanguageCode();
+      final outputLanguageCodes = subtitleSettings.getOutputLanguageCodes();
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder:
-              (context) => SubtitlesOnlyScreen(
-                subWordFont: "default",
-                backgroundColor: Colors.black,
-                subSpacing: 20,
-              ),
-        ),
+      debugPrint("🌐 언어 설정:");
+      debugPrint(
+        "  입력: ${subtitleSettings.selectedInputLanguages} -> $inputLanguageCode",
       );
+      debugPrint(
+        "  출력: ${subtitleSettings.selectedOutputLanguages} -> $outputLanguageCodes",
+      );
+
+      await _startSTTService(
+        inputLanguageCode: inputLanguageCode,
+        outputLanguageCodes: outputLanguageCodes,
+      ); // [STT 서비스 호출] - 녹음 시작
+
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => SubtitlesOnlyScreen(
+                  subWordFont: "default",
+                  backgroundColor: Colors.black,
+                  subSpacing: 20,
+                ),
+          ),
+        );
+      }
     } else {
       TimerManager.pause();
       await _sttService.stopRecording(); // [STT 서비스 호출] - 일시 정지 처리
@@ -151,6 +166,10 @@ class _BuildLecturePlayBarContentState
     setState(() {
       hasStarted = false; // 초기 상태로 돌림
     });
+
+    //번역 데이터 초기화
+    _sttService.clearAllData();
+
     debugPrint('취소');
   }
 
@@ -160,6 +179,24 @@ class _BuildLecturePlayBarContentState
     debugPrint('강의 종료');
 
     await _sttService.disconnect(); // [STT 서비스 호출] - 연결 해제(종료)
+
+    //자막 결과 및 통계 로그 출력
+    final transcriptHistory = _sttService.transcriptHistory;
+    final translationHistory = _sttService.translationHistory;
+    final fullTranscript = _sttService.fullTranscriptText;
+
+    debugPrint("강의 요약:");
+    debugPrint("  - 총 원문 개수: ${transcriptHistory.length}");
+    debugPrint("  - 총 번역 개수: ${translationHistory.length}");
+    debugPrint("  - 전체 원문 길이: ${fullTranscript.length}자");
+
+    if (fullTranscript.isNotEmpty) {
+      final sample =
+          fullTranscript.length > 200
+              ? "${fullTranscript.substring(0, 200)}..."
+              : fullTranscript;
+      debugPrint("  - 원문 샘플: $sample");
+    }
 
     // 콜백 호출 (SaveConfirmDialog는 상위에서 처리)
     _navigateToSaveDialog();
@@ -172,7 +209,7 @@ class _BuildLecturePlayBarContentState
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return SaveDialogScreen(); 
+        return SaveDialogScreen();
         // const 키워드 사용시 Flutter가 위젯을 재사용할 수 있어 이전 상태가 남아버림
         // 따라서 const 키워드를 사용하지 않음
       },
@@ -188,7 +225,10 @@ class _BuildLecturePlayBarContentState
   }
 
   // [STT 서비스 처리]
-  Future<void> _startSTTService() async {
+  Future<void> _startSTTService({
+    required String inputLanguageCode,
+    required List<String> outputLanguageCodes,
+  }) async {
     // 1) 서버 연결
     bool connected = await _sttService.connectToServer();
     if (!connected) {
@@ -199,11 +239,11 @@ class _BuildLecturePlayBarContentState
     // 2) 세션 시작 (언어 설정)
     // 🔴 국가 전송
     bool sessionStarted = await _sttService.startSession(
-      inputLanguage: "ko-KR",            // 입력 언어 (국가)
-      targetLanguages: ["en", "ja"]  // 출력 언어 (국가)
-      );
+      inputLanguage: "ko-KR", // 입력 언어 (국가)
+      targetLanguages: ["en", "ja"], // 출력 언어 (국가)
+    );
 
-    if(!sessionStarted) {
+    if (!sessionStarted) {
       debugPrint(">> 세션 시작 실패");
       return;
     }
