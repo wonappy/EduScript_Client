@@ -34,9 +34,10 @@ class WebSocketSTTService {
   List<String>? _currentTargetLanguages; // 현재 타켓 언어 (국가)
 
   //[번역 결과 저장]
-  Map<String, String> _currentTranslations = {}; // 현재 번역 결과
-  List<String> _transcriptHistory = []; // 원문 자막 저장소 -> llm 요약 활용
-  List<Map<String, String>> _translationHistory = []; // 번역 히스토리 (약 3개 정도만 저장)
+  final Map<String, String> _currentTranslations = {}; // 현재 번역 결과
+  final List<String> _transcriptHistory = []; // 원문 자막 저장소 -> llm 요약 활용
+  final List<Map<String, String>> _translationHistory =
+      []; // 번역 히스토리 (약 3개 정도만 저장)
 
   // [콜백 함수]
   Function(Map<String, TranslationResult>)? onTranslationReceived; // 번역 결과 콜백
@@ -342,13 +343,12 @@ class WebSocketSTTService {
       _currentTranslations.clear(); //현재 번역 초기화
       String? originalText;
 
-      // 나라별 번역 결과 저장
-      onTranslationReceived?.call(response.translations); // 콜백
-
-      // 로그 출력
-      print("=== 번역 결과 ===");
+      debugPrint("=== 번역 결과 ===");
       response.translations.forEach((lang, result) {
         _currentTranslations[lang] = result.resultText;
+
+        //번역 결과 로그 출력 포함
+        debugPrint("$lang: ${result.resultText}");
 
         // 입력 언어의 텍스트를 원문으로 저장
         if (lang == _currentInputLanguage) {
@@ -369,13 +369,7 @@ class WebSocketSTTService {
       // 4) 콜백 호출
       onTranslationReceived?.call(response.translations);
 
-      // 5) 로그 출력
-      debugPrint("=== 번역 결과 ===");
-      response.translations.forEach((lang, result) {
-        debugPrint("$lang: ${result.resultText}");
-      });
-
-      //원문 저장 상태 로그 출력
+      // 5) 원문 저장 상태 로그 출력
       if (originalText != null) {
         debugPrint("원문 저장: $originalText");
         debugPrint("총 원문 개수: ${_transcriptHistory.length}");
@@ -386,14 +380,12 @@ class WebSocketSTTService {
   // 상태 업데이트 헬퍼 (콜백)
   void _updateStatus(String status) {
     debugPrint("Status: $status");
-    print("Status: $status");
     onStatusUpdate?.call(status); // 콜백
   }
 
   // 에러 처리 헬퍼 (콜백)
   void _handleError(String message, String? errorCode) {
     debugPrint("Error: $message ${errorCode != null ? '($errorCode)' : ''}");
-    print("Error: $message ${errorCode != null ? '($errorCode)' : ''}");
     onError?.call(message, errorCode); // 콜백
   }
 
