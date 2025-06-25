@@ -186,7 +186,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     }
 
     // 🎯 폴백: 기본 매핑도 시도 (여기에 추가!)
-    if (serverKey == null && googleCode != null) {
+    if (googleCode != null) {
       if (availableKeys.contains(googleCode)) {
         serverKey = googleCode;
         debugPrint("🔄 폴백 매핑 성공: '$displayLanguage' → '$googleCode'");

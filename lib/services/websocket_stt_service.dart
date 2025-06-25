@@ -17,7 +17,7 @@ import '../models/speech_translation_response_model.dart';
 class WebSocketSTTService {
   // [WebSocket 통신]
   WebSocketChannel? _webSocketChannel; // 실시간 통신 채널
-  final String _serverBaseUrl = "ws://10.101.54.175:8000"; // 서버 엔드포인트
+  final String _serverBaseUrl = "ws://10.101.71.246:8000"; // 서버 엔드포인트
   final String _serverEndpoint = "/api/routes/speech-translation/connect";
 
   // [상태 변수]
@@ -34,9 +34,9 @@ class WebSocketSTTService {
   List<String>? _currentTargetLanguages; // 현재 타켓 언어 (국가)
 
   //[번역 결과 저장]
-  Map<String, String> _currentTranslations = {}; // 현재 번역 결과
-  List<String> _transcriptHistory = []; // 원문 자막 저장소 -> llm 요약 활용
-  List<Map<String, String>> _translationHistory = []; // 번역 히스토리 (약 3개 정도만 저장)
+  final Map<String, String> _currentTranslations = {}; // 현재 번역 결과
+  final List<String> _transcriptHistory = []; // 원문 자막 저장소 -> llm 요약 활용
+  final List<Map<String, String>> _translationHistory = []; // 번역 히스토리 (약 3개 정도만 저장)
 
   // [콜백 함수]
   Function(Map<String, TranslationResult>)? onTranslationReceived; // 번역 결과 콜백
