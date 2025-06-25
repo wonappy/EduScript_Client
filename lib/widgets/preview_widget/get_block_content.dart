@@ -1,7 +1,6 @@
 /// title에 맞는 content 반환
 library;
 
-import 'package:client/models/subtitles_model.dart';
 import 'package:client/widgets/preview_widget/play_progress/build_lecture_playbar_content.dart';
 import 'package:client/widgets/preview_widget/preview_screen/build_lecture_preview_content.dart';
 import 'package:client/widgets/preview_widget/subtitle_setting/build_subtitle_setting_content.dart';

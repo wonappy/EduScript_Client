@@ -1,4 +1,5 @@
 /// 화면 공유 on/off 시 사용하는 위젯
+library;
 
 import 'package:flutter/material.dart';
 
