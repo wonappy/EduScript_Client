@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 
 class PostProcessorService {
   // http 통신 설정
-  final String _serverBaseUrl = "http://10.101.71.246:8000"; // 서버 엔드포인트
+  final String _serverBaseUrl = "http://10.101.77.82:8000"; // 서버 엔드포인트
   final String _serverEndpoint = "/api/routes/language/refinement";
 
   bool _isProcessing = false;

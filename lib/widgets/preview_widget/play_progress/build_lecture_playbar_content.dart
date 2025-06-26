@@ -115,13 +115,17 @@ class _BuildLecturePlayBarContentState
   // [Button 처리]
   // [1] 재생/일시정지
   void _handlePlayPause() async {
-    if (!TimerManager.isPlaying) {
-      TimerManager.start();
-      setState(() {
-        hasStarted = true; // 재생 시작했음을 표시
-      });
-      debugPrint('강의 시작');
+  if (!TimerManager.isPlaying) {
+    TimerManager.start();
+    setState(() {
+      hasStarted = true; // 재생 시작했음을 표시
+    });
+    debugPrint('강의 시작');
 
+    if (_sttService.isConnected) {
+      await _sttService.startRecording(); // 이미 연결되어 있으면 녹음 재시작
+      debugPrint("기존 연결로 녹음 재시작");
+    } else {
       // Provider에서 언어 설정 가져오기
       final subtitleSettings = context.read<SubtitleSettingsProvider>();
       final inputLanguageCode = subtitleSettings.getInputLanguageCode();
@@ -139,26 +143,26 @@ class _BuildLecturePlayBarContentState
         inputLanguageCode: inputLanguageCode,
         outputLanguageCodes: outputLanguageCodes,
       ); // [STT 서비스 호출] - 녹음 시작
-
-      if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) => SubtitlesOnlyScreen(
-                  subWordFont: "default",
-                  backgroundColor: Colors.black,
-                  subSpacing: 20,
-                ),
-          ),
-        );
-      }
-    } else {
-      TimerManager.pause();
-      await _sttService.stopRecording(); // [STT 서비스 호출] - 일시 정지 처리
-      debugPrint('일시정지');
     }
+
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SubtitlesOnlyScreen(
+            subWordFont: "default",
+            backgroundColor: Colors.black,
+            subSpacing: 20,
+          ),
+        ),
+      );
+    }
+  } else {
+    TimerManager.pause();
+    await _sttService.stopRecording(); // [STT 서비스 호출] - 일시 정지 처리
+    debugPrint('일시정지');
   }
+}
 
   // [2] 취소 -> 타이머 리셋
   void _handleCancel() {
@@ -169,6 +173,7 @@ class _BuildLecturePlayBarContentState
 
     //번역 데이터 초기화
     _sttService.clearAllData();
+    _sttService.disconnect(); // [STT 서비스 호출] - 연결 해제(종료)
 
     debugPrint('취소');
   }
@@ -177,6 +182,9 @@ class _BuildLecturePlayBarContentState
   void _handleStop() async {
     TimerManager.reset();
     debugPrint('강의 종료');
+    setState(() {
+      hasStarted = false; // 초기 상태로 돌림
+    });
 
     await _sttService.disconnect(); // [STT 서비스 호출] - 연결 해제(종료)
 
