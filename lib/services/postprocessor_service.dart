@@ -14,6 +14,7 @@ class PostProcessorService {
 
   bool _isProcessing = false;
   String? _lastRequest;
+  String _fileFormat = 'txt';
   Map<String, dynamic>? _lastResponse;
 
   // [요청 설정]
@@ -29,6 +30,7 @@ class PostProcessorService {
    // [Getter]
   bool get isProcessing => _isProcessing;
   String? get lastRequest => _lastRequest;
+  String get fileFormat => _fileFormat;
   Map<String, dynamic>? get lastResponse => _lastResponse;
   bool get enableRefine => _enableRefine;
   bool get enableSummarize => _enableSummarize;
@@ -70,6 +72,7 @@ class PostProcessorService {
     required String fullText,
     bool? enableSummarize,
     bool? enableKeypoints,
+    String fileFormat = 'txt', // 파일 형식 (기본값은 txt)
   }) async {
     // 중복 요청 방지
     if (_isProcessing) {
@@ -90,6 +93,7 @@ class PostProcessorService {
       // 요청 데이터 생성
       final requestBody = {
         'full_text': fullText,
+        'fileFormat': fileFormat.replaceAll('.', ''),
         'enable_refine': _enableRefine,
         'enable_summarize': enableSummarize ?? _enableSummarize,
         'enable_keypoints': enableKeypoints ?? _enableKeypoints,
