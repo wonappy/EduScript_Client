@@ -1,4 +1,4 @@
-import 'package:client/screens/preview_screen.dart';
+import 'package:client/screens/start_screen.dart';
 import 'package:client/widgets/preview_widget/subtitle_setting_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: true, //디버깅 모드
       title: 'EduScript',
       theme: testTheme,
-      home: const PreviewScreen(),
+      home: const StartScreen(),
     );
   }
 }
