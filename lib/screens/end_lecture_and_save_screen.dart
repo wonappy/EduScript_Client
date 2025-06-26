@@ -64,6 +64,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
         fullText: _sttService.fullTranscriptText,
         enableSummarize: true,
         enableKeypoints: true,
+        fileFormat: fileFormat.replaceAll('.',''), // 파일 형식에서 '.' 제거
       );
 
       if (result != null) {
@@ -140,6 +141,11 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
                 setState(() {
                   fileFormat = value;
                 });
+
+                // 파일 형식이 변경되면 재처리
+                if (_refinedData != null) {
+                  _processTranscriptAutomatically();
+                }
               },
               onEmailAddressChanged: (address) {
                 setState(() {
@@ -247,7 +253,9 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
     // 사용자 친화적인 파일명 생성
     DateTime now = DateTime.now();
     String timestamp = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
-    String userFileName = '${fileName}_${fileType}_$timestamp.txt';
+    
+    String extension = fileFormat.startsWith('.')? fileFormat : '.$fileFormat'; // 파일 형식이 '.'로 시작하지 않으면 추가
+    String userFileName = '${fileName}_${fileType}_$timestamp$extension';
     
     // 사용자가 선택한 경로에 저장
     String fullPath = '$basePath/$userFileName';
