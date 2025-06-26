@@ -21,6 +21,8 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
   bool isMajorFile = false; //주요 파일인지 여부
   String selectedLocation = ''; //저장 위치
   String? selectedFilePath; //선택된 파일 경로
+  String fileName = ''; //파일 이름
+  String fileFormat = '.txt'; //파일 형식 (기본값은 .txt)
   String emailAddress = ''; //이메일 주소
   String emailDomain = 'naver.com'; //이메일 도메인 기본값
 
@@ -90,7 +92,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       backgroundColor: Colors.transparent,
       child: Container(
-        width: 450,
+        width: 800,
         padding: const EdgeInsets.all(25),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -101,6 +103,8 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
               isSummaryFileSelected: isSummaryFile,
               isMajorFileSelected: isMajorFile,
               selectedLocation: selectedLocation,
+              fileName: fileName,
+              fileFormat: fileFormat,
               selectedFilePath: selectedFilePath,
               emailAddress: emailAddress,
               emailDomain: emailDomain,
@@ -125,6 +129,16 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
               onLocationChanged: (location) {
                 setState(() {
                   selectedLocation = location;
+                });
+              },
+              onFileNameChanged: (value){
+                setState(() {
+                  fileName = value;
+                });
+              },
+              onFileFormatChanged: (value){
+                setState(() {
+                  fileFormat = value;
                 });
               },
               onEmailAddressChanged: (address) {
@@ -224,7 +238,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
   // 서버 파일을 다운로드하는 헬퍼 함수
   Future<String> _downloadServerFile(Map<String, dynamic> fileData, String fileType, String basePath) async {
     // 서버 파일 정보
-    String fileName = fileData['filename']; // 서버에서 생성한 파일명
+    //String fileName = fileData['filename']; // 서버에서 생성한 파일명
     String base64Data = fileData['data'];
     
     // Base64 디코딩
@@ -233,7 +247,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
     // 사용자 친화적인 파일명 생성
     DateTime now = DateTime.now();
     String timestamp = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
-    String userFileName = '강의_${fileType}_$timestamp.txt';
+    String userFileName = '${fileName}_${fileType}_$timestamp.txt';
     
     // 사용자가 선택한 경로에 저장
     String fullPath = '$basePath/$userFileName';
