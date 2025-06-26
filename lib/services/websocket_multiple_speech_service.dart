@@ -1,5 +1,5 @@
-// [services/websocket_stt_service.dart]
-/// 서버 STT + 번역 (Single Mode) 엔드포인트 연결
+// [services/websocket_multiple_speech_service.dart]
+/// 서버 STT + 번역 (Multiple Mode) 엔드포인트 연결
 library;
 
 import 'package:flutter/cupertino.dart';
@@ -11,14 +11,15 @@ import 'dart:convert'; // JSON 데이터 변환 (인코딩, 디코딩)
 import 'dart:typed_data'; // 바이너리 오디오 데이터 처리
 import 'dart:async'; // Stream, Timer 등 비동기 처리
 import '../core/global_core.dart';
-import '../models/config_message_model.dart';
+import '../models/multiple_config_message_model.dart'; //언어 설정 request dto
 import '../models/status_message_model.dart';
 import '../models/speech_translation_response_model.dart';
 
 class WebSocketSTTService {
   // [WebSocket 통신]
   WebSocketChannel? _webSocketChannel; // 실시간 통신 채널
-  final String _serverEndpoint = "/api/routes/speech-translation/connect";
+  final String _serverEndpoint =
+      "/api/routes/speech-translation/connect/multiple-mode";
 
   // [상태 변수]
   bool _isConnected = false; // 서버 연결 상태
@@ -30,12 +31,13 @@ class WebSocketSTTService {
   StreamSubscription<Uint8List>? _audioStreamSubscription; // 오디오 스트림 구독 관리
 
   // [현재 설정]
-  String? _currentInputLanguage; // 현재 입력 언어 (국가)
+  List<String>? _currentInputLanguages; // 현재 입력 언어 (국가)
   List<String>? _currentTargetLanguages; // 현재 타켓 언어 (국가)
 
   //[번역 결과 저장]
   final Map<String, String> _currentTranslations = {}; // 현재 번역 결과
-  final List<String> _transcriptHistory = []; // 원문 자막 저장소 -> llm 요약 활용
+  final List<String> _transcriptHistory = []; // 원문 자막 저장소 - 다국어 인식 결과 저장
+  final Map<String, List<String>> _languageTextHistory = {}; //각 나라 별 자막 저장소
   final List<Map<String, String>> _translationHistory =
       []; // 번역 히스토리 (약 3개 정도만 저장)
 
@@ -53,18 +55,23 @@ class WebSocketSTTService {
   bool get isConnected => _isConnected;
   bool get isSessionReady => _isSessionReady;
   bool get isRecording => _isRecording;
-  String? get currentInputLanguage => _currentInputLanguage;
+  List<String>? get currentInputLanguages => _currentInputLanguages;
   List<String>? get currentTargetLanguages => _currentTargetLanguages;
 
   // [Getter] 번역 결과 접근
   Map<String, String> get currentTranslations =>
       Map.unmodifiable(_currentTranslations);
+  Map<String, List<String>> get languageTextHistory =>
+      Map.unmodifiable(_languageTextHistory);
   List<String> get transcriptHistory => List.unmodifiable(_transcriptHistory);
   List<Map<String, String>> get translationHistory =>
       List.unmodifiable(_translationHistory);
 
-  // 전체 원문 텍스트 (하나의 문자열로) -> LLM 활용
-  String get fullTranscriptText => _transcriptHistory.join(' ');
+  // 전체 원문 텍스트 (하나의 문단으로) -> LLM 활용 -> [언어] 내용 형태로 확장 고려
+  String get fullTranscriptText => _transcriptHistory.join("\n");
+
+  // // 각 나라 원문 텍스트 (하나의 문자열로) -> LLM 활용
+  // String get LanguageTranscriptText => _languageTextHistory.join(" ");
 
   // [1] WebSocket 서버 연결 (상태 응답 - StatusMessage)
   Future<bool> connectToServer() async {
@@ -98,7 +105,7 @@ class WebSocketSTTService {
 
   // [2] 음성 인식 세션 시작 (언어 설정 - ConfigMessage)
   Future<bool> startSession({
-    required String inputLanguage,
+    required List<String> inputLanguages,
     required List<String> targetLanguages,
   }) async {
     if (!_isConnected || _webSocketChannel == null) {
@@ -114,8 +121,8 @@ class WebSocketSTTService {
       }
 
       // 2) 설정 메시지 생성
-      final configMessage = ConfigMessage(
-        inputLanguage: inputLanguage,
+      final configMessage = MultipleConfigMessage(
+        inputLanguages: inputLanguages,
         targetLanguages: targetLanguages,
       );
 
@@ -123,7 +130,7 @@ class WebSocketSTTService {
       _webSocketChannel!.sink.add(jsonEncode(configMessage.toJson()));
 
       // 현재 상태 업데이트
-      _currentInputLanguage = inputLanguage;
+      _currentInputLanguages = inputLanguages;
       _currentTargetLanguages = targetLanguages;
 
       //자막 데이터 초기화
@@ -215,7 +222,7 @@ class WebSocketSTTService {
 
   // [5] 언어 설정 변경 (세션 중에)
   Future<bool> changeLanguageSettings({
-    String? newInputLanguage,
+    List<String>? newInputLanguages,
     List<String>? newTargetLanguages,
   }) async {
     if (!_isConnected || _webSocketChannel == null) {
@@ -224,14 +231,14 @@ class WebSocketSTTService {
     }
 
     try {
-      final configMessage = ConfigMessage(
-        inputLanguage: newInputLanguage ?? _currentInputLanguage!,
+      final configMessage = MultipleConfigMessage(
+        inputLanguages: newInputLanguages ?? _currentInputLanguages!,
         targetLanguages: newTargetLanguages ?? _currentTargetLanguages!,
       );
 
       _webSocketChannel!.sink.add(jsonEncode(configMessage.toJson()));
 
-      if (newInputLanguage != null) _currentInputLanguage = newInputLanguage;
+      if (newInputLanguages != null) _currentInputLanguages = newInputLanguages;
 
       if (newTargetLanguages != null) {
         _currentTargetLanguages = newTargetLanguages;
@@ -266,6 +273,7 @@ class WebSocketSTTService {
   // 번역 데이터 초기화
   void _clearTranslationData() {
     _currentTranslations.clear();
+    _languageTextHistory.clear();
     _transcriptHistory.clear();
     _translationHistory.clear();
     debugPrint("번역 데이터 초기화");
@@ -299,7 +307,9 @@ class WebSocketSTTService {
           _handleStatusMessage(StatusMessage.fromJson(data));
           break;
         case 'result':
-          _handleTranslationResult(SpeechTranslationResponse.fromJson(data));
+          _handleTranslationResult(
+            SeperatedSpeechTranslationResponse.fromJson(data),
+          );
           break;
         default:
           debugPrint("알 수 없는 메시지 타입: $messageType");
@@ -347,9 +357,9 @@ class WebSocketSTTService {
     return status.isGranted;
   }
 
-  // 번역 결과 처리 (SpeechTranslationResponse) (콜백)
-  void _handleTranslationResult(SpeechTranslationResponse response) {
-    if (response.translations.isNotEmpty) {
+  // 번역 결과 처리 (SeperatedSpeechTranslationResponse) (콜백)
+  void _handleTranslationResult(SeperatedSpeechTranslationResponse response) {
+    if (response.translations.isNotEmpty && response.original.isNotEmpty) {
       // 1) 현재 번역 결과 업데이트
       _currentTranslations.clear(); //현재 번역 초기화
       String? originalText;
@@ -361,16 +371,20 @@ class WebSocketSTTService {
         //번역 결과 로그 출력 포함
         debugPrint("$lang: ${result.resultText}");
 
-        // 입력 언어의 텍스트를 원문으로 저장
-        if (lang == _currentInputLanguage) {
-          originalText = result.resultText;
+        //각 나라 언어 저장소에 추가
+        //저장소에 없는 나라면 list 추가 먼저
+        if (_languageTextHistory[lang] == null) {
+          _languageTextHistory[lang] = [];
         }
+        //추가
+        _languageTextHistory[lang]!.add(result.resultText);
       });
 
       // 2) 원문 자막 저장소에 추가
-      if (originalText != null && originalText!.isNotEmpty) {
-        _transcriptHistory.add(originalText!);
-      }
+      response.original.forEach((lang, result) {
+        originalText = result.resultText;
+        _transcriptHistory.add(result.resultText);
+      });
 
       // 3) 번역 저장소에 추가
       if (_currentTranslations.isNotEmpty) {

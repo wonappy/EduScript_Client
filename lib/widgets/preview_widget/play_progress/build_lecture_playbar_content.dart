@@ -247,9 +247,10 @@ class _BuildLecturePlayBarContentState
     // 2) 세션 시작 (언어 설정)
     // 🔴 국가 전송
     bool sessionStarted = await _sttService.startSession(
-      inputLanguage: "ko-KR", // 입력 언어 (국가)
-      targetLanguages: ["en", "ja"], // 출력 언어 (국가)
+      inputLanguage: inputLanguageCode, // 입력 언어 (국가)
+      targetLanguages: outputLanguageCodes, // 출력 언어 (국가)
     );
+    debugPrint("입력 언어 :  $inputLanguageCode, 출력 언어들 : $outputLanguageCodes");
 
     if (!sessionStarted) {
       debugPrint(">> 세션 시작 실패");
