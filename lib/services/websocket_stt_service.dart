@@ -17,7 +17,7 @@ import '../models/speech_translation_response_model.dart';
 class WebSocketSTTService {
   // [WebSocket 통신]
   WebSocketChannel? _webSocketChannel; // 실시간 통신 채널
-  final String _serverBaseUrl = "ws://10.101.71.246:8000"; // 서버 엔드포인트
+  final String _serverBaseUrl = "ws://10.101.77.82:8000"; // 서버 엔드포인트
   final String _serverEndpoint = "/api/routes/speech-translation/connect";
 
   // [상태 변수]
@@ -188,17 +188,28 @@ class WebSocketSTTService {
   Future<void> stopRecording() async {
     if (!_isRecording) return;
 
+    debugPrint("🔍 녹음 중지 전 데이터: ${_transcriptHistory.length}개");
+    debugPrint("🔍 전체 텍스트: $fullTranscriptText");
+
     try {
       await _audioStreamSubscription?.cancel();
       await _audioRecorder.stop();
 
       _audioStreamSubscription = null;
       _isRecording = false;
-
+      
+      debugPrint("🔍 녹음 중지 후 데이터: ${_transcriptHistory.length}개");
       _updateStatus(">> [4] 음성 녹음 중지");
     } catch (e) {
       _handleError("- 녹음 중지 실패", e.toString());
     }
+  }
+
+  Future<void> resumeRecording() async {
+    if (_isRecording || !_isConnected) return;
+
+    debugPrint("🔍 재시작: 기존 데이터 연결됨");
+    await startRecording(); // 기존 메서드 그대로 호출
   }
 
   // [5] 언어 설정 변경 (세션 중에)
