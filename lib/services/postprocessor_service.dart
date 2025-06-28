@@ -8,7 +8,7 @@ import 'package:http/http.dart' as http;
 
 class PostProcessorService {
   // http 통신 설정
-  final String _serverBaseUrl = "http://-:8000"; // 서버 엔드포인트
+  final String _serverBaseUrl = "http://10.101.85.215:8000"; // 서버 엔드포인트
   final String _serverEndpoint = "/api/routes/language/refinement";
 
   bool _isProcessing = false;
@@ -30,6 +30,7 @@ class PostProcessorService {
   // [Getter]
   bool get isProcessing => _isProcessing;
   String? get lastRequest => _lastRequest;
+  String get fileName => ""; // 파일 이름 (기본값)
   String get fileFormat => _fileFormat;
   Map<String, dynamic>? get lastResponse => _lastResponse;
   bool get enableRefine => _enableRefine;
@@ -72,6 +73,7 @@ class PostProcessorService {
     required String fullText,
     bool? enableSummarize,
     bool? enableKeypoints,
+    String fileName = 'speech',
     String fileFormat = 'txt', // 파일 형식 (기본값은 txt)
   }) async {
     // 중복 요청 방지
@@ -93,6 +95,7 @@ class PostProcessorService {
       // 요청 데이터 생성
       final requestBody = {
         'full_text': fullText,
+        'fileName': fileName,
         'fileFormat': fileFormat.replaceAll('.', ''),
         'enable_refine': _enableRefine,
         'enable_summarize': enableSummarize ?? _enableSummarize,

@@ -65,6 +65,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
         enableSummarize: true,
         enableKeypoints: true,
         fileFormat: fileFormat.replaceAll('.',''), // 파일 형식에서 '.' 제거
+        fileName: fileName,
       );
 
       if (result != null) {
