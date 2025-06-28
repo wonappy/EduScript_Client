@@ -1,3 +1,4 @@
+import 'package:client/providers/mode_provider.dart';
 import 'package:client/screens/start_screen.dart';
 import 'package:client/widgets/preview_widget/subtitle_setting_provider.dart';
 import 'package:flutter/material.dart';
@@ -7,8 +8,11 @@ import 'core/styles/colors_core.dart';
 void main() {
   //runApp(const MyApp());
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => SubtitleSettingsProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => SubtitleSettingsProvider()),
+        ChangeNotifierProvider(create: (context) => ModeProvider()),
+      ],
       child: MyApp(),
     ),
   );

@@ -149,10 +149,16 @@ class SubtitleSettingsProvider extends ChangeNotifier {
   static List<String> get supportedLanguages => _languageMappings.keys.toList();
 
   // 표시명 -> 언어 코드
-  String getInputLanguageCode() {
-    if (_selectedInputLanguages.isEmpty) return 'ko-KR'; //디폴트 한국어
-    final mapping = _languageMappings[_selectedInputLanguages.first];
-    return mapping?.speechCode ?? 'ko-KR';
+  // String getInputLanguageCode() {
+  //   if (_selectedInputLanguages.isEmpty) return 'ko-KR'; //디폴트 한국어
+  //   final mapping = _languageMappings[_selectedInputLanguages.first];
+  //   return mapping?.speechCode ?? 'ko-KR';
+  // }
+
+  List<String> getInputLanguageCodes() {
+    return _selectedInputLanguages
+        .map((lang) => _languageMappings[lang]?.speechCode ?? 'ko-KR')
+        .toList();
   }
 
   List<String> getOutputLanguageCodes() {

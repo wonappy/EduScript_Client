@@ -1,7 +1,10 @@
 import 'package:client/screens/preview_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../core/enum_core.dart';
 import '../core/styles/colors_core.dart';
+import '../providers/mode_provider.dart';
 
 class StartScreen extends StatefulWidget {
   const StartScreen({super.key});
@@ -25,23 +28,13 @@ class _StartScreenState extends State<StartScreen> {
     });
   }
 
-  void _selectMode(String mode) {
-    // 선택된 모드에 따라 다른 화면으로 이동
-    if (mode == 'lecture') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PreviewScreen(), // 강의 모드용 화면
-        ),
-      );
-    } else if (mode == 'meeting') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PreviewScreen(), // 회의 모드용 화면 (나중에 다른 화면으로 변경 가능)
-        ),
-      );
-    }
+  void _selectMode(Mode mode) {
+    //mode 설정 (UI 재빌드 false)
+    Provider.of<ModeProvider>(context, listen: false).setMode(mode);
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => PreviewScreen()),
+    );
   }
 
   @override
@@ -59,14 +52,23 @@ class _StartScreenState extends State<StartScreen> {
           child: Column(
             children: [
               // 상단 여백 (모드 선택 시 줄어듦)
-              SizedBox(height: _showModeSelection ? screenHeight * 0.03 : screenHeight * 0.1),
-              
+              SizedBox(
+                height:
+                    _showModeSelection
+                        ? screenHeight * 0.03
+                        : screenHeight * 0.1,
+              ),
+
               // EduScript 제목 (모드 선택 시 상단으로 이동)
-              _showModeSelection ? _buildTopTitle(screenWidth, isWideScreen) : _buildCenterTitle(screenWidth, screenHeight, isWideScreen),
-              
+              _showModeSelection
+                  ? _buildTopTitle(screenWidth, isWideScreen)
+                  : _buildCenterTitle(screenWidth, screenHeight, isWideScreen),
+
               // 버튼 영역
-              _showModeSelection ? _buildModeSelection(screenWidth, screenHeight, isWideScreen) : _buildStartButton(screenWidth, screenHeight, isWideScreen),
-              
+              _showModeSelection
+                  ? _buildModeSelection(screenWidth, screenHeight, isWideScreen)
+                  : _buildStartButton(screenWidth, screenHeight, isWideScreen),
+
               // 하단 여백
               SizedBox(height: screenHeight * 0.05),
             ],
@@ -77,7 +79,11 @@ class _StartScreenState extends State<StartScreen> {
   }
 
   // 초기 화면의 가운데 제목
-  Widget _buildCenterTitle(double screenWidth, double screenHeight, bool isWideScreen) {
+  Widget _buildCenterTitle(
+    double screenWidth,
+    double screenHeight,
+    bool isWideScreen,
+  ) {
     return Expanded(
       flex: 3,
       child: Center(
@@ -87,7 +93,8 @@ class _StartScreenState extends State<StartScreen> {
             Text(
               'EduScript',
               style: TextStyle(
-                fontSize: isWideScreen ? screenWidth * 0.08 : screenWidth * 0.12,
+                fontSize:
+                    isWideScreen ? screenWidth * 0.08 : screenWidth * 0.12,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
                 letterSpacing: 2.0,
@@ -97,7 +104,8 @@ class _StartScreenState extends State<StartScreen> {
             Text(
               'AI 기반 실시간 스크립트 생성',
               style: TextStyle(
-                fontSize: isWideScreen ? screenWidth * 0.02 : screenWidth * 0.04,
+                fontSize:
+                    isWideScreen ? screenWidth * 0.02 : screenWidth * 0.04,
                 color: Colors.white70,
                 letterSpacing: 0.5,
               ),
@@ -117,17 +125,15 @@ class _StartScreenState extends State<StartScreen> {
         children: [
           IconButton(
             onPressed: _goBack,
-            icon: const Icon(
-              Icons.arrow_back_ios,
-              color: Colors.white70,
-            ),
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.white70),
           ),
           Expanded(
             child: Center(
               child: Text(
                 'EduScript',
                 style: TextStyle(
-                  fontSize: isWideScreen ? screenWidth * 0.05 : screenWidth * 0.08,
+                  fontSize:
+                      isWideScreen ? screenWidth * 0.05 : screenWidth * 0.08,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                   letterSpacing: 1.5,
@@ -142,7 +148,11 @@ class _StartScreenState extends State<StartScreen> {
     );
   }
 
-  Widget _buildStartButton(double screenWidth, double screenHeight, bool isWideScreen) {
+  Widget _buildStartButton(
+    double screenWidth,
+    double screenHeight,
+    bool isWideScreen,
+  ) {
     return Expanded(
       flex: 1,
       child: Column(
@@ -166,7 +176,8 @@ class _StartScreenState extends State<StartScreen> {
               child: Text(
                 '시작하기',
                 style: TextStyle(
-                  fontSize: isWideScreen ? screenWidth * 0.025 : screenWidth * 0.045,
+                  fontSize:
+                      isWideScreen ? screenWidth * 0.025 : screenWidth * 0.045,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 1.0,
                 ),
@@ -178,7 +189,11 @@ class _StartScreenState extends State<StartScreen> {
     );
   }
 
-  Widget _buildModeSelection(double screenWidth, double screenHeight, bool isWideScreen) {
+  Widget _buildModeSelection(
+    double screenWidth,
+    double screenHeight,
+    bool isWideScreen,
+  ) {
     return Expanded(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -193,16 +208,16 @@ class _StartScreenState extends State<StartScreen> {
               letterSpacing: 0.5,
             ),
           ),
-          
+
           SizedBox(height: screenHeight * 0.06),
-          
+
           // 강의 모드 버튼
           Container(
             width: double.infinity,
             height: screenHeight * 0.08,
             margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
             child: ElevatedButton.icon(
-              onPressed: () => _selectMode('lecture'),
+              onPressed: () => _selectMode(Mode.lecture),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: backgroundcolorOnWord,
@@ -223,26 +238,28 @@ class _StartScreenState extends State<StartScreen> {
                   Text(
                     '강의 모드',
                     style: TextStyle(
-                      fontSize: isWideScreen ? screenWidth * 0.025 : screenWidth * 0.045,
+                      fontSize:
+                          isWideScreen
+                              ? screenWidth * 0.025
+                              : screenWidth * 0.045,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.5,
                     ),
                   ),
-          
                 ],
               ),
             ),
           ),
-          
+
           SizedBox(height: screenHeight * 0.025),
-          
+
           // 회의 모드 버튼
           Container(
             width: double.infinity,
             height: screenHeight * 0.08,
             margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
             child: ElevatedButton.icon(
-              onPressed: () => _selectMode('meeting'),
+              onPressed: () => _selectMode(Mode.conference),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: backgroundcolorOnWord,
@@ -263,7 +280,10 @@ class _StartScreenState extends State<StartScreen> {
                   Text(
                     '회의 모드',
                     style: TextStyle(
-                      fontSize: isWideScreen ? screenWidth * 0.025 : screenWidth * 0.045,
+                      fontSize:
+                          isWideScreen
+                              ? screenWidth * 0.025
+                              : screenWidth * 0.045,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.5,
                     ),

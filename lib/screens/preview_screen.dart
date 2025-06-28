@@ -1,6 +1,7 @@
 //대기 화면
 import 'package:flutter/material.dart';
 
+import '../core/enum_core.dart';
 import '../core/styles/colors_core.dart';
 import '../widgets/preview_widget/build_narrow_layout.dart';
 import '../widgets/preview_widget/build_wide_layout.dart';
