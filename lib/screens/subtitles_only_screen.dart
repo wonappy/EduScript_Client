@@ -6,6 +6,7 @@ import 'package:html/parser.dart' as html_parser;
 
 import '../core/enum_core.dart';
 import '../providers/mode_provider.dart';
+import '../services/websocket_multiple_speech_service.dart';
 import '../services/websocket_stt_service.dart';
 import '../widgets/preview_widget/subtitle_setting_provider.dart';
 
@@ -26,13 +27,27 @@ class SubtitlesOnlyScreen extends StatefulWidget {
 }
 
 class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
-  final WebSocketSTTService _sttService = WebSocketSTTService();
-
+  late dynamic _sttService; // 두 타입을 모두 받을 수 있게 dynamic 또는 공통 인터페이스 사용
   Map<String, String> _currentTranslations = {};
 
   @override
   void initState() {
     super.initState();
+    // 서비스 인스턴스는 build에서 할당 (context 필요)
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final mode = Provider.of<ModeProvider>(context, listen: false).currentMode;
+    if (mode == Mode.lecture) {
+      _sttService = Provider.of<WebSocketSTTService>(context, listen: false);
+    } else {
+      _sttService = Provider.of<WebSocketMultipleSTTService>(
+        context,
+        listen: false,
+      );
+    }
 
     // STT 서비스 -> 번역 결과 콜백 등록
     _sttService.onTranslationReceived = (translations) {
@@ -45,11 +60,9 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
             _currentTranslations[lang] = result.resultText;
           });
         });
-
         debugPrint("자막 화면 업데이트: ${_currentTranslations.length}개 언어");
       }
     };
-
     // 초기 상태 로드
     _currentTranslations = Map.from(_sttService.currentTranslations);
   }
