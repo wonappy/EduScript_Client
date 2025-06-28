@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:html/parser.dart' as html_parser;
 
+import '../core/enum_core.dart';
+import '../providers/mode_provider.dart';
 import '../services/websocket_stt_service.dart';
 import '../widgets/preview_widget/subtitle_setting_provider.dart';
 
@@ -66,7 +68,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     final settings = context.watch<SubtitleSettingsProvider>(); //자막 출력
     final languages = settings.selectedOutputLanguages; //선택된 출력 언어 목록 가져오기
 
-    // 🎯 디버그: Provider 설정 확인
+    // 디버그: Provider 설정 확인
     debugPrint("🔍 Provider 설정:");
     debugPrint("  - 선택된 출력 언어: $languages");
     debugPrint("  - 출력 언어 코드: ${settings.getOutputLanguageCodes()}");
@@ -154,6 +156,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     String displayLanguage,
     SubtitleSettingsProvider settings,
   ) {
+    debugPrint("자막 언어 매핑 중...");
     // 1) 먼저 Provider의 일반적인 매핑 확인 (Google Translation 코드)
     final outputLanguages = settings.selectedOutputLanguages;
     final outputCodes = settings.getOutputLanguageCodes();
@@ -206,6 +209,17 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
         if (key.contains('-') && key.split('-')[0] == googleCode) {
           serverKey = key;
           debugPrint("🔄 접두사 매핑 성공: '$displayLanguage' ($googleCode) → '$key'");
+          break;
+        }
+      }
+    }
+
+    // 🎯 최종 폴백: 어떤 경우든 부분 일치(앞, 뒤, 포함) 시도
+    if (serverKey == null && googleCode != null) {
+      for (String key in availableKeys) {
+        if (key.contains(googleCode) || googleCode.contains(key)) {
+          serverKey = key;
+          debugPrint("🔄 최종 부분 매핑: '$displayLanguage' ($googleCode) ↔ '$key'");
           break;
         }
       }

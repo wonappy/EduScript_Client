@@ -1,9 +1,9 @@
 // [models/config_message_model.dart]
-/// DTO 모델 
-/// [1] 언어 설정 (Request)
+/// DTO 모델
+/// [1]-1 일반 언어 설정 (Request)
 class ConfigMessage {
-  final String type;                  // 타입(setting)
-  final String inputLanguage;         // 입력 언어 (국가)
+  final String type; // 타입(setting)
+  final String inputLanguage; // 입력 언어 (국가)
   final List<String> targetLanguages; // 번역할 언어 (국가)
 
   ConfigMessage({
