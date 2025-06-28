@@ -96,6 +96,8 @@ class _BuildLecturePlayBarContentState
     super.dispose();
   }
 
+  //🔴🔴 지금 호출되고 있지 않는 코드입니다!!!!! provider를 통해서 service를 확인하고 있기 때문에 사용되고 있지 않음!
+  // 근데 의문점... subtitle only screen에 service provider를 적용하기 전에는 이 코드가 출력됐었는데 ... 뭐지
   // [콜백] stt 서비스 초기화
   void _initializeSTTService() {
     final service = currentService;
