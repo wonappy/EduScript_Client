@@ -15,7 +15,7 @@ import '../models/multiple_config_message_model.dart'; //언어 설정 request d
 import '../models/status_message_model.dart';
 import '../models/speech_translation_response_model.dart';
 
-class WebSocketSTTService {
+class WebSocketMultipleSTTService {
   // [WebSocket 통신]
   WebSocketChannel? _webSocketChannel; // 실시간 통신 채널
   final String _serverEndpoint =
@@ -47,9 +47,10 @@ class WebSocketSTTService {
   Function(String, String?)? onError; // 에러 콜백
 
   // [싱글톤 패턴]
-  static final WebSocketSTTService _instance = WebSocketSTTService._internal();
-  factory WebSocketSTTService() => _instance;
-  WebSocketSTTService._internal();
+  static final WebSocketMultipleSTTService _instance =
+      WebSocketMultipleSTTService._internal();
+  factory WebSocketMultipleSTTService() => _instance;
+  WebSocketMultipleSTTService._internal();
 
   // [Getter] 현재 상태 확인
   bool get isConnected => _isConnected;
@@ -103,7 +104,7 @@ class WebSocketSTTService {
     }
   }
 
-  // [2] 음성 인식 세션 시작 (언어 설정 - ConfigMessage)
+  // [2] 음성 인식 세션 시작 (언어 설정 - MultipleConfigMessage)
   Future<bool> startSession({
     required List<String> inputLanguages,
     required List<String> targetLanguages,
@@ -125,6 +126,8 @@ class WebSocketSTTService {
         inputLanguages: inputLanguages,
         targetLanguages: targetLanguages,
       );
+      debugPrint("설정 메시지(string) : ${configMessage.toString()}");
+      debugPrint("설정 메시지(json) : ${configMessage.toJson()}");
 
       // JSON 매핑 -> 전송
       _webSocketChannel!.sink.add(jsonEncode(configMessage.toJson()));
@@ -416,6 +419,98 @@ class WebSocketSTTService {
 
   // 리소스 정리
   void dispose() {
+    // 완전 종료 전 모든 저장소 내용 출력
+    _printAllStoredData();
     disconnect();
+  }
+
+  // 모든 저장소 내용 출력 메서드
+  void _printAllStoredData() {
+    debugPrint("\n${"=" * 60}");
+    debugPrint("🔚 WebSocketMultipleSTTService 완전 종료 - 저장소 데이터 출력");
+    debugPrint("=" * 60);
+
+    // 1. 기본 통계 정보
+    debugPrint("\n📊 기본 통계:");
+    debugPrint("  - 총 원문 개수: ${_transcriptHistory.length}개");
+    debugPrint("  - 총 번역 히스토리: ${_translationHistory.length}개");
+    debugPrint("  - 언어별 저장소 개수: ${_languageTextHistory.length}개 언어");
+    debugPrint("  - 현재 번역 결과: ${_currentTranslations.length}개 언어");
+
+    // 2. 현재 설정 정보
+    debugPrint("\n⚙️ 현재 설정:");
+    debugPrint("  - 입력 언어: ${_currentInputLanguages ?? 'None'}");
+    debugPrint("  - 출력 언어: ${_currentTargetLanguages ?? 'None'}");
+
+    // 3. 전체 원문 히스토리
+    debugPrint("\n📝 전체 원문 히스토리 (${_transcriptHistory.length}개):");
+    if (_transcriptHistory.isEmpty) {
+      debugPrint("  (저장된 원문이 없습니다)");
+    } else {
+      for (int i = 0; i < _transcriptHistory.length; i++) {
+        debugPrint("  [$i] ${_transcriptHistory[i]}");
+      }
+    }
+
+    // 4. 언어별 텍스트 히스토리
+    debugPrint("\n🌍 언어별 텍스트 저장소:");
+    if (_languageTextHistory.isEmpty) {
+      debugPrint("  (저장된 언어별 데이터가 없습니다)");
+    } else {
+      _languageTextHistory.forEach((language, textList) {
+        debugPrint("  📌 $language (${textList.length}개):");
+        for (int i = 0; i < textList.length; i++) {
+          debugPrint("    [$i] ${textList[i]}");
+        }
+      });
+    }
+
+    // 5. 번역 히스토리
+    debugPrint("\n🔄 번역 히스토리 (${_translationHistory.length}개):");
+    if (_translationHistory.isEmpty) {
+      debugPrint("  (저장된 번역 히스토리가 없습니다)");
+    } else {
+      for (int i = 0; i < _translationHistory.length; i++) {
+        debugPrint("  [히스토리 $i]:");
+        _translationHistory[i].forEach((lang, text) {
+          debugPrint("    $lang: $text");
+        });
+      }
+    }
+
+    // 7. 전체 원문 텍스트 (연결된 형태)
+    debugPrint("\n📄 전체 원문 텍스트 (LLM용):");
+    final fullText = fullTranscriptText;
+    if (fullText.isEmpty) {
+      debugPrint("  (전체 텍스트가 없습니다)");
+    } else {
+      debugPrint("  총 길이: ${fullText.length}자");
+      // 너무 길면 일부만 출력
+      if (fullText.length > 500) {
+        debugPrint("  내용 (처음 500자): ${fullText.substring(0, 500)}...");
+      } else {
+        debugPrint("  전체 내용: $fullText");
+      }
+    }
+
+    // 8. 각 언어별 전체 텍스트
+    debugPrint("\n🌐 언어별 전체 텍스트:");
+    if (_languageTextHistory.isEmpty) {
+      debugPrint("  (언어별 데이터가 없습니다)");
+    } else {
+      _languageTextHistory.forEach((language, textList) {
+        final languageFullText = textList.join(" ");
+        debugPrint("  $language (${languageFullText.length}자): ");
+        if (languageFullText.length > 200) {
+          debugPrint("    ${languageFullText.substring(0, 200)}...");
+        } else {
+          debugPrint("    $languageFullText");
+        }
+      });
+    }
+
+    debugPrint("\n${"=" * 60}");
+    debugPrint("🔚 데이터 출력 완료");
+    debugPrint("=" * 60);
   }
 }

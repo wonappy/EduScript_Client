@@ -6,7 +6,6 @@ import 'package:client/services/websocket_stt_service.dart';
 import 'package:client/screens/end_lecture_and_save_screen.dart';
 import 'package:http/http.dart' as http;
 
-
 class PostProcessorService {
   // http 통신 설정
   final String _serverBaseUrl = "http://10.101.85.215:8000"; // 서버 엔드포인트
@@ -23,11 +22,12 @@ class PostProcessorService {
   bool _enableKeypoints = false;
 
   // [싱글톤 패턴]
-  static final PostProcessorService _instance = PostProcessorService._internal();
+  static final PostProcessorService _instance =
+      PostProcessorService._internal();
   factory PostProcessorService() => _instance;
   PostProcessorService._internal();
 
-   // [Getter]
+  // [Getter]
   bool get isProcessing => _isProcessing;
   String? get lastRequest => _lastRequest;
   String get fileName => ""; // 파일 이름 (기본값)
@@ -45,7 +45,7 @@ class PostProcessorService {
   }) {
     if (enableRefine != null) _enableRefine = enableRefine;
     if (enableSummarize != null) _enableSummarize = enableSummarize;
-    if (enableKeypoints != null) _enableKeypoints = enableKeypoints;   
+    if (enableKeypoints != null) _enableKeypoints = enableKeypoints;
   }
 
   // [메인 기능] STT 서비스와 연동하여 정제 요청
@@ -55,7 +55,7 @@ class PostProcessorService {
   }) async {
     final sttService = WebSocketSTTService();
     final fullText = sttService.fullTranscriptText;
-    
+
     if (fullText.trim().isEmpty) {
       debugPrint("[LLM] 오류: STT 서비스에 정제할 텍스트가 없습니다");
       return null;
@@ -89,7 +89,7 @@ class PostProcessorService {
     try {
       _isProcessing = true;
       _lastRequest = fullText;
-      
+
       debugPrint("[LLM] 정제 요청 시작 (${fullText.length}자)");
 
       // 요청 데이터 생성
@@ -119,17 +119,16 @@ class PostProcessorService {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body) as Map<String, dynamic>;
         _lastResponse = responseData;
-        
+
         debugPrint("[LLM] ✅ 정제 완료!");
         //_printResults(responseData); // 결과 출력
-        
+
         return responseData;
       } else {
         final errorMsg = "서버 오류 (${response.statusCode}): ${response.body}";
         debugPrint("[LLM] ❌ $errorMsg");
         return null;
       }
-
     } on TimeoutException {
       debugPrint("[LLM] ❌ 요청 타임아웃 (30초 초과)");
       return null;
@@ -141,4 +140,3 @@ class PostProcessorService {
     }
   }
 }
-

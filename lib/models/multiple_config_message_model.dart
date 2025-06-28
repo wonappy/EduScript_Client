@@ -16,7 +16,7 @@ class MultipleConfigMessage {
   Map<String, dynamic> toJson() {
     return {
       'type': type,
-      'input_language': inputLanguages,
+      'input_languages': inputLanguages,
       'target_languages': targetLanguages,
     };
   }
