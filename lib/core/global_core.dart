@@ -1,5 +1,5 @@
 //변수
-final String serverBaseUrl = "ws://10.101.85.215:8000"; // 서버 엔드포인트
+final String serverBaseUrl = "ws://203.234.12.234:8000"; // 서버 엔드포인트
 
 //함수
 /// 반응형 폰트 크기 계산
