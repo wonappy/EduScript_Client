@@ -1,11 +1,15 @@
 //강의 끝나고 나서 나오는 dialog 화면
 import 'dart:io';
 import 'dart:convert';
+import 'package:client/services/websocket_multiple_speech_service.dart';
 import 'package:flutter/material.dart';
 import '../widgets/end_screen/save_dialog_components.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/postprocessor_service.dart';
 import '../services/websocket_stt_service.dart';
+import 'package:provider/provider.dart';
+import '../providers/mode_provider.dart';
+import '../core/enum_core.dart';
 
 class SaveDialogScreen extends StatefulWidget {
   const SaveDialogScreen({super.key});
@@ -27,10 +31,14 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
   String emailDomain = 'naver.com'; //이메일 도메인 기본값
 
   final PostProcessorService _llmService = PostProcessorService();
-  final WebSocketSTTService _sttService = WebSocketSTTService();
+  
+  WebSocketSTTService? _sttService;
+  WebSocketMultipleSTTService? _multipleSTTService;
+
   bool _isProcessing = false;
   String _statusMessage = '';
   Map<String, dynamic>? _refinedData;
+  Mode? _currentMode;
 
   @override
   void initState() {
@@ -39,14 +47,51 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
     debugPrint('초기 isContentFile: $isContentFile');
     debugPrint('초기 isSummaryFile: $isSummaryFile');
     debugPrint('초기 isMajorFile: $isMajorFile');
+  }
 
-    // 자동으로 LLM 정제 실행
-    _processTranscriptAutomatically();
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // 모드 설정 (한 번만)
+    if (_currentMode == null) {
+      _currentMode = Provider.of<ModeProvider>(context, listen: false).currentMode;
+      debugPrint("🔥 현재 모드: ${_currentMode.toString()}");
+      
+      // 모드에 따라 적절한 STT 서비스 선택
+      if (_currentMode == Mode.conference) {
+        _multipleSTTService  = Provider.of<WebSocketMultipleSTTService>(context, listen: false);
+        debugPrint("🔥 Multiple STT 서비스 사용");
+      } else {
+        _sttService = Provider.of<WebSocketSTTService>(context, listen: false);
+        debugPrint("🔥 Single STT 서비스 사용");
+      }
+      
+      // 자동으로 LLM 정제 실행
+      _processTranscriptAutomatically();
+    }
+  }
+
+  // 현재 STT 서비스의 텍스트 가져오기
+  String get _currentTranscriptText {
+    if (_currentMode == Mode.conference && _multipleSTTService != null) {
+      return _multipleSTTService!.fullTranscriptText;
+    } else if (_sttService != null) {
+      return _sttService!.fullTranscriptText;
+    }
+    return '';
   }
 
    // 자동으로 STT 내용을 LLM으로 정제
   Future<void> _processTranscriptAutomatically() async {
-    if (_sttService.fullTranscriptText.trim().isEmpty) {
+    final transcriptText = _currentTranscriptText;
+    
+    debugPrint('🔍 STT 텍스트 확인:');
+    debugPrint('  - 모드: ${_currentMode.toString()}');
+    debugPrint('  - 텍스트 길이: ${transcriptText.length}');
+    debugPrint('  - 텍스트 내용: "$transcriptText"');
+    
+    if (transcriptText.trim().isEmpty) {
       setState(() {
         _statusMessage = '정제할 텍스트가 없습니다';
       });
@@ -59,14 +104,24 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
     });
 
     try {
+      final apiMode = _currentMode!.apiValue;
+      debugPrint("🔥 API 모드: $apiMode");
+
       // 요약과 핵심 포인트 모두 활성화하여 정제
       final result = await _llmService.refineText(
-        fullText: _sttService.fullTranscriptText,
+        fullText: transcriptText,
         enableSummarize: true,
         enableKeypoints: true,
-        fileFormat: fileFormat.replaceAll('.',''), // 파일 형식에서 '.' 제거
+        fileFormat: fileFormat.replaceAll('.',''),
         fileName: fileName,
+        processingMode: apiMode,
       );
+
+      debugPrint("🔥 응답 결과: $result");
+      if (result != null) {
+        debugPrint("🔥 refined_result 존재: ${result.containsKey('refined_result')}");
+        debugPrint("🔥 total_files: ${result['total_files']}");
+      }
 
       if (result != null) {
         setState(() {
@@ -187,6 +242,11 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
 
   // 파일 저장 버튼 클릭 시 처리 (LLM 데이터 포함)
   Future<void> _handleFileSave() async {
+    debugPrint('=== 저장 버튼 클릭 디버그 ===');
+    debugPrint('_refinedData: ${_refinedData != null ? "있음" : "없음"}');
+    debugPrint('_isProcessing: $_isProcessing');
+    debugPrint('_statusMessage: $_statusMessage');
+
     if (_refinedData == null) {
       _showErrorMessage('저장할 데이터가 준비되지 않았습니다');
       return;
