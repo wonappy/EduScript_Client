@@ -5,15 +5,17 @@ import 'package:client/services/postprocessor_service.dart';
 import 'package:client/services/websocket_stt_service.dart';
 import 'package:client/screens/end_lecture_and_save_screen.dart';
 import 'package:http/http.dart' as http;
+import 'package:client/core/enum_core.dart';
 
 class PostProcessorService {
   // http 통신 설정
-  final String _serverBaseUrl = "http://10.101.85.215:8000"; // 서버 엔드포인트
+  final String _serverBaseUrl = "http://10.101.134.30:8000"; // 서버 엔드포인트
   final String _serverEndpoint = "/api/routes/language/refinement";
 
   bool _isProcessing = false;
   String? _lastRequest;
   String _fileFormat = 'txt';
+  String _processingMode = 'lecture';
   Map<String, dynamic>? _lastResponse;
 
   // [요청 설정]
@@ -32,6 +34,7 @@ class PostProcessorService {
   String? get lastRequest => _lastRequest;
   String get fileName => ""; // 파일 이름 (기본값)
   String get fileFormat => _fileFormat;
+  String get processingMode => _processingMode;
   Map<String, dynamic>? get lastResponse => _lastResponse;
   bool get enableRefine => _enableRefine;
   bool get enableSummarize => _enableSummarize;
@@ -42,16 +45,24 @@ class PostProcessorService {
     bool? enableRefine,
     bool? enableSummarize,
     bool? enableKeypoints,
+    String? processingMode,
   }) {
     if (enableRefine != null) _enableRefine = enableRefine;
     if (enableSummarize != null) _enableSummarize = enableSummarize;
     if (enableKeypoints != null) _enableKeypoints = enableKeypoints;
+    if(processingMode != null) _processingMode = processingMode;
+  }
+
+  void setProcessingMode(String mode) {
+    _processingMode = mode;
+    debugPrint("[LLM] 처리 모드 변경: $mode");
   }
 
   // [메인 기능] STT 서비스와 연동하여 정제 요청
   Future<Map<String, dynamic>?> processSTTTranscript({
     bool? enableSummarize,
     bool? enableKeypoints,
+    String? processingMode,
   }) async {
     final sttService = WebSocketSTTService();
     final fullText = sttService.fullTranscriptText;
@@ -65,8 +76,10 @@ class PostProcessorService {
       fullText: fullText,
       enableSummarize: enableSummarize,
       enableKeypoints: enableKeypoints,
+      processingMode: processingMode,
     );
   }
+ 
 
   // [핵심 기능] 텍스트 정제 요청
   Future<Map<String, dynamic>?> refineText({
@@ -75,6 +88,7 @@ class PostProcessorService {
     bool? enableKeypoints,
     String fileName = 'speech',
     String fileFormat = 'txt', // 파일 형식 (기본값은 txt)
+    String? processingMode,
   }) async {
     // 중복 요청 방지
     if (_isProcessing) {
@@ -92,6 +106,8 @@ class PostProcessorService {
 
       debugPrint("[LLM] 정제 요청 시작 (${fullText.length}자)");
 
+      final finalProcessingMode = processingMode ?? _processingMode;
+
       // 요청 데이터 생성
       final requestBody = {
         'full_text': fullText,
@@ -100,6 +116,7 @@ class PostProcessorService {
         'enable_refine': _enableRefine,
         'enable_summarize': enableSummarize ?? _enableSummarize,
         'enable_keypoints': enableKeypoints ?? _enableKeypoints,
+        'processing_mode': finalProcessingMode,
       };
 
       debugPrint("요청 데이터 원문 전문 : $fullText");
@@ -137,6 +154,18 @@ class PostProcessorService {
       return null;
     } finally {
       _isProcessing = false;
+    }
+  }
+}
+
+// 2. Mode enum과 문자열 변환 유틸리티
+extension ModeExtension on Mode {
+  String get apiValue {
+    switch (this) {
+      case Mode.lecture:
+        return 'lecture';
+      case Mode.conference:
+        return 'conference';
     }
   }
 }
