@@ -9,6 +9,7 @@ import '../providers/mode_provider.dart';
 import '../services/websocket_multiple_speech_service.dart';
 import '../services/websocket_stt_service.dart';
 import '../widgets/preview_widget/subtitle_setting_provider.dart';
+import '../widgets/common/connection_status_bar_widget.dart';
 
 class SubtitlesOnlyScreen extends StatefulWidget {
   final Color backgroundColor; // 배경 색상
@@ -30,6 +31,12 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
   late dynamic _sttService; // 두 타입을 모두 받을 수 있게 dynamic 또는 공통 인터페이스 사용
   Map<String, String> _currentTranslations = {};
 
+  // 재연결 상태 변수
+  late ServerConnectionState _serverConnectionState; // 서버 연결 상태
+  String _statusMessage = "";               // 연결 상태 메시지 -> UI 화면에 출력
+  int _reconnectAttempts = 0;               // 재연결 시도 횟수
+  int _maxReconnectAttempts = 3;            // 최대 가능 재시도 횟수
+
   @override
   void initState() {
     super.initState();
@@ -39,14 +46,30 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
+    // [모드에 따른 서비스 할당] (강의 or 회의)
+    // 현재 선택된 모드
     final mode = Provider.of<ModeProvider>(context, listen: false).currentMode;
+    debugPrint("[🔴 DEBUG] 현재 모드 $mode");
+
+    // 강의 모드
     if (mode == Mode.lecture) {
       _sttService = Provider.of<WebSocketSTTService>(context, listen: false);
+      debugPrint("[🔴 DEBUG] 강의 모드 서비스 할당됨");
+    }
+    // 회의 모드
+    else {
+      _sttService = Provider.of<WebSocketMultipleSTTService>(context, listen: false,);
+      debugPrint("[🔴 DEBUG] 회의 모드 서비스 할당됨");
+    }
+
+    // [서버 연결 상태로 초기화]
+    if (_sttService.isConnected) {
+      _serverConnectionState = ServerConnectionState.connected;
+      _statusMessage = "서버 연결 성공";
     } else {
-      _sttService = Provider.of<WebSocketMultipleSTTService>(
-        context,
-        listen: false,
-      );
+      _serverConnectionState = ServerConnectionState.disconnected;
+      _statusMessage = "서버 연결 끊김";
     }
 
     // STT 서비스 -> 번역 결과 콜백 등록
@@ -65,6 +88,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     };
     // 초기 상태 로드
     _currentTranslations = Map.from(_sttService.currentTranslations);
+    _reconnectionCallbacks(); // (호출) [1] 재연결 콜백 메서드
   }
 
   @override
@@ -73,6 +97,8 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     if (_sttService.onTranslationReceived != null) {
       _sttService.onTranslationReceived = null;
     }
+    _sttService.onStatusUpdate = null;
+    _sttService.onError = null;
     super.dispose();
   }
 
@@ -95,6 +121,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     return Scaffold(
       body: Stack(
         children: [
+          // 1) 자막 컨테이너
           Container(
             width: screenWidth,
             height: screenHeight,
@@ -120,7 +147,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
                           color: settings.getBackgroundColor().withValues(
                             //자막 배경 색상 지정
                             alpha:
-                                settings.getBackgroundOpacity(), //자막 배경 불투명도 지정
+                            settings.getBackgroundOpacity(), //자막 배경 불투명도 지정
                           ),
                           borderRadius: BorderRadius.circular(20),
                         ),
@@ -145,9 +172,26 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
             ),
           ),
 
+          // 2) 연결 상태 표시바
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SizedBox(
+              width: double.infinity,
+              child: ConnectionStatusBar( //[위젯] 로딩 스피너
+                serverConnectionState: _serverConnectionState,
+                statusMessage: _statusMessage,
+                reconnectAttempts: _reconnectAttempts,
+              ),
+            ),
+          ),
+
           // // 📊 디버그 정보 (개발용)
           // if (kDebugMode)
           //   Positioned(top: 50, left: 16, child: _buildDebugInfo()),
+
+          // 3) Close 아이콘
           Positioned(
             bottom: 16,
             right: 16,
@@ -280,6 +324,86 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     } else {
       return "...";
     }
+  }
+
+  // [재연결 시도 관련 코드]
+  // [1] 재연결 콜백 메서드
+  void _reconnectionCallbacks() {
+    debugPrint("[🔴 DEBUG] _reconnectionCallbacks 메서드 실행");
+    // 콜백 중복 방지
+    _sttService?.onStatusUpdate = null;
+    _sttService?.onError = null;
+
+    // [1-1] 서버 연결 상태
+    _sttService?.onStatusUpdate = (String status) {
+      debugPrint("[🔴 DEBUG] UI 상태 업데이트 $status");
+      if (!mounted) return;
+      // >> UI 동작 (화면 업데이트)
+      setState(() {
+        debugPrint("[🔴 DEBUG] setState 호출");
+        // 1) 재연결 시도
+        if (status.contains("재시도")) {
+          _serverConnectionState = ServerConnectionState.reconnecting; // 서버 연결 상태 - 재연결
+          _statusMessage = status; // UI에 출력할 상태 메시지
+
+          // (2) 재연결 시도 횟수 파싱
+          final match = RegExp(r'재시도 (\d+)/').firstMatch(status);
+          if (match != null) {
+            _reconnectAttempts = int.parse(match.group(1)!);
+          }
+        }
+        // 2) 연결 성공
+        else if (status.contains("연결 성공")) {
+          _serverConnectionState = ServerConnectionState.connected; // 서버 연결 상태 - 연결 성공
+          _statusMessage = "서버에 연결되었습니다."; // UI에 출력할 상태 메시지
+        }
+        // 3) 연결 종료
+        else if (status.contains("연결 종료")) {
+          _serverConnectionState = ServerConnectionState.disconnected; // 서버 연결 상태 - 연결 종료
+          _statusMessage = "서버 연결이 끊어졌습니다."; // UI에 출력할 상태 메시지
+        }
+      });
+    };
+
+    debugPrint("[🔴 DEBUG] 콜백 등록 완료");
+
+    // [1-2] 서버 연결 실패
+    _sttService?.onError = (String message, String? errorCode) {
+      if (!mounted) return;
+      setState(() {
+        // 1) 최대 재시도 초과
+        if (message.contains("최대 재시도")) {
+          _serverConnectionState = ServerConnectionState.failed; // 서버 연결 상태 - 연결 실패
+          _statusMessage = "최대 재시도 횟수 초과로 서버 연결에 실패했습니다."; // UI에 출력할 상태 메시지
+        }
+        // 2) 기타
+        else if (message.contains("연결 실패")) {
+          _serverConnectionState = ServerConnectionState.disconnected; // 서버 연결 상태 - 연결 끊김
+          _statusMessage = "서버 연결 실패 : $message"; // UI에 출력할 상태 메시지
+        }
+      });
+      //_showErrorSnackBar(message); // (호출) [2] 에러 메시지 표시
+    };
+  }
+
+  // [2] 에러 메시지 표시
+  void _showErrorSnackBar(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 3),
+        action: SnackBarAction(
+          label: '확인',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
   }
 
   // 디버그 정보 표시

@@ -1,4 +1,5 @@
 import 'package:client/screens/preview_screen.dart';
+import 'package:client/services/postprocessor_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -31,6 +32,12 @@ class _StartScreenState extends State<StartScreen> {
   void _selectMode(Mode mode) {
     //mode 설정 (UI 재빌드 false)
     Provider.of<ModeProvider>(context, listen: false).setMode(mode);
+
+    final postProcessor = PostProcessorService();
+    postProcessor.setProcessingMode(mode.apiValue);
+
+    debugPrint("선택된 모드: ${mode.name} → API 모드: ${mode.apiValue}");
+
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => PreviewScreen()),
