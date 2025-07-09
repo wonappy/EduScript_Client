@@ -13,44 +13,31 @@ import '../widgets/common/connection_status_bar_widget.dart';
 
 class SubtitlesOnlyScreen extends StatefulWidget {
   final Color backgroundColor; // 배경 색상
-  final String subWordFont; //자막 글꼴
-  final double subSpacing; //자막 간 간격
+  final String subWordFont;    // 자막 글꼴
+  final double subSpacing;     // 자막 간 간격
 
-  const SubtitlesOnlyScreen({
-    super.key,
-    required this.backgroundColor,
-    required this.subWordFont,
-    required this.subSpacing,
-  });
+  const SubtitlesOnlyScreen({ super.key, required this.backgroundColor, required this.subWordFont, required this.subSpacing, });
 
   @override
   State<SubtitlesOnlyScreen> createState() => _SubtitlesOnlyScreenState();
 }
 
 class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
-  late dynamic _sttService; // 두 타입을 모두 받을 수 있게 dynamic 또는 공통 인터페이스 사용
-  Map<String, String> _currentTranslations = {};
+  late dynamic _sttService;                       // 두 타입을 모두 받을 수 있게 dynamic 또는 공통 인터페이스 사용
+  Map<String, String> _currentTranslations = {};  // 번역 결과 저장 { "en": "Hello" }
 
-  // 재연결 상태 변수
-  late ServerConnectionState _serverConnectionState; // 서버 연결 상태
+  // [재연결 상태 변수]
+  ServerConnectionState _serverConnectionState = ServerConnectionState.connected; // 서버 연결 상태
   String _statusMessage = "";               // 연결 상태 메시지 -> UI 화면에 출력
   int _reconnectAttempts = 0;               // 재연결 시도 횟수
-  int _maxReconnectAttempts = 3;            // 최대 가능 재시도 횟수
 
   @override
   void initState() {
     super.initState();
-    // 서비스 인스턴스는 build에서 할당 (context 필요)
-  }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    // [모드에 따른 서비스 할당] (강의 or 회의)
+    // 1) 모드에 따른 서비스 할당
     // 현재 선택된 모드
     final mode = Provider.of<ModeProvider>(context, listen: false).currentMode;
-    debugPrint("[🔴 DEBUG] 현재 모드 $mode");
 
     // 강의 모드
     if (mode == Mode.lecture) {
@@ -63,32 +50,13 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
       debugPrint("[🔴 DEBUG] 회의 모드 서비스 할당됨");
     }
 
-    // [서버 연결 상태로 초기화]
-    if (_sttService.isConnected) {
-      _serverConnectionState = ServerConnectionState.connected;
-      _statusMessage = "서버 연결 성공";
-    } else {
-      _serverConnectionState = ServerConnectionState.disconnected;
-      _statusMessage = "서버 연결 끊김";
-    }
+    // 2) 콜백 설정
+    _setupCallbacks();
 
-    // STT 서비스 -> 번역 결과 콜백 등록
-    _sttService.onTranslationReceived = (translations) {
-      if (mounted) {
-        setState(() {
-          // 번역 결과를 로컬 상태로 복사
-          _currentTranslations.clear(); //현재 자막 초기화
-          translations.forEach((lang, result) {
-            //각 언어 자막 저장
-            _currentTranslations[lang] = result.resultText;
-          });
-        });
-        debugPrint("자막 화면 업데이트: ${_currentTranslations.length}개 언어");
-      }
-    };
-    // 초기 상태 로드
-    _currentTranslations = Map.from(_sttService.currentTranslations);
-    _reconnectionCallbacks(); // (호출) [1] 재연결 콜백 메서드
+    // 3) 화면이 그려진 직후, 딱 한 번만 서비스 시작 요청
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initAndStartService();
+    });
   }
 
   @override
@@ -104,11 +72,11 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SubtitleSettingsProvider>(); //자막 출력
-    final languages = settings.selectedOutputLanguages; //선택된 출력 언어 목록 가져오기
+    final settings = context.watch<SubtitleSettingsProvider>(); // 자막 출력
+    final languages = settings.selectedOutputLanguages; // 선택된 출력 언어 목록 가져오기
 
-    // 디버그: Provider 설정 확인
-    debugPrint("🔍 Provider 설정:");
+    // [DEBUG] Provider 설정 확인
+    debugPrint("🔴 Provider 설정:");
     debugPrint("  - 선택된 출력 언어: $languages");
     debugPrint("  - 출력 언어 코드: ${settings.getOutputLanguageCodes()}");
     debugPrint("  - 현재 번역 결과 키: ${_currentTranslations.keys.toList()}");
@@ -186,10 +154,6 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
               ),
             ),
           ),
-
-          // // 📊 디버그 정보 (개발용)
-          // if (kDebugMode)
-          //   Positioned(top: 50, left: 16, child: _buildDebugInfo()),
 
           // 3) Close 아이콘
           Positioned(
@@ -326,6 +290,59 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     }
   }
 
+  // [서비스 시작 함수]
+  // [1] 서비스 시작
+  Future<void> _initAndStartService() async {
+    // 이미 연결된 상태라면 아무것도 X
+    if (_sttService.isConnected) return;
+
+    // 1) 언어 설정 가져오기
+    final settings = Provider.of<SubtitleSettingsProvider>(context, listen: false); // 사용자가 설정한 언어 정보
+    final inputLanguageCodes = settings.getInputLanguageCodes();    // 입력 언어 설정
+    final outputLanguageCodes = settings.getOutputLanguageCodes();  // 출력 언어 설정
+
+    // 2) 웹소켓 연결
+    bool connectd = await _sttService.connectToServer();
+    // 연결 성공 시
+    if (connectd) {
+      if (_sttService is WebSocketSTTService) { // 싱글 모드
+        await _sttService.startSession(
+          inputLanguage: inputLanguageCodes[0],
+          targetLanguages: outputLanguageCodes,
+        );
+      } else if (_sttService is WebSocketMultipleSTTService) { // 멀티 모드
+        await _sttService.startSession(
+          inputLanguages: inputLanguageCodes,
+          targetLanguages: outputLanguageCodes,
+        );
+      }
+    }
+  }
+
+  // [2] 콜백 함수
+  void _setupCallbacks() {
+    // 1) 번역 결과 콜백
+    _sttService.onTranslationReceived = (translations) {
+      if (mounted) {
+        setState(() {
+          // 번역 결과를 로컬 상태로 복사
+          _currentTranslations.clear(); //현재 자막 초기화
+          translations.forEach((lang, result) {
+            // 각 언어 자막 저장
+            _currentTranslations[lang] = result.resultText;
+          });
+        });
+        debugPrint("자막 화면 업데이트: ${_currentTranslations.length}개 언어");
+      }
+    };
+
+    // 초기 상태 로드
+    _currentTranslations = Map.from(_sttService.currentTranslations);
+
+    // 2) 재연결 콜백 리스너
+    _reconnectionCallbacks(); // (호출) [1] 재연결 콜백 메서드
+  }
+
   // [재연결 시도 관련 코드]
   // [1] 재연결 콜백 메서드
   void _reconnectionCallbacks() {
@@ -353,7 +370,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
           }
         }
         // 2) 연결 성공
-        else if (status.contains("연결 성공")) {
+        else if (status.contains("연결 성공") || status.contains("세션 준비 시작") || status.contains("음성 녹음 시작")) {
           _serverConnectionState = ServerConnectionState.connected; // 서버 연결 상태 - 연결 성공
           _statusMessage = "서버에 연결되었습니다."; // UI에 출력할 상태 메시지
         }
@@ -405,6 +422,56 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
       ),
     );
   }
+
+  // Future<void> _initiateAndStartSttSession() async {
+  //   // 이미 녹음 중이면 아무것도 X
+  //   if (_sttService.isRecording) return;
+  //
+  //   // 1) 서비스 연결 상태 확인
+  //   if (_sttService.isConnected) {
+  //     await _sttService.startRecording();
+  //     debugPrint("기존 연결로 녹음 재시작");
+  //   } else {
+  //
+  //     // Provider에서 언어 설정 가져오기
+  //     final subtitleSettings = context.read<SubtitleSettingsProvider>();
+  //     final inputLanguageCodes = subtitleSettings.getInputLanguageCodes();
+  //     final outputLanguageCodes = subtitleSettings.getOutputLanguageCodes();
+  //
+  //     debugPrint("🌐 언어 설정:");
+  //     debugPrint(
+  //       "  입력: ${subtitleSettings.selectedInputLanguages} -> $inputLanguageCodes",
+  //     );
+  //     debugPrint(
+  //       "  출력: ${subtitleSettings.selectedOutputLanguages} -> $outputLanguageCodes",
+  //     );
+  //
+  //     bool connected = await _sttService.connectToServer();
+  //
+  //     if(!connected) {
+  //       debugPrint("[subtitles_only_screen] 서버 연결 실패");
+  //       return; // 연결 실패 시 중단
+  //     }
+  //
+  //     // 세션 시작 (강의 모드는 입력 언어가 하나)
+  //     bool sessionStarted = await _sttService.startSession(
+  //       inputLanguage: inputLanguageCodes[0],
+  //       targetLanguages: outputLanguageCodes,
+  //     );
+  //
+  //     if (!sessionStarted) {
+  //       debugPrint("[SubtitlesScreen] 세션 시작 실패");
+  //       // startSession 내부에서 ready 콜백을 받으면 자동으로 startRecording이 호출되므로
+  //       // 여기서 별도로 startRecording을 호출할 필요가 없습니다.
+  //     }
+  //
+  //     // await _startSTTService(
+  //     //   inputLanguageCodes: inputLanguageCodes,
+  //     //   outputLanguageCodes: outputLanguageCodes,
+  //     // );
+  //   }
+  // }
+
 
   // 디버그 정보 표시
   // Widget _buildDebugInfo() {

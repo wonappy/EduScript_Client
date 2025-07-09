@@ -166,53 +166,57 @@ class _BuildLecturePlayBarContentState
   // [Button 처리]
   // [1] 재생/일시정지
   void _handlePlayPause() async {
+    // 1) 재생 버튼 눌렀을 때 
     if (!TimerManager.isPlaying) {
-      TimerManager.start();
+      TimerManager.start(); // 타이머 실행
       setState(() {
         hasStarted = true;
       });
       debugPrint('강의 시작 - 모드: ${_currentMode.toString()}');
 
-      final service = currentService; // 현재 서비스 가져오기
+      // final service = currentService; // 현재 서비스 가져오기
+      //
+      // if (service.isConnected) {
+      //   await service.startRecording();
+      //   debugPrint("기존 연결로 녹음 재시작");
+      // } else {
+      //   // Provider에서 언어 설정 가져오기
+      //   final subtitleSettings = context.read<SubtitleSettingsProvider>();
+      //   final inputLanguageCodes = subtitleSettings.getInputLanguageCodes();
+      //   final outputLanguageCodes = subtitleSettings.getOutputLanguageCodes();
+      //
+      //   debugPrint("🌐 언어 설정:");
+      //   debugPrint(
+      //     "  입력: ${subtitleSettings.selectedInputLanguages} -> $inputLanguageCodes",
+      //   );
+      //   debugPrint(
+      //     "  출력: ${subtitleSettings.selectedOutputLanguages} -> $outputLanguageCodes",
+      //   );
+      //
+      //   await _startSTTService(
+      //     inputLanguageCodes: inputLanguageCodes,
+      //     outputLanguageCodes: outputLanguageCodes,
+      //   );
+      // }
 
-      if (service.isConnected) {
-        await service.startRecording();
-        debugPrint("기존 연결로 녹음 재시작");
-      } else {
-        // Provider에서 언어 설정 가져오기
-        final subtitleSettings = context.read<SubtitleSettingsProvider>();
-        final inputLanguageCodes = subtitleSettings.getInputLanguageCodes();
-        final outputLanguageCodes = subtitleSettings.getOutputLanguageCodes();
-
-        debugPrint("🌐 언어 설정:");
-        debugPrint(
-          "  입력: ${subtitleSettings.selectedInputLanguages} -> $inputLanguageCodes",
-        );
-        debugPrint(
-          "  출력: ${subtitleSettings.selectedOutputLanguages} -> $outputLanguageCodes",
-        );
-
-        await _startSTTService(
-          inputLanguageCodes: inputLanguageCodes,
-          outputLanguageCodes: outputLanguageCodes,
-        );
-      }
-
+      // 화면 전환
       if (mounted) {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder:
                 (context) => SubtitlesOnlyScreen(
-                  subWordFont: "default",
-                  backgroundColor: Colors.black,
-                  subSpacing: 20,
-                ),
+              subWordFont: "default",
+              backgroundColor: Colors.black,
+              subSpacing: 20,
+            ),
           ),
         );
       }
-    } else {
-      TimerManager.pause();
+    }
+    // 일시정지 상태일 때
+    else {
+      TimerManager.pause(); // 타이머 일시정지
       final service = currentService;
       await service.stopRecording();
       debugPrint('일시정지');
@@ -256,9 +260,9 @@ class _BuildLecturePlayBarContentState
 
     if (fullTranscript.isNotEmpty) {
       final sample =
-          fullTranscript.length > 200
-              ? "${fullTranscript.substring(0, 200)}..."
-              : fullTranscript;
+      fullTranscript.length > 200
+          ? "${fullTranscript.substring(0, 200)}..."
+          : fullTranscript;
       debugPrint("  - 원문 샘플: $sample");
     }
 
@@ -288,37 +292,35 @@ class _BuildLecturePlayBarContentState
   }) async {
     final service = currentService;
 
-    // 1) 서버 연결
+    debugPrint("[🧸 DEBUG] _startSTT 메서드 실행");
     bool connected = await service.connectToServer();
-    if (!connected) {
-      debugPrint(">> 서버 연결 실패");
+    debugPrint("[🧸 DEBUG] [1] connectToServer 결과 - $connected");
+
+    if (!connected){
+      debugPrint("[🧸 DEBUG] 서버 연결 실패 ㅠ.ㅠ");
       return;
     }
-
+    
     // 2) 세션 시작 (서비스 타입에 따라 분기)
+    debugPrint("[🧸 DEBUG] [2] startSesion 호출 준비");
     bool sessionStarted = false;
 
+    // 세션 - 싱글 모드
     if (service is WebSocketSTTService) {
-      // Single 모드: 입력 언어 하나만 사용
-      sessionStarted = await service.startSession(
-        inputLanguage: inputLanguageCodes[0], //가장 첫번째로 설정된 언어만 전송
-        targetLanguages: outputLanguageCodes,
-      );
-    } else if (service is WebSocketMultipleSTTService) {
-      // Multiple 모드: 입력 언어를 리스트로 전달
-      sessionStarted = await service.startSession(
-        inputLanguages: inputLanguageCodes,
-        targetLanguages: outputLanguageCodes,
-      );
+      debugPrint("[🧸 DEBUG] 싱글 모드 세션 시작");
+      sessionStarted = await service.startSession(inputLanguage: inputLanguageCodes[0], targetLanguages: outputLanguageCodes);      
+    } // 세션 - 멀티 모드
+    else if (service is WebSocketMultipleSTTService) {
+      debugPrint("[🧸 DEBUG] 멀티 모드 세션 시작");
     }
 
-    debugPrint("입력 언어들: $inputLanguageCodes, 출력 언어들: $outputLanguageCodes");
-
+    // 세션 결과
+    debugPrint("[🧸 DEBUG] [2] startSession 결과 - $sessionStarted");
     if (!sessionStarted) {
-      debugPrint(">> 세션 시작 실패");
-      return;
+      debugPrint("[🧸 DEBUG] 세션 시작 실패");
     }
 
-    debugPrint(">> STT 서비스 시작 완료 (모드: ${_currentMode.toString()})");
+    debugPrint("[🧸 DEBUG] 입력 언어 - $inputLanguageCodes, 출력 언어 - $outputLanguageCodes");
+    debugPrint("[🧸 DEBUG] STT 서비스 시작 완료 (모드 - ${_currentMode.toString()})");
   }
 }
