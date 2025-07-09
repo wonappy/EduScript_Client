@@ -18,28 +18,26 @@ import '../models/speech_translation_response_model.dart';
 class WebSocketMultipleSTTService {
   // [WebSocket 통신]
   WebSocketChannel? _webSocketChannel; // 실시간 통신 채널
-  final String _serverEndpoint =
-      "/api/routes/speech-translation/connect/multiple-mode";
+  final String _serverEndpoint = "/api/routes/speech-translation/connect/multiple-mode";
 
-  // [상태 변수]
+  // [연결 상태 변수]
   bool _isConnected = false; // 서버 연결 상태
   bool _isSessionReady = false; // 음성 인식 세션 준비 여부
 
   // [오디오 녹음 관련]
-  final AudioRecorder _audioRecorder = AudioRecorder(); // 오디오 캡쳐 객체
-  bool _isRecording = false; // 현재 녹음 상태
-  StreamSubscription<Uint8List>? _audioStreamSubscription; // 오디오 스트림 구독 관리
+  final AudioRecorder _audioRecorder = AudioRecorder();      // 오디오 캡쳐 객체
+  bool _isRecording = false;                                 // 현재 녹음 상태
+  StreamSubscription<Uint8List>? _audioStreamSubscription;   // 오디오 스트림 구독 관리
 
-  // [현재 설정]
-  List<String>? _currentInputLanguages; // 현재 입력 언어 (국가)
-  List<String>? _currentTargetLanguages; // 현재 타켓 언어 (국가)
+  // [현재 언어 설정]
+  List<String>? _currentInputLanguages;                       // 현재 입력 언어 (국가)
+  List<String>? _currentTargetLanguages;                      // 현재 타켓 언어 (국가)
 
   //[번역 결과 저장]
-  final Map<String, String> _currentTranslations = {}; // 현재 번역 결과
-  final List<String> _transcriptHistory = []; // 원문 자막 저장소 - 다국어 인식 결과 저장
-  final Map<String, List<String>> _languageTextHistory = {}; //각 나라 별 자막 저장소
-  final List<Map<String, String>> _translationHistory =
-      []; // 번역 히스토리 (약 3개 정도만 저장)
+  final Map<String, String> _currentTranslations = {};        // 현재 번역 결과
+  final List<String> _transcriptHistory = [];                 // 원문 자막 저장소 - 다국어 인식 결과 저장
+  final Map<String, List<String>> _languageTextHistory = {};  // 각 나라 별 자막 저장소
+  final List<Map<String, String>> _translationHistory = [];   // 번역 히스토리 (약 3개 정도만 저장)
 
   // [콜백 함수]
   Function(Map<String, TranslationResult>)? onTranslationReceived; // 번역 결과 콜백
@@ -47,8 +45,7 @@ class WebSocketMultipleSTTService {
   Function(String, String?)? onError; // 에러 콜백
 
   // [싱글톤 패턴]
-  static final WebSocketMultipleSTTService _instance =
-      WebSocketMultipleSTTService._internal();
+  static final WebSocketMultipleSTTService _instance = WebSocketMultipleSTTService._internal();
   factory WebSocketMultipleSTTService() => _instance;
   WebSocketMultipleSTTService._internal();
 
@@ -60,89 +57,103 @@ class WebSocketMultipleSTTService {
   List<String>? get currentTargetLanguages => _currentTargetLanguages;
 
   // [Getter] 번역 결과 접근
-  Map<String, String> get currentTranslations =>
-      Map.unmodifiable(_currentTranslations);
-  Map<String, List<String>> get languageTextHistory =>
-      Map.unmodifiable(_languageTextHistory);
+  Map<String, String> get currentTranslations => Map.unmodifiable(_currentTranslations);
+  Map<String, List<String>> get languageTextHistory => Map.unmodifiable(_languageTextHistory);
   List<String> get transcriptHistory => List.unmodifiable(_transcriptHistory);
-  List<Map<String, String>> get translationHistory =>
-      List.unmodifiable(_translationHistory);
+  List<Map<String, String>> get translationHistory => List.unmodifiable(_translationHistory);
 
   // 전체 원문 텍스트 (하나의 문단으로) -> LLM 활용 -> [언어] 내용 형태로 확장 고려
   String get fullTranscriptText => _transcriptHistory.join("\n");
 
-  // // 각 나라 원문 텍스트 (하나의 문자열로) -> LLM 활용
+  // 각 나라 원문 텍스트 (하나의 문자열로) -> LLM 활용
   // String get LanguageTranscriptText => _languageTextHistory.join(" ");
 
-  // [1] WebSocket 서버 연결 (상태 응답 - StatusMessage)
+  // [1] WebSocket 연결 (상태 응답 - StatusMessage)
   Future<bool> connectToServer() async {
     try {
-      _updateStatus(">> [1] 웹소켓 서버 연결 시도 중...");
+      debugPrint("[🐟 DEBUG] === MultiMode 연결 시작 시간 - ${DateTime.now()} ===");
+      _updateStatus("[DEBUG 1] 웹소켓 서버 연결 시도");
       final uri = Uri.parse('$serverBaseUrl$_serverEndpoint'); // 서버 엔드포인트
-      _webSocketChannel = WebSocketChannel.connect(uri); // WebSocket 연결
+      _webSocketChannel = WebSocketChannel.connect(uri);       // WebSocket 연결
 
-      // 서버 메시지 수신 리스너
+      // 1) 서버 메시지 수신 리스너
       _webSocketChannel!.stream.listen(
         _handleServerMessage,
         onError: (error) {
-          _handleError("- WebSocket 연결 오류", error.toString());
+          debugPrint("[🐟 DEBUG] 메시지 수신 시간 - ${DateTime.now()}");
+          debugPrint("[🐟 DEBUG] 에러 내용 - $error");
+          _handleError("[DEBUG 1] WebSocket 연결 오류", error.toString());
           _isConnected = false;
         },
         onDone: () {
-          _updateStatus("- 서버 연결 종료됨");
-          _isConnected = false;
-          _isSessionReady = false;
+          debugPrint("[🐟 DEBUG] 연결 종료 시간 - ${DateTime.now()}");
+          debugPrint("[🐟 DEBUG] 연결 종료 시점 상태");
+          debugPrint("  - isConnected : $_isConnected");
+          debugPrint("  - isSessionReady : $_isSessionReady");
+          debugPrint("  - isRecording : $_isRecording");
+
+          _updateStatus("[DEBUG 1] 서버 연결 종료됨");
+          _isConnected = false;     // 연결 상태 OFF
+          _isSessionReady = false;  // 연결 상태 OFF
         },
       );
 
-      _isConnected = true;
-      _updateStatus("- 서버 연결 성공");
+      _isConnected = true; // 연결 상태 ON
+      _updateStatus("[DEBUG 1] 서버 연결 성공");
       return true;
     } catch (e) {
-      _handleError("- 서버 연결 실패", e.toString());
+      _handleError("[DEBUG 1] 서버 연결 실패", e.toString());
       return false;
     }
   }
 
   // [2] 음성 인식 세션 시작 (언어 설정 - MultipleConfigMessage)
   Future<bool> startSession({
-    required List<String> inputLanguages,
-    required List<String> targetLanguages,
+    required List<String> inputLanguages,   // 입력 언어 국가 (다중)
+    required List<String> targetLanguages,  // 출력 언어 국가 (다중)
   }) async {
+    debugPrint("[DEBUG 2] startSession 메서드 실행");
+
+    // 연결이 끊겼을 때
     if (!_isConnected || _webSocketChannel == null) {
-      _handleError("세션 시작 실패", "서버가 연결되지 않았습니다");
+      _handleError("[DEBUG 2] 세션 시작 실패", "서버가 연결 되지 않았습니다");
       return false;
     }
 
     try {
       // 1) 마이크 권한 확인
       if (!await _checkMicrophonePermission()) {
-        _handleError("- 세션 시작 실패", "마이크 권한이 필요합니다");
+        _handleError("[DEBUG 2] 세션 시작 실패", "마이크 권한이 필요합니다");
         return false;
       }
 
-      // 2) 설정 메시지 생성
+      // 2) 언어 설정 정보 생성
       final configMessage = MultipleConfigMessage(
         inputLanguages: inputLanguages,
         targetLanguages: targetLanguages,
       );
-      debugPrint("설정 메시지(string) : ${configMessage.toString()}");
-      debugPrint("설정 메시지(json) : ${configMessage.toJson()}");
+      debugPrint("[🐟 DEBUG 2] 언어 설정 정보(String) - ${configMessage.toString()}");
+      debugPrint("[🐟 DEBUG 2] 언어 설정 정보(Json) - ${configMessage.toJson()}");
 
-      // JSON 매핑 -> 전송
+      // +) 전송할 메시지
+      final jsonMessage = jsonEncode(configMessage.toJson());
+      debugPrint("[🐟 DEBUG 2] 전송할 언어 설정 정보 - $jsonMessage");
+
+      // 3) 언어 설정 정보 전송 (JSON 매핑 -> 전송)
       _webSocketChannel!.sink.add(jsonEncode(configMessage.toJson()));
+      debugPrint("[🐟 DEBUG 2] 언어 설정 정보 전송 완료 - ${DateTime.now()}");
 
-      // 현재 상태 업데이트
+      // 4) 현재 언어 정보 업데이트
       _currentInputLanguages = inputLanguages;
       _currentTargetLanguages = targetLanguages;
 
-      //자막 데이터 초기화
+      // 5) 자막 데이터 초기화
       _clearTranslationData();
 
-      _updateStatus("세션 설정 전송 완료, 서버 응답 대기 중...");
+      _updateStatus("[DEBUG 2] 세션 설정 전송 완료, 서버 응답 대기 중...");
       return true;
     } catch (e) {
-      _handleError("- 세션 시작 실패", e.toString());
+      _handleError("[DEBUG 2] 세션 시작 실패", e.toString());
       return false;
     }
   }
@@ -288,41 +299,103 @@ class WebSocketMultipleSTTService {
   }
 
   // [헬퍼 함수]
-  // 서버 메시지 처리
+  // [1] 서버 메시지 처리
   void _handleServerMessage(dynamic message) {
+    debugPrint("[🐟 DEBUG] _handleServerMessage 실행");
+    debugPrint("[🐟 DEBUG] 수신 시간 - ${DateTime.now()}");
+    debugPrint("[🐟 DEBUG] 메시지 타입 - ${message.runtimeType}");
+    debugPrint("[🐟 DEBUG] 메시지 내용 - $message");
     try {
       Map<String, dynamic> data;
 
-      // 메시지 타입 확인 (String 또는 이미 파싱된 Map)
+      // 1) 메시지 타입 확인 (String 또는 이미 파싱된 Map)
       if (message is String) {
-        data = jsonDecode(message);
+        debugPrint("[🐟 DEBUG] String 메시지 파싱 중 ...");
+        data = jsonDecode(message); // 파싱
       } else if (message is Map<String, dynamic>) {
+        debugPrint("[🐟 DEBUG] Map 메시지 수신 ...");
         data = message;
       } else {
-        debugPrint("알 수 없는 메시지 형식: ${message.runtimeType}");
+        debugPrint("[🐟 DEBUG] 알 수 없는 메시지 형식 - ${message.runtimeType}");
         return;
       }
 
+      // 2) 메시지 타입 저장
       final messageType = data['type'] ?? '';
+      debugPrint("[🐟 DEBUG] 메시지 타입 - $messageType");
 
       switch (messageType) {
         case 'status':
+          debugPrint("[🐟 DEBUG] Status 메시지 처리");
           _handleStatusMessage(StatusMessage.fromJson(data));
           break;
         case 'result':
+          debugPrint("[🐟 DEBUG] Result 메시지 처리");
+          debugPrint("[🐟 DEBUG] Result 데이터 - $data");
           _handleTranslationResult(
             SeperatedSpeechTranslationResponse.fromJson(data),
           );
           break;
         default:
-          debugPrint("알 수 없는 메시지 타입: $messageType");
+          debugPrint("[🐟 ERROR] 알 수 없는 메시지 타입 - $messageType");
       }
     } catch (e) {
+      debugPrint("[🐟 ERROR] 메시지 처리 오류 - $e");
       _handleError("메시지 처리 오류", e.toString());
     }
   }
 
-  // 상태 메시지 처리 (StatusMessage)
+  // [2] 번역 결과 처리 (SeperatedSpeechTranslationResponse) (콜백)
+  void _handleTranslationResult(SeperatedSpeechTranslationResponse response) {
+    debugPrint("[🐟 DEBUG] _handleTranslationResult 실행");
+    debugPrint("[🐟 DEBUG] original 개수 - ${response.original.length}");
+    debugPrint("[🐟 DEBUG] translations 개수 - ${response.translations.length}");
+
+    if (response.translations.isNotEmpty && response.original.isNotEmpty) {
+      // 1) 현재 번역 결과 업데이트
+      _currentTranslations.clear(); // 현재 번역 초기화
+      String? originalText;
+
+      debugPrint("[🐟 DEBUG] === 번역 결과 ===");
+      response.translations.forEach((lang, result) {
+        debugPrint("[🐟 DEBUG] [$lang]: ${result.resultText}"); // 번역 결과 로그
+        _currentTranslations[lang] = result.resultText;
+
+        // 각 국가 언어 저장소에 추가
+        // 저장소에 없는 나라면 List 먼저 추가
+        if (_languageTextHistory[lang] == null) {
+          _languageTextHistory[lang] = [];
+        }
+
+        // 저장소에 추가
+        _languageTextHistory[lang]!.add(result.resultText);
+      });
+
+      // 2) 원문 자막 저장소에 추가
+      response.original.forEach((lang, result) {
+        debugPrint("[🐟 DEBUG] [$lang]: ${result.resultText}"); // 원문 로그
+        originalText = result.resultText;
+        _transcriptHistory.add(result.resultText);
+      });
+
+      // 3) 번역 저장소에 추가
+      if (_currentTranslations.isNotEmpty) {
+        _translationHistory.add(Map.from(_currentTranslations));
+      }
+
+      // 4) 콜백 호출
+      debugPrint("[🐟 DEBUG] 콜백 호출 - 번역 결과 개수 ${response.translations.length}");
+      onTranslationReceived?.call(response.translations);
+
+      // 5) 원문 저장 상태 로그 출력
+      if (originalText != null) {
+        debugPrint("[🐟 DEBUG] 원문 저장 - $originalText");
+        debugPrint("[🐟 DEBUG] 총 원문 개수 - ${_transcriptHistory.length}");
+      }
+    }
+  }
+
+  // [3] 상태 메시지 처리 (StatusMessage)
   void _handleStatusMessage(StatusMessage statusMsg) {
     switch (statusMsg.status) {
       case 'ready':
@@ -348,7 +421,7 @@ class WebSocketMultipleSTTService {
     }
   }
 
-  // 마이크 권한 확인
+  // [4] 마이크 권한 확인
   Future<bool> _checkMicrophonePermission() async {
     final status = await Permission.microphone.status;
 
@@ -360,58 +433,14 @@ class WebSocketMultipleSTTService {
     return status.isGranted;
   }
 
-  // 번역 결과 처리 (SeperatedSpeechTranslationResponse) (콜백)
-  void _handleTranslationResult(SeperatedSpeechTranslationResponse response) {
-    if (response.translations.isNotEmpty && response.original.isNotEmpty) {
-      // 1) 현재 번역 결과 업데이트
-      _currentTranslations.clear(); //현재 번역 초기화
-      String? originalText;
-
-      debugPrint("=== 번역 결과 ===");
-      response.translations.forEach((lang, result) {
-        _currentTranslations[lang] = result.resultText;
-
-        //번역 결과 로그 출력 포함
-        debugPrint("$lang: ${result.resultText}");
-
-        //각 나라 언어 저장소에 추가
-        //저장소에 없는 나라면 list 추가 먼저
-        if (_languageTextHistory[lang] == null) {
-          _languageTextHistory[lang] = [];
-        }
-        //추가
-        _languageTextHistory[lang]!.add(result.resultText);
-      });
-
-      // 2) 원문 자막 저장소에 추가
-      response.original.forEach((lang, result) {
-        originalText = result.resultText;
-        _transcriptHistory.add(result.resultText);
-      });
-
-      // 3) 번역 저장소에 추가
-      if (_currentTranslations.isNotEmpty) {
-        _translationHistory.add(Map.from(_currentTranslations));
-      }
-
-      // 4) 콜백 호출
-      onTranslationReceived?.call(response.translations);
-
-      // 5) 원문 저장 상태 로그 출력
-      if (originalText != null) {
-        debugPrint("원문 저장: $originalText");
-        debugPrint("총 원문 개수: ${_transcriptHistory.length}");
-      }
-    }
-  }
-
-  // 상태 업데이트 헬퍼 (콜백)
+  // [상태 콜백]
+  // [1] 상태 업데이트 (콜백)
   void _updateStatus(String status) {
     debugPrint("Status: $status");
     onStatusUpdate?.call(status); // 콜백
   }
 
-  // 에러 처리 헬퍼 (콜백)
+  // [2] 에러 (콜백)
   void _handleError(String message, String? errorCode) {
     debugPrint("Error: $message ${errorCode != null ? '($errorCode)' : ''}");
     onError?.call(message, errorCode); // 콜백
