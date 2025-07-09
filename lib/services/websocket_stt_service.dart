@@ -20,16 +20,18 @@ class WebSocketSTTService {
   WebSocketChannel? _webSocketChannel; // 실시간 통신 채널
   final String _serverEndpoint = "/api/routes/speech-translation/connect/single-mode";
 
-  // [상태 변수]
+  // [연결 상태 변수]
   bool _isConnected = false; // 서버 연결 상태
   bool _isSessionReady = false; // 음성 인식 세션 준비 여부
+  bool _isReconnecting = false; // 재연결 상태
+  int _countWebSocketChannel = 0;
 
   // [오디오 녹음 관련]
   final AudioRecorder _audioRecorder = AudioRecorder();     // 오디오 캡쳐 객체
   bool _isRecording = false;                                // 현재 녹음 상태
   StreamSubscription<Uint8List>? _audioStreamSubscription;  // 오디오 스트림 구독 관리
 
-  // [현재 설정]
+  // [현재 언어 설정]
   String? _currentInputLanguage;                            // 현재 입력 언어 (국가)
   List<String>? _currentTargetLanguages;                    // 현재 출력 언어 (국가)
 
@@ -64,20 +66,33 @@ class WebSocketSTTService {
   List<String>? get currentTargetLanguages => _currentTargetLanguages;
 
   // [Getter] 번역 결과 접근
-  Map<String, String> get currentTranslations =>
-      Map.unmodifiable(_currentTranslations);
+  Map<String, String> get currentTranslations => Map.unmodifiable(_currentTranslations);
   List<String> get transcriptHistory => List.unmodifiable(_transcriptHistory);
-  List<Map<String, String>> get translationHistory =>
-      List.unmodifiable(_translationHistory);
+  List<Map<String, String>> get translationHistory => List.unmodifiable(_translationHistory);
 
   // 전체 원문 텍스트 (하나의 문자열로) -> LLM 활용
   String get fullTranscriptText => _transcriptHistory.join(' ');
 
-  // [1] WebSocket 서버 연결 (상태 응답 - StatusMessage)
+  // [1] WebSocket 연결 (상태 응답 - StatusMessage)
   Future<bool> connectToServer({bool isRetry = false}) async {
     debugPrint("[DEBUG 1] connectToServer 메서드 실행 (웹소켓 연결)");
+
+    // 기존 웹소켓 정리
+    if (_webSocketChannel != null) {
+      try {
+        //debugPrint("[🐟 DEBUG 1] 이전 웹소켓 정리 시도 - $_countWebSocketChannel차");
+        // 1) 기존 웹소켓 채널에 "연결 종료" 신호
+        _webSocketChannel!.sink.close().timeout(const Duration(seconds: 2));
+        //debugPrint("[🐟 DEBUG 1] 이전 웹소켓 채널을 정리했습니다.");
+      } catch (e) {
+        // 2) 이미 닫힌 채널 또 닫지 않도록
+        debugPrint("[DEBUG 1] 이전 웹소켓 정리 중 오류 발생 (무시 가능) - $e");
+      }
+      _webSocketChannel = null; // 웹소켓 변수 삭제
+    }
+
     try {
-      // 1) 최초 연결 시
+      // 1) "재연결"이 아닐 때
       if (!isRetry) {
         _updateStatus("[DEBUG 1] 웹소켓 서버 연결 시도");
         _reconnectAttempts = 0; // 연결 시도 횟수 - 최초 연결 시에만 리셋
@@ -88,31 +103,39 @@ class WebSocketSTTService {
       // 2) 서버에 WebSocket 연결 시도
       final uri = Uri.parse('$serverBaseUrl$_serverEndpoint'); // 서버 엔드포인트
       _webSocketChannel = WebSocketChannel.connect(uri); // WebSocket 연결
+      _countWebSocketChannel++;
+      //debugPrint("[🐟 DEBUG 1] 새로운 웹소켓 할당 - $_countWebSocketChannel번째");
+      // -> 재연결 시 새로운 웹소켓 채널을 할당 받으면, 기존에 생성되었던 웹소켓 채널은 자동 삭제됨
 
       // 3) 서버 연결 완료 확인 - Completer
       final Completer<bool> connectionCompleter = Completer<bool>();
 
       // 4) 서버 메시지 수신 리스너
-      _webSocketChannel!.stream.listen(
-        (message) {
+      _webSocketChannel!.stream.listen((message)
+        {
           // 4-1) 첫 번째 메시지 수신 시
           if (!connectionCompleter.isCompleted) {
             connectionCompleter.complete(true); // 연결 성공
+            debugPrint("[🐟 DEBUG 1] WebSocket ready 완료");
           }
           // 4-2) 그 외 메시지 처리
           _handleServerMessage(message);
         },
+        // 4-3) 웹소켓 연결 오류 시
         onError: (error) {
-          // 4-3) 웹소켓 연결 오류 시
-          _handleError("[ERROR 1] WebSocket 연결 오류", error.toString());
+          if (!isRetry) { // "재연결"이 아닐 때에만 콜백 호출
+            _handleError("[ERROR 1] WebSocket 연결 오류", error.toString());
+          }
           _isConnected = false;
           if (!connectionCompleter.isCompleted) {
-            connectionCompleter.complete(false);
+            connectionCompleter.complete(false); // 연결 실패로 완료
           }
         },
+        // 4-4) 연결이 종료되었을 때 처리
         onDone: () {
-          // 4-4) 연결이 종료되었을 때 처리
-          _handleConnectionClosed();
+          if (!isRetry) { // "재연결"이 아닐 때만 _handleConnectionClosed 호출
+            _handleConnectionClosed();
+          }
           if (!connectionCompleter.isCompleted) {
             connectionCompleter.complete(false); // 연결 실패로 완료
           }
@@ -121,37 +144,43 @@ class WebSocketSTTService {
 
       // 5) 타임아웃 예외 처리
       try {
-        // 10초 내 실제 연결 성공 여부 확인
-        final result = await connectionCompleter.future.timeout(
+        // ready 수신 까지 10초
+        await _webSocketChannel!.ready.timeout(
           Duration(seconds: 10),
           onTimeout: () {
-            // 3초 내에 응답 없을 시, 타임아웃
-            _handleError("[ERROR 1] 서버 연결 타임아웃", "Connection Timeout");
-            return false;
+            throw TimeoutException("WebSocket 연결 타임아웃", Duration(seconds: 10));
           },
         );
 
-        // 5-1) 10초 내 서버 연결 성공 시
-        if (result) {
-          _isConnected = true;
-          _updateStatus("[DEBUG 1] 서버 연결 성공 ~!@");
-          return true;
-        } else {
-          _isConnected = false;
-          return false;
+        // 웹소켓 연결 성공 시 true 반환
+        _isConnected = true;
+        _updateStatus("");
+        return true;
+      }
+      catch (e) { // 타임아웃 예외 발생 시
+        if (!isRetry) { // "재시도"가 아닐 때 예외 처리
+          if (e is TimeoutException) {
+            _handleError("[ERROR 1] 서버 연결 10초 타임아웃", "Connection Timeout");
+          } else {
+            _handleError("[ERROR 1] 서버 연결 실패",  e.toString());
+          }
         }
-      } catch (e) {
         _isConnected = false;
         return false;
       }
     } catch (e) {
-      _handleError("[ERROR 1] 서버 연결 실패", e.toString());
+      // "재시도"가 아닐 때만 에러를 보고하도록
+      if (!isRetry) {
+        _handleError("[ERROR 1] 서버 연결 실패", e.toString());
+      }
       _isConnected = false;
       return false;
     }
   }
 
   // [2] 음성 인식 세션 시작 (언어 설정 - ConfigMessage)
+  // 어플리케이션 세션 시작
+  // 언어설정 전송 -> "ready" 응답 대기
   Future<bool> startSession({
     required String inputLanguage,          // (매개변수1) 입력 언어 국가 설정
     required List<String> targetLanguages,  // (매개변수2) 출력 언어 국가 설정
@@ -312,6 +341,11 @@ class WebSocketSTTService {
   // [6-1] 연결 끊어졌을 때 처리
   // -> 상태 업데이트, 녹음 상태 저장, 재연결 스케줄링
   void _handleConnectionClosed() {
+    if(_isReconnecting) { // "재연결" 상태면 새로운 재연결 X
+      debugPrint("[🐟 DEBUG 6] 이미 재연결 절차가 진행 중이므로 중복 스케줄링 방지함");
+      return; // 호출 위치 [1]로 돌아감
+    }
+
     debugPrint("[DEBUG 6] _handleConnectionClosed 메서드 실행 (재연결)");
 
     _isConnected = false;                         // 세션 연결 종료
@@ -319,7 +353,6 @@ class WebSocketSTTService {
     _wasRecordingBeforeDisconnect = _isRecording; // 끊어지기 전 상태 저장 (녹음 중이었는지)
 
     if (_shouldAutoReconnect && _reconnectAttempts < _maxReconnectAttempts) { // 자동 재연결, 재시도 횟수 < 3
-      //_shouldAutoReconnect = false; // 중복 재연결 방지
       _scheduleReconnect(); // (호출) 2) 재연결 예약
     } else { // 횟수 초과로 재연결 중단
       _shouldAutoReconnect = false; // 중복 재연결 방지
@@ -329,43 +362,58 @@ class WebSocketSTTService {
 
   // [6-2] 재연결 예약
   void _scheduleReconnect() {
-    final delay = _reconnectDelays[_reconnectAttempts.clamp(0, _reconnectDelays.length-1)]; // clamp(최소,최댓값)
-    _updateStatus("[DEBUG 6] ${delay}초 후 재연결 시도"); // 1, 3, 5초
+    _isReconnecting = true; // 재연결 상태 ON
 
+    final delay = _reconnectDelays[_reconnectAttempts.clamp(0, _reconnectDelays.length-1)]; // clamp(최소,최댓값)
+    _updateStatus("[DEBUG 6] ${delay}초 후 재연결 시도"); // 2, 6, 10초
+
+    // 2초 뒤에 [3]으로 이동
     _reconnectTimer = Timer(Duration(seconds: delay), _attemptReconnect); // (호출) 3) 재연결 시도
   }
 
   // [6-3] 재연결 시도
   Future<void> _attemptReconnect() async {
-    debugPrint("[🐟 DEBUG] _attemptReconnect 실행 - 현재 : $_reconnectAttempts");
-    _reconnectAttempts++; // 재연결 시도 횟수 증가
-    debugPrint("[🐟 DEBUG] _attemptReconnect 실행 - 증가 후 : $_reconnectAttempts");
-    _updateStatus("[DEBUG 1] 서버 연결 재시도 ${_reconnectAttempts}/${_maxReconnectAttempts}");
-    final success = await connectToServer(isRetry: true); // (호출) [1] WebSocket 서버 연결 - 재연결 시도 !!!
+    try {
+      debugPrint("[🐟 DEBUG] 재연결 시작 시간 - ${DateTime.now()}");
+      debugPrint("[🐟 DEBUG] _attemptReconnect 실행 - 현재 : $_reconnectAttempts");
+      _reconnectAttempts++; // 재연결 시도 횟수 증가
+      debugPrint("[🐟 DEBUG] _attemptReconnect 실행 - 증가 후 : $_reconnectAttempts");
 
-    // 1) 재연결 성공
-    if (success && _currentInputLanguage != null) { // 재연결 성공 && 입력 언어 국가 not null
-      //_shouldAutoReconnect = true;
-      _stopReconnectTimer(); // 타이머 중지
-      _reconnectAttempts = 0; // 재시도 카운트 리셋
+      _updateStatus("[DEBUG] 서버 연결 재시도 ${_reconnectAttempts}/${_maxReconnectAttempts}");
+      // (호출) [1] WebSocket 서버 연결 - 재연결 시도
+      final success = await connectToServer(isRetry: true);
 
-      await startSession( // (호출) [2] 음성 인식 세션
-        inputLanguage: _currentInputLanguage!, // 입력 언어 국가
-        targetLanguages: _currentTargetLanguages!, // 출력 언어 국가
-      );
+      // 1) 재연결 성공
+      if (success) {
+        _stopReconnectTimer(); // 타이머 중지
+        _reconnectAttempts = 0; // 재시도 카운트 리셋 = 0
+        _isReconnecting = false; // 재연결 상태 = false
 
-      if (_wasRecordingBeforeDisconnect) { // 이전에 녹음 중이었다면 재개
-        await resumeRecording();
+        // (호출) [2] 음성 인식 세션
+        await startSession(
+          inputLanguage: _currentInputLanguage!, // 입력 언어 국가
+          targetLanguages: _currentTargetLanguages!, // 출력 언어 국가
+        );
+
+        // 녹음 중 상태였다면 -> (호출) [3] 녹음 재개
+        if (_wasRecordingBeforeDisconnect) {
+          await resumeRecording();
+        }
       }
-    } else {
       // 2) 재연결 실패
-      if (_reconnectAttempts >= _maxReconnectAttempts) { // 최대 재시도 초과 시
-        _stopReconnectTimer();   // 타이머 중지
-        _shouldAutoReconnect = false; // 자동 재연결 끄기
-        _handleError("[ERROR 6] 실패", "최대 재시도 횟수 초과");
-      } else { // 재시도 횟수 남으면 다시 시도
-        _scheduleReconnect(); // (호출) 2) 재연결 시도
+      else {
+        if (_reconnectAttempts >= _maxReconnectAttempts) { // 최대 재시도 초과 시
+          _stopReconnectTimer(); // 타이머 중지
+          _shouldAutoReconnect = false; // 자동 재연결 끄기
+          _isReconnecting = false; // 재연결 상태 OFF
+          _handleError("[ERROR 6] 재연결 실패", "최대 재시도 횟수 초과");
+        } else { // 재시도 횟수 남으면 다시 시도
+          _scheduleReconnect(); // (호출) 2) 재연결 예약
+        }
       }
+    } catch (e) {
+      debugPrint("[DEBUG] _attemptReconnect 예외 발생 - $e");
+      _isReconnecting = false;
     }
   }
 

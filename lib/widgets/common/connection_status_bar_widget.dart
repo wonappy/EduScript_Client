@@ -15,7 +15,6 @@ class ConnectionStatusBar extends StatelessWidget {
   Widget build(BuildContext context) {
     debugPrint("[🌟 DEBUG] ConnectionStatusBar 실행 - $serverConnectionState");
 
-
     if (serverConnectionState == ServerConnectionState.connected) {
       return const SizedBox.shrink(); // 감추기
     }
