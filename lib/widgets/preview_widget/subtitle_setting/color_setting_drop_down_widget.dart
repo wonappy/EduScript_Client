@@ -1,3 +1,4 @@
+import 'package:client/core/styles/color_core.dart';
 import 'package:flutter/material.dart';
 import '../../../core/global_core.dart';
 
@@ -220,7 +221,7 @@ class _ColorSettingDropDownState extends State<ColorSettingDropDown> {
     return Container(
       //padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
       decoration: BoxDecoration(
-        color: widget.backgroundColor ?? const Color(0xFFF6F6F6),
+        color: AppColors.whiteColor1,
         borderRadius: BorderRadius.circular(30),
       ),
       child: Row(
@@ -230,7 +231,7 @@ class _ColorSettingDropDownState extends State<ColorSettingDropDown> {
           Text(
             widget.title,
             style: TextStyle(
-              fontSize: _fontSize,
+              fontSize: getResponsiveFontSize(widget.screenWidth) * 0.85,
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),

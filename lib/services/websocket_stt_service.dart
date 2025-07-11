@@ -191,7 +191,7 @@ class WebSocketSTTService {
 
   // [2] 음성 인식 세션 시작 (언어 설정 - ConfigMessage)
   // 어플리케이션 세션 시작
-  // 언어설정 전송 -> "ready" 응답 대기
+  // 언어 설정 전송 -> "ready" 응답 대기
   Future<bool> startSession({
     required String inputLanguage, // (매개변수1) 입력 언어 국가 설정
     required List<String> targetLanguages, // (매개변수2) 출력 언어 국가 설정

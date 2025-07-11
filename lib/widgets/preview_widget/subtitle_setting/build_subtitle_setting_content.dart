@@ -1,6 +1,7 @@
 /// 자막 언어 및 테마 설정 (Provider 연동)
 library;
 
+import 'package:client/core/styles/color_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/global_core.dart';
@@ -61,7 +62,7 @@ class _BuildSubtitleSettingContentState
       //   end: Alignment.bottomRight,        
       // ),
       ),
-      padding: EdgeInsets.all(20),
+
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -73,10 +74,10 @@ class _BuildSubtitleSettingContentState
               child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      _buildScreenShareSection(),
-                      SizedBox(height: 30),
+                      //_buildScreenShareSection(),
+                      //SizedBox(height: 30),
                       _buildInputLanguageSection(),
-                      SizedBox(height: 30),
+                      SizedBox(height: 25),
                       _buildOutputLanguageSection(),
                     ],
                   ),
@@ -90,42 +91,42 @@ class _BuildSubtitleSettingContentState
 
   // [섹션 별 빌더]
   // 1) 화면 공유 섹션
-  Widget _buildScreenShareSection() {
-    final settings = context.read<SubtitleSettingsProvider>();
-
-    return Column(
-      children: [
-        _buildSectionTitle("화면 공유"),
-        SizedBox(height: 10,),
-        _buildBigContainer(
-          child: Column(
-            children: [
-              _buildSmallContainer(
-                child: Row(                  
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    //_buildSectionTitle('화면 공유 ON/OFF'),
-                    Text("화면 공유 ON/OFF",
-                    style: TextStyle(
-                      fontSize: getResponsiveFontSize(widget.screenWidth) * 0.8,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),),
-                    OnOffSwitch(
-                      initialValue: settings.screenSharedEnabled,
-                      onChanged: (bool newValue) {
-                        settings.updateScreenSharedEnabled(newValue);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+  // Widget _buildScreenShareSection() {
+  //   final settings = context.read<SubtitleSettingsProvider>();
+  //
+  //   return Column(
+  //     children: [
+  //       _buildSectionTitle("화면 공유"),
+  //       SizedBox(height: 10,),
+  //       _buildBigContainer(
+  //         child: Column(
+  //           children: [
+  //             _buildSmallContainer(
+  //               child: Row(
+  //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                 children: [
+  //                   //_buildSectionTitle('화면 공유 ON/OFF'),
+  //                   Text("화면 공유 ON/OFF",
+  //                   style: TextStyle(
+  //                     fontSize: getResponsiveFontSize(widget.screenWidth) * 0.8,
+  //                     fontWeight: FontWeight.bold,
+  //                     color: Colors.black,
+  //                   ),),
+  //                   OnOffSwitch(
+  //                     initialValue: settings.screenSharedEnabled,
+  //                     onChanged: (bool newValue) {
+  //                       settings.updateScreenSharedEnabled(newValue);
+  //                     },
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
   // 2) 입력 언어 설정 섹션
   Widget _buildInputLanguageSection() {
@@ -167,7 +168,7 @@ class _BuildSubtitleSettingContentState
 
     return Column(
       children: [
-        _buildSectionTitle("출력 언어 설정"),
+        _buildSectionTitle("자막 설정"),
         SizedBox(height: 10),
         _buildBigContainer(
           child: Column(
@@ -195,6 +196,7 @@ class _BuildSubtitleSettingContentState
                   ),
                 ),
               ),
+              SizedBox(height: 20),
               _buildSubSection(
                 title: "텍스트",
                 content: _buildMediumContainer(
@@ -204,6 +206,7 @@ class _BuildSubtitleSettingContentState
                   ),
                 ),
               ),
+              SizedBox(height: 20),
               _buildSubSection(
                 title: "배경",
                 content: _buildMediumContainer(
@@ -413,17 +416,10 @@ class _BuildSubtitleSettingContentState
   // 큰 컨테이너
   Widget _buildBigContainer({required Widget child}) {
   return Container(
-    padding: EdgeInsets.all(16),
+    padding: EdgeInsets.all(10),
     decoration: BoxDecoration(
-      color: Color(0xFFC1C1C1),
-      borderRadius: BorderRadius.circular(12),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.12),
-          blurRadius: 12,
-          offset: Offset(0, 4),
-        ),
-      ],
+      color: Colors.grey[300],
+      borderRadius: BorderRadius.circular(7),
     ),
     child: child,
   );
@@ -432,9 +428,9 @@ class _BuildSubtitleSettingContentState
   // 작은 컨테이너
   Widget _buildSmallContainer({required Widget child}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 0),
       decoration: BoxDecoration(
-        color: Color(0xFFF6F6F6),
+        color: AppColors.whiteColor1,
         borderRadius: BorderRadius.circular(7),
         // boxShadow: [
         //   BoxShadow(
@@ -451,9 +447,9 @@ class _BuildSubtitleSettingContentState
   // 중앙 컨테이너
   Widget _buildMediumContainer({required Widget child}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 0),
       decoration: BoxDecoration(
-        color: Color(0xFFF6F6F6),
+        color: AppColors.whiteColor1,
         borderRadius: BorderRadius.circular(8),
         // boxShadow: [
         //   BoxShadow(
@@ -477,7 +473,7 @@ class _BuildSubtitleSettingContentState
         _buildSubSectionTitle(title),
         SizedBox(height: spacing),
         content,
-        SizedBox(height: 20),
+        // SizedBox(height: 20),
       ],
     );
   }
