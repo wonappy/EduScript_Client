@@ -34,7 +34,7 @@ class BuildPreviewBlock extends StatelessWidget {
         if (showTitle && title.isNotEmpty) ...[
           Padding(
             padding: EdgeInsets.only(
-              left: screenWidth * 0.01,
+              left: 1,
               bottom: screenHeight * 0.01,
             ),
             child: Text(
@@ -42,7 +42,7 @@ class BuildPreviewBlock extends StatelessWidget {
               style: TextStyle(
                 color: Colors.black,
                 fontSize: getResponsiveFontSize(screenWidth),
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),

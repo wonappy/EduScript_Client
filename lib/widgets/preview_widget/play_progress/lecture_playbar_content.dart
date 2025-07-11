@@ -21,7 +21,7 @@ class LecturePlayBarComponents {
       ),
       decoration: BoxDecoration(
         color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(screenWidth * 0.01),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -115,7 +115,7 @@ class LecturePlayBarComponents {
     return Text(
       displayTime,
       style: TextStyle(
-        fontSize: getResponsiveFontSize(screenWidth) * 0.8,
+        fontSize: 40,
         fontWeight: FontWeight.w500,
         color: Colors.black87,
       ),

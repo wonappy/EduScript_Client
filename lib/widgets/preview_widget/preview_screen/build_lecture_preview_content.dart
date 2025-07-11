@@ -1,6 +1,7 @@
 /// 강의 화면 미리보기 컨텐츠
 library;
 
+import 'package:client/core/styles/color_core.dart';
 import 'package:flutter/material.dart';
 
 import '../subtitle_setting_provider.dart';
@@ -22,8 +23,8 @@ class BuildLecturePreviewContent extends StatelessWidget {
           width: screenWidth,
           height: screenHeight,
           decoration: BoxDecoration(
-            color: Colors.black, //배경 색상 지정
-            borderRadius: BorderRadius.circular(screenWidth * 0.02),
+            color: AppColors.blackFontColor, //배경 색상 지정
+            borderRadius: BorderRadius.circular(8),
           ),
           padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
           child: Column(
@@ -32,7 +33,7 @@ class BuildLecturePreviewContent extends StatelessWidget {
               for (int i = 0; i < languages.length; i++)
                 Column(
                   children: [
-                    SizedBox(height: 10), //자막 간 간격 지정
+                    SizedBox(height: 0), //자막 간 간격 지정
                     Container(
                       padding: EdgeInsets.symmetric(
                         horizontal: 10,
@@ -40,22 +41,22 @@ class BuildLecturePreviewContent extends StatelessWidget {
                       ),
                       width: screenWidth * 0.95,
                       constraints: BoxConstraints(
-                        maxHeight: screenHeight * 0.5,
+                        maxHeight: screenHeight * 0.2,
                       ),
-                      //최대 자막 컨테이너 높이
+                      // 최대 자막 컨테이너 높이
                       decoration: BoxDecoration(
                         color: settings.getBackgroundColor().withValues(
-                          //자막 배경 색상 지정
+                          // 자막 배경 색상 지정
                           alpha:
                               settings.getBackgroundOpacity(), //자막 배경 불투명도 지정
                         ),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(5),
                       ),
                       child: Text(
-                        settings.getPreviewText(languages[i]), //자막 내용 지정
+                        settings.getPreviewText(languages[i]), // 자막 내용 지정
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: settings.getFontColor(), //자막 글자 색상 지정
+                          color: settings.getFontColor(), // 자막 글자 색상 지정
                           fontSize: settings.getFontSize(
                             screenWidth,
                           ), //자막 글자 크기 지정

@@ -1,10 +1,10 @@
-//화면 공유 + 자막
-//대기 화면
+/// 화면 공유 + 자막
+// 대기 화면
+import 'package:client/core/styles/color_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/enum_core.dart';
-import '../core/styles/colors_core.dart';
 import '../providers/mode_provider.dart';
 import '../services/websocket_stt_service.dart';
 import '../services/websocket_multiple_speech_service.dart';
@@ -65,7 +65,7 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
     final bool isWideScreen = screenWidth > screenHeight * 1.5;
 
     return Scaffold(
-      backgroundColor: backgroundcolorOnWord, // 회색 배경
+      backgroundColor: AppColors.blackColor, // 🔴 배경색
       body: Column(
         children: [
           // [위젯] 연결 상태 표시바
