@@ -38,7 +38,7 @@ class BuildWideLayout extends StatelessWidget {
                   screenHeight: screenHeight * 0.7,
                 ),
               ),
-              SizedBox(height: screenHeight * 0.02), // 2% 간격
+              SizedBox(height: 18), // 2% 간격
               // 강의 시작
               Expanded(
                 flex: 3, // 왼쪽 영역의 30%

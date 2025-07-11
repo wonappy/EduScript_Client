@@ -1,3 +1,4 @@
+import 'package:client/core/styles/color_core.dart';
 import 'package:flutter/material.dart';
 import '../../../core/global_core.dart';
 import 'multi_language_select_dialog.dart';
@@ -54,7 +55,7 @@ class MultiLanguageDropdown extends StatelessWidget {
     return Container(
       //padding: EdgeInsets.symmetric(horizontal: 15, vertical: 0),
       decoration: BoxDecoration(
-        color: backgroundColor ?? Color(0xFFF6F6F6),
+        color: AppColors.whiteColor1,
         borderRadius: BorderRadius.circular(30),
       ),
       child: Row(
@@ -63,7 +64,7 @@ class MultiLanguageDropdown extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              fontSize: getResponsiveFontSize(screenWidth) * 0.8,
+              fontSize: getResponsiveFontSize(screenWidth) * 0.85,
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),

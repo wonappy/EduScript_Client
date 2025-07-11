@@ -9,7 +9,7 @@ class SubtitleSettingsProvider extends ChangeNotifier {
   bool _screenSharedEnabled = true;
   List<String> _selectedInputLanguages = ['한국어'];
   List<String> _selectedOutputLanguages = ['한국어'];
-  String _selectedPosition = '하단';
+  String _selectedPosition = '중앙';
   String _selectedFontStyle = '기본';
   String _selectedFontSize = '중간';
   String _selectedFontColor = '흰색';

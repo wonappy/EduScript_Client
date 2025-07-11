@@ -1,8 +1,8 @@
-//대기 화면
+// 대기 화면
+import 'package:client/core/styles/color_core.dart';
 import 'package:flutter/material.dart';
 
 import '../core/enum_core.dart';
-import '../core/styles/colors_core.dart';
 import '../widgets/preview_widget/build_narrow_layout.dart';
 import '../widgets/preview_widget/build_wide_layout.dart';
 
@@ -20,7 +20,7 @@ class PreviewScreen extends StatelessWidget {
     final bool isWideScreen = screenWidth > screenHeight * 1.5;
 
     return Scaffold(
-      backgroundColor: backgroundcolorOnWord, // 회색 배경
+      backgroundColor: AppColors.whiteColor1, // 🔴 배경색
       body: Padding(
         padding: EdgeInsets.all(screenWidth * 0.015), // 화면 크기의 1.5%를 패딩으로
         child:
