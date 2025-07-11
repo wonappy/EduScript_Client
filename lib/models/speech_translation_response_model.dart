@@ -1,11 +1,16 @@
 // [models/speech_translation_response_model.dart]
 /// DTO 모델
-/// [3]-1 번역 응답 (Response)
+/// [3]-1 번역 응답 (Response) : 강의 모드
 class SpeechTranslationResponse {
   final String type; // 타입
+  final bool isFinal; // 완전 문장 여부
   final Map<String, TranslationResult> translations; // 번역 결과
 
-  SpeechTranslationResponse({this.type = "result", required this.translations});
+  SpeechTranslationResponse({
+    this.type = "result",
+    required this.isFinal,
+    required this.translations,
+  });
 
   factory SpeechTranslationResponse.fromJson(Map<String, dynamic> json) {
     Map<String, TranslationResult> translationMap = {};
@@ -19,19 +24,22 @@ class SpeechTranslationResponse {
 
     return SpeechTranslationResponse(
       type: json['type'] ?? 'result',
+      isFinal: json['is_final'],
       translations: translationMap,
     );
   }
 }
 
-/// [3]-2 번역 응답 (Response)
+/// [3]-2 번역 응답 (Response) : 토론 모드
 class SeperatedSpeechTranslationResponse {
   final String type; // 타입
+  final bool isFinal; // 타입
   final Map<String, TranslationResult> original; // 원문
   final Map<String, TranslationResult> translations; // 번역 결과
 
   SeperatedSpeechTranslationResponse({
     this.type = "result",
+    required this.isFinal,
     required this.original,
     required this.translations,
   });
@@ -58,6 +66,7 @@ class SeperatedSpeechTranslationResponse {
 
     return SeperatedSpeechTranslationResponse(
       type: json['type'] ?? 'result',
+      isFinal: json['is_final'],
       original: originalMap,
       translations: translationMap,
     );

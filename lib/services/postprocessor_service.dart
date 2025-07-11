@@ -9,7 +9,7 @@ import 'package:client/core/enum_core.dart';
 
 class PostProcessorService {
   // http 통신 설정
-  final String _serverBaseUrl = "http://10.101.134.30:8000"; // 서버 엔드포인트
+  final String _serverBaseUrl = "http://10.101.158.221:8000"; // 서버 엔드포인트
 
   final String _serverEndpoint = "/api/routes/language/refinement";
 
@@ -51,7 +51,7 @@ class PostProcessorService {
     if (enableRefine != null) _enableRefine = enableRefine;
     if (enableSummarize != null) _enableSummarize = enableSummarize;
     if (enableKeypoints != null) _enableKeypoints = enableKeypoints;
-    if(processingMode != null) _processingMode = processingMode;
+    if (processingMode != null) _processingMode = processingMode;
   }
 
   void setProcessingMode(String mode) {
@@ -80,7 +80,6 @@ class PostProcessorService {
       processingMode: processingMode,
     );
   }
- 
 
   // [핵심 기능] 텍스트 정제 요청
   Future<Map<String, dynamic>?> refineText({

@@ -18,34 +18,41 @@ import '../models/speech_translation_response_model.dart';
 class WebSocketMultipleSTTService {
   // [WebSocket 통신]
   WebSocketChannel? _webSocketChannel; // 실시간 통신 채널
-  final String _serverEndpoint = "/api/routes/speech-translation/connect/multiple-mode";
+  final String _serverEndpoint =
+      "/api/routes/speech-translation/connect/multiple-mode";
 
   // [연결 상태 변수]
   bool _isConnected = false; // 서버 연결 상태
   bool _isSessionReady = false; // 음성 인식 세션 준비 여부
 
   // [오디오 녹음 관련]
-  final AudioRecorder _audioRecorder = AudioRecorder();      // 오디오 캡쳐 객체
-  bool _isRecording = false;                                 // 현재 녹음 상태
-  StreamSubscription<Uint8List>? _audioStreamSubscription;   // 오디오 스트림 구독 관리
+  final AudioRecorder _audioRecorder = AudioRecorder(); // 오디오 캡쳐 객체
+  bool _isRecording = false; // 현재 녹음 상태
+  StreamSubscription<Uint8List>? _audioStreamSubscription; // 오디오 스트림 구독 관리
+
+  final List<int> _audioBuffer = []; //오디오 버퍼 저장
+  Timer? _bufferSendTimer; //오디오 전송 시간
 
   // [현재 언어 설정]
-  List<String>? _currentInputLanguages;                       // 현재 입력 언어 (국가)
-  List<String>? _currentTargetLanguages;                      // 현재 타켓 언어 (국가)
+  List<String>? _currentInputLanguages; // 현재 입력 언어 (국가)
+  List<String>? _currentTargetLanguages; // 현재 타켓 언어 (국가)
 
   //[번역 결과 저장]
-  final Map<String, String> _currentTranslations = {};        // 현재 번역 결과
-  final List<String> _transcriptHistory = [];                 // 원문 자막 저장소 - 다국어 인식 결과 저장
-  final Map<String, List<String>> _languageTextHistory = {};  // 각 나라 별 자막 저장소
-  final List<Map<String, String>> _translationHistory = [];   // 번역 히스토리 (약 3개 정도만 저장)
+  final Map<String, String> _currentTranslations = {}; // 현재 번역 결과
+  final List<String> _transcriptHistory = []; // 원문 자막 저장소 - 다국어 인식 결과 저장
+  final Map<String, List<String>> _languageTextHistory = {}; // 각 나라 별 자막 저장소
+  final List<Map<String, String>> _translationHistory =
+      []; // 번역 히스토리 (약 3개 정도만 저장)
 
   // [콜백 함수]
-  Function(Map<String, TranslationResult>)? onTranslationReceived; // 번역 결과 콜백
+  Function(Map<String, TranslationResult>, bool, String)?
+  onTranslationReceived; // 번역 결과 콜백
   Function(String)? onStatusUpdate; // 상태 변경 콜백
   Function(String, String?)? onError; // 에러 콜백
 
   // [싱글톤 패턴]
-  static final WebSocketMultipleSTTService _instance = WebSocketMultipleSTTService._internal();
+  static final WebSocketMultipleSTTService _instance =
+      WebSocketMultipleSTTService._internal();
   factory WebSocketMultipleSTTService() => _instance;
   WebSocketMultipleSTTService._internal();
 
@@ -57,10 +64,13 @@ class WebSocketMultipleSTTService {
   List<String>? get currentTargetLanguages => _currentTargetLanguages;
 
   // [Getter] 번역 결과 접근
-  Map<String, String> get currentTranslations => Map.unmodifiable(_currentTranslations);
-  Map<String, List<String>> get languageTextHistory => Map.unmodifiable(_languageTextHistory);
+  Map<String, String> get currentTranslations =>
+      Map.unmodifiable(_currentTranslations);
+  Map<String, List<String>> get languageTextHistory =>
+      Map.unmodifiable(_languageTextHistory);
   List<String> get transcriptHistory => List.unmodifiable(_transcriptHistory);
-  List<Map<String, String>> get translationHistory => List.unmodifiable(_translationHistory);
+  List<Map<String, String>> get translationHistory =>
+      List.unmodifiable(_translationHistory);
 
   // 전체 원문 텍스트 (하나의 문단으로) -> LLM 활용 -> [언어] 내용 형태로 확장 고려
   String get fullTranscriptText => _transcriptHistory.join("\n");
@@ -74,7 +84,7 @@ class WebSocketMultipleSTTService {
       debugPrint("[🐟 DEBUG] === MultiMode 연결 시작 시간 - ${DateTime.now()} ===");
       _updateStatus("[DEBUG 1] 웹소켓 서버 연결 시도");
       final uri = Uri.parse('$serverBaseUrl$_serverEndpoint'); // 서버 엔드포인트
-      _webSocketChannel = WebSocketChannel.connect(uri);       // WebSocket 연결
+      _webSocketChannel = WebSocketChannel.connect(uri); // WebSocket 연결
 
       // 1) 서버 메시지 수신 리스너
       _webSocketChannel!.stream.listen(
@@ -93,8 +103,8 @@ class WebSocketMultipleSTTService {
           debugPrint("  - isRecording : $_isRecording");
 
           _updateStatus("[DEBUG 1] 서버 연결 종료됨");
-          _isConnected = false;     // 연결 상태 OFF
-          _isSessionReady = false;  // 연결 상태 OFF
+          _isConnected = false; // 연결 상태 OFF
+          _isSessionReady = false; // 연결 상태 OFF
         },
       );
 
@@ -109,8 +119,8 @@ class WebSocketMultipleSTTService {
 
   // [2] 음성 인식 세션 시작 (언어 설정 - MultipleConfigMessage)
   Future<bool> startSession({
-    required List<String> inputLanguages,   // 입력 언어 국가 (다중)
-    required List<String> targetLanguages,  // 출력 언어 국가 (다중)
+    required List<String> inputLanguages, // 입력 언어 국가 (다중)
+    required List<String> targetLanguages, // 출력 언어 국가 (다중)
   }) async {
     debugPrint("[DEBUG 2] startSession 메서드 실행");
 
@@ -182,21 +192,47 @@ class WebSocketMultipleSTTService {
         ),
       );
 
-      // 2) 오디오 데이터를 서버로 실시간 전송
+      // 2) 오디오 스트림 리스너: 데이터를 버퍼에 추가
       _audioStreamSubscription = stream.listen(
-        // 오디오가 들어올 때 콜백
         (audioData) {
-          // 바이너리 음성 데이터
-          if (_isConnected && _webSocketChannel != null) {
-            _webSocketChannel!.sink.add(audioData); // 음성 데이터를 실시간으로 전송
-          }
+          _audioBuffer.addAll(audioData);
         },
         onError: (error) {
           _handleError("오디오 스트림 오류", error.toString());
         },
       );
 
-      // 3) 상태 업데이트
+      // 3) 버퍼 타이머 설정: 250ms 마다 버퍼의 데이터를 서버로 전송
+      _bufferSendTimer?.cancel(); // 기존 타이머가 있다면 취소
+      _bufferSendTimer = Timer.periodic(const Duration(milliseconds: 250), (
+        timer,
+      ) {
+        // 연결 상태가 정상이면서 버퍼에 데이터가 있을 때만 전송
+        if (_isConnected &&
+            _webSocketChannel != null &&
+            _audioBuffer.isNotEmpty) {
+          // 버퍼 데이터 전송
+          _webSocketChannel!.sink.add(Uint8List.fromList(_audioBuffer));
+          // 버퍼 비움
+          _audioBuffer.clear();
+        }
+      });
+
+      // // 2) 오디오 데이터를 서버로 실시간 전송
+      // _audioStreamSubscription = stream.listen(
+      //   // 오디오가 들어올 때 콜백
+      //   (audioData) {
+      //     // 바이너리 음성 데이터
+      //     if (_isConnected && _webSocketChannel != null) {
+      //       _webSocketChannel!.sink.add(audioData); // 음성 데이터를 실시간으로 전송
+      //     }
+      //   },
+      //   onError: (error) {
+      //     _handleError("오디오 스트림 오류", error.toString());
+      //   },
+      // );
+
+      // 4) 상태 업데이트
       _isRecording = true;
       _updateStatus("🎤 음성 녹음 시작");
       return true;
@@ -357,6 +393,10 @@ class WebSocketMultipleSTTService {
       String? originalText;
 
       debugPrint("[🐟 DEBUG] === 번역 결과 ===");
+
+      // stt recognizing 문장인지의 여부
+      debugPrint("완전 문장 여부 : ${response.isFinal}");
+
       response.translations.forEach((lang, result) {
         debugPrint("[🐟 DEBUG] [$lang]: ${result.resultText}"); // 번역 결과 로그
         _currentTranslations[lang] = result.resultText;
@@ -367,25 +407,34 @@ class WebSocketMultipleSTTService {
           _languageTextHistory[lang] = [];
         }
 
-        // 저장소에 추가
-        _languageTextHistory[lang]!.add(result.resultText);
+        //완전 문장일 경우에만 저장
+        if (response.isFinal) {
+          // 저장소에 추가
+          _languageTextHistory[lang]!.add(result.resultText);
+        }
       });
 
       // 2) 원문 자막 저장소에 추가
-      response.original.forEach((lang, result) {
-        debugPrint("[🐟 DEBUG] [$lang]: ${result.resultText}"); // 원문 로그
-        originalText = result.resultText;
-        _transcriptHistory.add(result.resultText);
-      });
+      if (response.isFinal) {
+        response.original.forEach((lang, result) {
+          debugPrint("[🐟 DEBUG] [$lang]: ${result.resultText}"); // 원문 로그
+          originalText = result.resultText;
+          _transcriptHistory.add(result.resultText);
+        });
+      }
 
       // 3) 번역 저장소에 추가
-      if (_currentTranslations.isNotEmpty) {
+      if (_currentTranslations.isNotEmpty && response.isFinal) {
         _translationHistory.add(Map.from(_currentTranslations));
       }
 
       // 4) 콜백 호출
       debugPrint("[🐟 DEBUG] 콜백 호출 - 번역 결과 개수 ${response.translations.length}");
-      onTranslationReceived?.call(response.translations);
+      onTranslationReceived?.call(
+        response.translations,
+        response.isFinal,
+        response.original.keys.first,
+      );
 
       // 5) 원문 저장 상태 로그 출력
       if (originalText != null) {

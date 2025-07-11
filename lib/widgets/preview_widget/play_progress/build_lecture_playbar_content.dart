@@ -83,7 +83,7 @@ class _BuildLecturePlayBarContentState
       _currentMode =
           Provider.of<ModeProvider>(context, listen: false).currentMode;
       debugPrint("페이지 진입 - 현재 모드: ${_currentMode.toString()}");
-      _initializeSTTService();
+      //_initializeSTTService();
     }
   }
 
@@ -97,53 +97,54 @@ class _BuildLecturePlayBarContentState
   }
 
   //🔴🔴 지금 호출되고 있지 않는 코드입니다!!!!! provider를 통해서 service를 확인하고 있기 때문에 사용되고 있지 않음!
+  //multiple에서는 동작 하는듯...?
   // 근데 의문점... subtitle only screen에 service provider를 적용하기 전에는 이 코드가 출력됐었는데 ... 뭐지
   // [콜백] stt 서비스 초기화
-  void _initializeSTTService() {
-    final service = currentService;
-
-    if (service is WebSocketSTTService) {
-      // 일반 강의 모드
-      service.onTranslationReceived = (translations) {
-        // 1) 번역 결과 처리
-        debugPrint("번역 결과 처리");
-        translations.forEach((language, result) {
-          // forEach : 번역 결과 순회하면 출력
-          debugPrint(">> UI [$language] ${result.resultText}"); // UI 로그
-        });
-      };
-
-      // 2) 상태 변화 콜백
-      service.onStatusUpdate = (status) {
-        debugPrint("STT Status : $status");
-      };
-
-      // 3) 에러 코드 콜백
-      service.onError = (message, errorCode) {
-        debugPrint(
-          "STT Error : $message ${errorCode != null ? '($errorCode)' : ''}",
-        );
-      };
-    } else if (service is WebSocketMultipleSTTService) {
-      // 다국어 회의 모드
-      service.onTranslationReceived = (translations) {
-        debugPrint("번역 결과 처리 (다국어 회의)");
-        translations.forEach((language, result) {
-          debugPrint(">> UI [$language] ${result.resultText}");
-        });
-      };
-
-      service.onStatusUpdate = (status) {
-        debugPrint("STT Status (회의): $status");
-      };
-
-      service.onError = (message, errorCode) {
-        debugPrint(
-          "STT Error (회의): $message ${errorCode != null ? '($errorCode)' : ''}",
-        );
-      };
-    }
-  }
+  // void _initializeSTTService() {
+  //   final service = currentService;
+  //
+  //   if (service is WebSocketSTTService) {
+  //     // 일반 강의 모드
+  //     service.onTranslationReceived = (translations, isFinal) {
+  //       // 1) 번역 결과 처리
+  //       debugPrint("번역 결과 처리");
+  //       translations.forEach((language, result) {
+  //         // forEach : 번역 결과 순회하면 출력
+  //         debugPrint(">> UI [$language] ${result.resultText}"); // UI 로그
+  //       });
+  //     };
+  //
+  //     // 2) 상태 변화 콜백
+  //     service.onStatusUpdate = (status) {
+  //       debugPrint("STT Status : $status");
+  //     };
+  //
+  //     // 3) 에러 코드 콜백
+  //     service.onError = (message, errorCode) {
+  //       debugPrint(
+  //         "STT Error : $message ${errorCode != null ? '($errorCode)' : ''}",
+  //       );
+  //     };
+  //   } else if (service is WebSocketMultipleSTTService) {
+  //     // 다국어 회의 모드
+  //     service.onTranslationReceived = (translations, isFinal) {
+  //       debugPrint("번역 결과 처리 (다국어 회의)");
+  //       translations.forEach((language, result) {
+  //         debugPrint(">> UI [$language] ${result.resultText}");
+  //       });
+  //     };
+  //
+  //     service.onStatusUpdate = (status) {
+  //       debugPrint("STT Status (회의): $status");
+  //     };
+  //
+  //     service.onError = (message, errorCode) {
+  //       debugPrint(
+  //         "STT Error (회의): $message ${errorCode != null ? '($errorCode)' : ''}",
+  //       );
+  //     };
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -166,7 +167,7 @@ class _BuildLecturePlayBarContentState
   // [Button 처리]
   // [1] 재생/일시정지
   void _handlePlayPause() async {
-    // 1) 재생 버튼 눌렀을 때 
+    // 1) 재생 버튼 눌렀을 때
     if (!TimerManager.isPlaying) {
       TimerManager.start(); // 타이머 실행
       setState(() {
@@ -206,10 +207,10 @@ class _BuildLecturePlayBarContentState
           MaterialPageRoute(
             builder:
                 (context) => SubtitlesOnlyScreen(
-              subWordFont: "default",
-              backgroundColor: Colors.black,
-              subSpacing: 20,
-            ),
+                  subWordFont: "default",
+                  backgroundColor: Colors.black,
+                  subSpacing: 20,
+                ),
           ),
         );
       }
@@ -260,9 +261,9 @@ class _BuildLecturePlayBarContentState
 
     if (fullTranscript.isNotEmpty) {
       final sample =
-      fullTranscript.length > 200
-          ? "${fullTranscript.substring(0, 200)}..."
-          : fullTranscript;
+          fullTranscript.length > 200
+              ? "${fullTranscript.substring(0, 200)}..."
+              : fullTranscript;
       debugPrint("  - 원문 샘플: $sample");
     }
 
@@ -296,11 +297,11 @@ class _BuildLecturePlayBarContentState
     bool connected = await service.connectToServer();
     debugPrint("[🧸 DEBUG] [1] connectToServer 결과 - $connected");
 
-    if (!connected){
+    if (!connected) {
       debugPrint("[🧸 DEBUG] 서버 연결 실패 ㅠ.ㅠ");
       return;
     }
-    
+
     // 2) 세션 시작 (서비스 타입에 따라 분기)
     debugPrint("[🧸 DEBUG] [2] startSesion 호출 준비");
     bool sessionStarted = false;
@@ -308,7 +309,10 @@ class _BuildLecturePlayBarContentState
     // 세션 - 싱글 모드
     if (service is WebSocketSTTService) {
       debugPrint("[🧸 DEBUG] 싱글 모드 세션 시작");
-      sessionStarted = await service.startSession(inputLanguage: inputLanguageCodes[0], targetLanguages: outputLanguageCodes);      
+      sessionStarted = await service.startSession(
+        inputLanguage: inputLanguageCodes[0],
+        targetLanguages: outputLanguageCodes,
+      );
     } // 세션 - 멀티 모드
     else if (service is WebSocketMultipleSTTService) {
       debugPrint("[🧸 DEBUG] 멀티 모드 세션 시작");
@@ -320,7 +324,9 @@ class _BuildLecturePlayBarContentState
       debugPrint("[🧸 DEBUG] 세션 시작 실패");
     }
 
-    debugPrint("[🧸 DEBUG] 입력 언어 - $inputLanguageCodes, 출력 언어 - $outputLanguageCodes");
+    debugPrint(
+      "[🧸 DEBUG] 입력 언어 - $inputLanguageCodes, 출력 언어 - $outputLanguageCodes",
+    );
     debugPrint("[🧸 DEBUG] STT 서비스 시작 완료 (모드 - ${_currentMode.toString()})");
   }
 }
