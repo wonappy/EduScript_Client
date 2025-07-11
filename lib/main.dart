@@ -5,7 +5,6 @@ import 'package:client/services/websocket_stt_service.dart';
 import 'package:client/widgets/preview_widget/subtitle_setting_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'core/styles/colors_core.dart';
 
 void main() {
   //runApp(const MyApp());
@@ -32,7 +31,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: true, //디버깅 모드
       title: 'EduScript',
-      theme: testTheme,
+      //theme: testTheme,
       home: const StartScreen(),
     );
   }

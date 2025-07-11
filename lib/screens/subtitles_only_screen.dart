@@ -108,7 +108,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
                         ),
                         width: screenWidth * 0.95,
                         constraints: BoxConstraints(
-                          maxHeight: screenHeight * 0.5,
+                          maxHeight: screenHeight * 0.2,
                         ),
                         //최대 자막 컨테이너 높이
                         decoration: BoxDecoration(
@@ -117,7 +117,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
                             alpha:
                             settings.getBackgroundOpacity(), //자막 배경 불투명도 지정
                           ),
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(5),
                         ),
                         child: Text(
                           _getSubtitleText(languages[i], settings), //자막 내용 지정
