@@ -13,23 +13,34 @@ import '../widgets/common/connection_status_bar_widget.dart';
 
 class SubtitlesOnlyScreen extends StatefulWidget {
   final Color backgroundColor; // 배경 색상
-  final String subWordFont;    // 자막 글꼴
-  final double subSpacing;     // 자막 간 간격
+  final String subWordFont; // 자막 글꼴
+  final double subSpacing; // 자막 간 간격
 
-  const SubtitlesOnlyScreen({ super.key, required this.backgroundColor, required this.subWordFont, required this.subSpacing, });
+  const SubtitlesOnlyScreen({
+    super.key,
+    required this.backgroundColor,
+    required this.subWordFont,
+    required this.subSpacing,
+  });
 
   @override
   State<SubtitlesOnlyScreen> createState() => _SubtitlesOnlyScreenState();
 }
 
 class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
-  late dynamic _sttService;                       // 두 타입을 모두 받을 수 있게 dynamic 또는 공통 인터페이스 사용
-  Map<String, String> _currentTranslations = {};  // 번역 결과 저장 { "en": "Hello" }
+  late dynamic _sttService; // 두 타입을 모두 받을 수 있게 dynamic 또는 공통 인터페이스 사용
+  Map<String, String> _confirmedTranslations =
+      {}; // 이전 완전 결과 저장 { "en": "Hello" }
+  Map<String, String> _currentTranslations = {}; // 번역 결과 저장 { "en": "Hello" }
+
+  // 현재 발화 언어 (multi모드)
+  String? _currentSpeakingLanguage;
 
   // [재연결 상태 변수]
-  ServerConnectionState _serverConnectionState = ServerConnectionState.connected; // 서버 연결 상태
-  String _statusMessage = "";               // 연결 상태 메시지 -> UI 화면에 출력
-  int _reconnectAttempts = 0;               // 재연결 시도 횟수
+  ServerConnectionState _serverConnectionState =
+      ServerConnectionState.connected; // 서버 연결 상태
+  String _statusMessage = ""; // 연결 상태 메시지 -> UI 화면에 출력
+  int _reconnectAttempts = 0; // 재연결 시도 횟수
 
   @override
   void initState() {
@@ -46,7 +57,10 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     }
     // 회의 모드
     else {
-      _sttService = Provider.of<WebSocketMultipleSTTService>(context, listen: false,);
+      _sttService = Provider.of<WebSocketMultipleSTTService>(
+        context,
+        listen: false,
+      );
       debugPrint("[🔴 DEBUG] 회의 모드 서비스 할당됨");
     }
 
@@ -100,7 +114,16 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
                 for (int i = 0; i < languages.length; i++)
                   Column(
                     children: [
-                      SizedBox(height: 10), //자막 간 간격 지정
+                      SizedBox(height: 15), //자막 간 간격 지정
+                      //이전 자막
+                      Text(
+                        Provider.of<SubtitleSettingsProvider>(
+                          context,
+                          listen: false,
+                        ).getOutputLanguage(languages[i]),
+                        style: TextStyle(color: Colors.white, fontSize: 17),
+                      ),
+                      SizedBox(height: 7),
                       Container(
                         padding: EdgeInsets.symmetric(
                           horizontal: 10,
@@ -115,12 +138,17 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
                           color: settings.getBackgroundColor().withValues(
                             //자막 배경 색상 지정
                             alpha:
-                            settings.getBackgroundOpacity(), //자막 배경 불투명도 지정
+                                settings.getBackgroundOpacity() *
+                                0.6, //현재 자막의 60% 정도 투명도
                           ),
                           borderRadius: BorderRadius.circular(5),
                         ),
                         child: Text(
-                          _getSubtitleText(languages[i], settings), //자막 내용 지정
+                          _getSubtitleText(
+                            languages[i],
+                            settings,
+                            true,
+                          ), //자막 내용 지정
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: settings.getFontColor(), //자막 글자 색상 지정
@@ -133,7 +161,50 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(height: 10), //자막 간 간격 지정
+                      SizedBox(height: 5),
+                      //현재 자막
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 10,
+                        ),
+                        width: screenWidth * 0.95,
+                        constraints: BoxConstraints(
+                          maxHeight: screenHeight * 0.5,
+                        ),
+                        //최대 자막 컨테이너 높이
+                        decoration: BoxDecoration(
+                          color: settings.getBackgroundColor().withValues(
+                            //자막 배경 색상 지정
+                            alpha:
+                                settings.getBackgroundOpacity(), //자막 배경 불투명도 지정
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border:
+                              // 발화 중인 언어 테두리 표시
+                              isSpeakingLanguage(languages[i])
+                                  ? Border.all(color: Colors.blue, width: 1.5)
+                                  : null,
+                        ),
+                        child: Text(
+                          _getSubtitleText(
+                            languages[i],
+                            settings,
+                            false,
+                          ), //자막 내용 지정
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: settings.getFontColor(), //자막 글자 색상 지정
+                            fontSize: settings.getFontSize(
+                              screenWidth,
+                            ), //자막 글자 크기 지정
+                            fontWeight: settings.getFontWeight(),
+                            fontStyle: settings.getFontStyle(),
+                            textBaseline: null,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 15), //자막 간 간격 지정
                     ],
                   ),
               ],
@@ -147,7 +218,8 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
             right: 0,
             child: SizedBox(
               width: double.infinity,
-              child: ConnectionStatusBar( //[위젯] 로딩 스피너
+              child: ConnectionStatusBar(
+                //[위젯] 로딩 스피너
                 serverConnectionState: _serverConnectionState,
                 statusMessage: _statusMessage,
                 reconnectAttempts: _reconnectAttempts,
@@ -172,10 +244,35 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     );
   }
 
+  //multi모드 전용 : 현재 발화 중인 언어인지 확인
+  bool isSpeakingLanguage(String lang) {
+    bool result = false;
+
+    // multi 모드 일 때 && 발화 중일 때에만
+    if (_sttService is WebSocketMultipleSTTService &&
+        _currentTranslations.isNotEmpty) {
+      //lang 키 가져오기
+      final settings = Provider.of<SubtitleSettingsProvider>(
+        context,
+        listen: false,
+      );
+      String? serverKey = _findServerKeyForLanguage(lang, settings, false);
+
+      if (serverKey != null) {
+        if (serverKey == _currentSpeakingLanguage) {
+          result = true;
+        }
+      }
+    }
+
+    return result;
+  }
+
   // 🎯 자동 언어 매핑 함수
   String? _findServerKeyForLanguage(
     String displayLanguage,
     SubtitleSettingsProvider settings,
+    bool isConfirmedLine,
   ) {
     debugPrint("자막 언어 매핑 중...");
     // 1) 먼저 Provider의 일반적인 매핑 확인 (Google Translation 코드)
@@ -191,7 +288,9 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     }
 
     // 2) 서버 응답 키들 중에서 매칭되는 것 찾기
-    final availableKeys = _currentTranslations.keys.toList();
+    final targetTranslations =
+        isConfirmedLine ? _confirmedTranslations : _currentTranslations;
+    final availableKeys = targetTranslations.keys.toList();
     String? serverKey;
 
     // 2-1) 언어명으로 역추적 (Provider 매핑 테이블 활용)
@@ -235,7 +334,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
       }
     }
 
-    // 🎯 최종 폴백: 어떤 경우든 부분 일치(앞, 뒤, 포함) 시도
+    // 최종 폴백: 어떤 경우든 부분 일치(앞, 뒤, 포함) 시도
     if (serverKey == null && googleCode != null) {
       for (String key in availableKeys) {
         if (key.contains(googleCode) || googleCode.contains(key)) {
@@ -250,21 +349,32 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
   }
 
   // 언어별 자막 반환 (자동 매핑 사용)
-  String _getSubtitleText(String language, SubtitleSettingsProvider settings) {
+  String _getSubtitleText(
+    String language,
+    SubtitleSettingsProvider settings,
+    bool isConfirmedLine,
+  ) {
+    final targetTranslations =
+        isConfirmedLine ? _confirmedTranslations : _currentTranslations;
+
     // 자동 매핑으로 서버 키 찾기
-    String? serverKey = _findServerKeyForLanguage(language, settings);
+    String? serverKey = _findServerKeyForLanguage(
+      language,
+      settings,
+      isConfirmedLine,
+    );
 
     // 디버그: 매핑 결과 확인
-    debugPrint("🔍 자동 매핑: '$language' → '$serverKey'");
+    debugPrint("자동 매핑: '$language' → '$serverKey'");
 
     // 번역 결과 확인
     if (serverKey != null &&
-        _currentTranslations.containsKey(serverKey) &&
-        _currentTranslations[serverKey]!.isNotEmpty) {
-      debugPrint("✅ '$serverKey' 번역 결과 찾음");
+        targetTranslations.containsKey(serverKey) &&
+        targetTranslations[serverKey]!.isNotEmpty) {
+      debugPrint("'$serverKey' 번역 결과 찾음");
 
       // HTML 디코딩 (return 하기 전에!)
-      String rawText = _currentTranslations[serverKey]!;
+      String rawText = targetTranslations[serverKey]!;
       var document = html_parser.parse(rawText);
       String processedText = document.documentElement?.text ?? rawText;
 
@@ -297,20 +407,25 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     if (_sttService.isConnected) return;
 
     // 1) 언어 설정 가져오기
-    final settings = Provider.of<SubtitleSettingsProvider>(context, listen: false); // 사용자가 설정한 언어 정보
-    final inputLanguageCodes = settings.getInputLanguageCodes();    // 입력 언어 설정
-    final outputLanguageCodes = settings.getOutputLanguageCodes();  // 출력 언어 설정
+    final settings = Provider.of<SubtitleSettingsProvider>(
+      context,
+      listen: false,
+    ); // 사용자가 설정한 언어 정보
+    final inputLanguageCodes = settings.getInputLanguageCodes(); // 입력 언어 설정
+    final outputLanguageCodes = settings.getOutputLanguageCodes(); // 출력 언어 설정
 
     // 2) 웹소켓 연결
     bool connectd = await _sttService.connectToServer();
     // 연결 성공 시
     if (connectd) {
-      if (_sttService is WebSocketSTTService) { // 싱글 모드
+      if (_sttService is WebSocketSTTService) {
+        // 싱글 모드
         await _sttService.startSession(
           inputLanguage: inputLanguageCodes[0],
           targetLanguages: outputLanguageCodes,
         );
-      } else if (_sttService is WebSocketMultipleSTTService) { // 멀티 모드
+      } else if (_sttService is WebSocketMultipleSTTService) {
+        // 멀티 모드
         await _sttService.startSession(
           inputLanguages: inputLanguageCodes,
           targetLanguages: outputLanguageCodes,
@@ -319,25 +434,62 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     }
   }
 
-  // [2] 콜백 함수
+  // [2] 콜백 함수 : 현재 출력 자막 변경 알림 콜백
   void _setupCallbacks() {
     // 1) 번역 결과 콜백
-    _sttService.onTranslationReceived = (translations) {
-      if (mounted) {
+    if (_sttService is WebSocketMultipleSTTService) {
+      //multi 모드
+      _sttService.onTranslationReceived = (
+        translations,
+        isFinal,
+        speackLanguage,
+      ) {
         setState(() {
-          // 번역 결과를 로컬 상태로 복사
-          _currentTranslations.clear(); //현재 자막 초기화
-          translations.forEach((lang, result) {
-            // 각 언어 자막 저장
-            _currentTranslations[lang] = result.resultText;
-          });
+          _currentSpeakingLanguage = speackLanguage;
+          if (isFinal) {
+            _confirmedTranslations = Map.from(_currentTranslations);
+            _currentTranslations.clear(); // 현재 문장 초기화
+
+            debugPrint("문장 확정!");
+          } else {
+            // 번역 결과를 로컬 상태로 복사
+            _currentTranslations.clear(); //현재 자막 초기화
+            translations.forEach((lang, result) {
+              // 각 언어 자막 저장
+              _currentTranslations[lang] = result.resultText;
+            });
+          }
+
+          debugPrint("자막 화면 업데이트: ${_currentTranslations.length}개 언어");
         });
-        debugPrint("자막 화면 업데이트: ${_currentTranslations.length}개 언어");
-      }
-    };
+      };
+    } else {
+      //single 모드
+      _sttService.onTranslationReceived = (translations, isFinal) {
+        setState(() {
+          if (isFinal) {
+            _confirmedTranslations = Map.from(_currentTranslations);
+            _currentTranslations.clear(); // 현재 문장 초기화
+
+            debugPrint("문장 확정!");
+          } else {
+            // 번역 결과를 로컬 상태로 복사
+            _currentTranslations.clear(); //현재 자막 초기화
+            translations.forEach((lang, result) {
+              // 각 언어 자막 저장
+              _currentTranslations[lang] = result.resultText;
+            });
+          }
+
+          debugPrint("자막 화면 업데이트: ${_currentTranslations.length}개 언어");
+        });
+      };
+    }
 
     // 초기 상태 로드
-    _currentTranslations = Map.from(_sttService.currentTranslations);
+    //_currentTranslations = Map.from(_sttService.currentTranslations);
+    _confirmedTranslations = {};
+    _currentTranslations = {};
 
     // 2) 재연결 콜백 리스너
     _reconnectionCallbacks(); // (호출) [1] 재연결 콜백 메서드
@@ -360,7 +512,8 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
         debugPrint("[🔴 DEBUG] setState 호출");
         // 1) 재연결 시도
         if (status.contains("재시도")) {
-          _serverConnectionState = ServerConnectionState.reconnecting; // 서버 연결 상태 - 재연결
+          _serverConnectionState =
+              ServerConnectionState.reconnecting; // 서버 연결 상태 - 재연결
           _statusMessage = status; // UI에 출력할 상태 메시지
 
           // (2) 재연결 시도 횟수 파싱
@@ -370,13 +523,17 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
           }
         }
         // 2) 연결 성공
-        else if (status.contains("연결 성공") || status.contains("세션 준비 시작") || status.contains("음성 녹음 시작")) {
-          _serverConnectionState = ServerConnectionState.connected; // 서버 연결 상태 - 연결 성공
+        else if (status.contains("연결 성공") ||
+            status.contains("세션 준비 시작") ||
+            status.contains("음성 녹음 시작")) {
+          _serverConnectionState =
+              ServerConnectionState.connected; // 서버 연결 상태 - 연결 성공
           _statusMessage = "서버에 연결되었습니다."; // UI에 출력할 상태 메시지
         }
         // 3) 연결 종료
         else if (status.contains("연결 종료")) {
-          _serverConnectionState = ServerConnectionState.disconnected; // 서버 연결 상태 - 연결 종료
+          _serverConnectionState =
+              ServerConnectionState.disconnected; // 서버 연결 상태 - 연결 종료
           _statusMessage = "서버 연결이 끊어졌습니다."; // UI에 출력할 상태 메시지
         }
       });
@@ -390,12 +547,14 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
       setState(() {
         // 1) 최대 재시도 초과
         if (message.contains("최대 재시도")) {
-          _serverConnectionState = ServerConnectionState.failed; // 서버 연결 상태 - 연결 실패
+          _serverConnectionState =
+              ServerConnectionState.failed; // 서버 연결 상태 - 연결 실패
           _statusMessage = "최대 재시도 횟수 초과로 서버 연결에 실패했습니다."; // UI에 출력할 상태 메시지
         }
         // 2) 기타
         else if (message.contains("연결 실패")) {
-          _serverConnectionState = ServerConnectionState.disconnected; // 서버 연결 상태 - 연결 끊김
+          _serverConnectionState =
+              ServerConnectionState.disconnected; // 서버 연결 상태 - 연결 끊김
           _statusMessage = "서버 연결 실패 : $message"; // UI에 출력할 상태 메시지
         }
       });
@@ -471,7 +630,6 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
   //     // );
   //   }
   // }
-
 
   // 디버그 정보 표시
   // Widget _buildDebugInfo() {
