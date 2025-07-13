@@ -21,7 +21,7 @@ class GetBlockContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     switch (title) {
-      case '강의 화면 미리보기':
+      case '화면 미리보기':
         return BuildLecturePreviewContent();
       case '':
         return BuildLecturePlayBarContent(

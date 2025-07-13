@@ -31,6 +31,25 @@ class _MultiLanguageSelectDialogState extends State<MultiLanguageSelectDialog> {
   void initState() {
     super.initState();
     _tempSelectedLanguages = List.from(widget.selectedLanguages);
+    // 강제 리빌드
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() {
+          // 강제로 한 번 더 업데이트
+          _tempSelectedLanguages = List.from(widget.selectedLanguages);
+        });
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(MultiLanguageSelectDialog oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedLanguages != widget.selectedLanguages) {
+      setState(() {
+        _tempSelectedLanguages = List.from(widget.selectedLanguages);
+      });
+    }
   }
 
   List<String> get _filteredLanguages {
@@ -94,7 +113,7 @@ class _MultiLanguageSelectDialogState extends State<MultiLanguageSelectDialog> {
                 itemBuilder: (context, index) {
                   final language = _filteredLanguages[index];
                   final isSelected = _tempSelectedLanguages.contains(language);
-                  // [1] 강의 모드 + 음성 언어 설정
+                  // [1-1] 강의 모드 + 음성 언어 설정
                   if (widget.isLectureMode && widget.isInputLanguage) {
                     return ListTile(
                       title: Text(language, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),),
@@ -108,7 +127,7 @@ class _MultiLanguageSelectDialogState extends State<MultiLanguageSelectDialog> {
                     );
                   }
 
-                  // [2-1] 강의 모드 + 출력 언어 설정
+                  // [2-2] 강의 모드 + 출력 언어 설정
                   else if (widget.isLectureMode && !widget.isInputLanguage) {
                     return CheckboxListTile(
                       title: Text(language, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),),
@@ -140,7 +159,7 @@ class _MultiLanguageSelectDialogState extends State<MultiLanguageSelectDialog> {
                   }
 
                   // [2] 토론 모드
-                  else if (!widget.isLectureMode) {
+                  else {
                     return CheckboxListTile(
                       title: Text(language, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),),
                       value: _tempSelectedLanguages.contains(language),
