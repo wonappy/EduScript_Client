@@ -151,21 +151,32 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
       child: Container(
         width: 800,
         padding: const EdgeInsets.all(25),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // SaveDialogComponents에서 빌드한 메인 섹션
-            SaveDialogComponents.buildMainSection(
-              isContentFileSelected: isContentFile,
-              isSummaryFileSelected: isSummaryFile,
-              isMajorFileSelected: isMajorFile,
-              selectedLocation: selectedLocation,
-              fileName: fileName,
-              fileFormat: fileFormat,
-              selectedFilePath: selectedFilePath,
-              emailAddress: emailAddress,
-              emailDomain: emailDomain,
-              context: context,
+        child: _isProcessing
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                CircularProgressIndicator(),
+                SizedBox(height: 20),
+                Text(
+                  'AI가 내용을 정제 중입니다...',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ],
+            )
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SaveDialogComponents.buildMainSection(
+                  isContentFileSelected: isContentFile,
+                  isSummaryFileSelected: isSummaryFile,
+                  isMajorFileSelected: isMajorFile,
+                  selectedLocation: selectedLocation,
+                  fileName: fileName,
+                  fileFormat: fileFormat,
+                  selectedFilePath: selectedFilePath,
+                  emailAddress: emailAddress,
+                  emailDomain: emailDomain,
+                  context: context,
 
               // 콜백 함수들
               onContentFileChanged: (value) {

@@ -10,7 +10,7 @@ import 'package:client/services/websocket_multiple_speech_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/enum_core.dart';
-import '../../../core/global_core.dart';
+// import '../../../core/global_core.dart';
 import '../../../providers/mode_provider.dart';
 import '../subtitle_setting_provider.dart';
 import 'time_manager.dart';

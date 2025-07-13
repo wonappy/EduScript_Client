@@ -10,7 +10,7 @@ import 'package:client/core/enum_core.dart';
 
 class PostProcessorService {
   // http 통신 설정
-  final String _serverBaseUrl = "http://10.101.158.221:8000"; // 서버 엔드포인트
+  final String _serverBaseUrl = "http://192.168.0.254:8000"; // 서버 엔드포인트
 
   final String _serverEndpoint = "/api/routes/language/refinement";
 

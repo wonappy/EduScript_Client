@@ -450,19 +450,7 @@ class _BuildSubtitleSettingContentState
       child: child,
     );
   }
-
-  // 큰 컨테이너
-  Widget _buildBigContainer({required Widget child}) {
-    return Container(
-      padding: EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(7),
-      ),
-      child: child,
-    );
-  }
-
+  
   // 작은 컨테이너
   Widget _buildSmallContainer({required Widget child}) {
     return Container(
