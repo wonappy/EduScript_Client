@@ -40,7 +40,7 @@ class WebSocketSTTService {
   final Map<String, String> _currentTranslations = {}; // 현재 번역 결과
   final List<String> _transcriptHistory = []; // 원문 자막 저장소 -> llm 요약 활용
   final List<Map<String, String>> _translationHistory =
-      []; // 번역 히스토리 (약 3개 정도만 저장)
+  []; // 번역 히스토리 (약 3개 정도만 저장)
 
   // [서버 연결 재시도 처리 관련]
   Timer? _reconnectTimer; // 재시도 타이머
@@ -100,11 +100,13 @@ class WebSocketSTTService {
       // 1) "재연결"이 아닐 때
       if (!isRetry) {
         _updateStatus("[DEBUG 1] 웹소켓 서버 연결 시도");
-        _reconnectAttempts = 0; // 연결 시도 횟수 - 최초 연결 시에만 리셋
+        // 처음 연결 시 자동 재연결
+        _shouldAutoReconnect = true; // 자동 재연결 활성화
+        _reconnectAttempts = 0; // 연결 시도 횟수 초기화 (최초 연결 시에만 리셋)
       } else {
         // 재시도 시
         _updateStatus(
-          "[DEBUG 1] 서버 연결 재시도 ${_reconnectAttempts}/${_maxReconnectAttempts}",
+          "서버 연결 재시도 ${_reconnectAttempts}/${_maxReconnectAttempts}",
         );
       }
 
@@ -120,7 +122,7 @@ class WebSocketSTTService {
 
       // 4) 서버 메시지 수신 리스너
       _webSocketChannel!.stream.listen(
-        (message) {
+            (message) {
           // 4-1) 첫 번째 메시지 수신 시
           if (!connectionCompleter.isCompleted) {
             connectionCompleter.complete(true); // 연결 성공
@@ -171,9 +173,9 @@ class WebSocketSTTService {
         if (!isRetry) {
           // "재시도"가 아닐 때 예외 처리
           if (e is TimeoutException) {
-            _handleError("[ERROR 1] 서버 연결 10초 타임아웃", "Connection Timeout");
+            _handleError("서버 연결 10초 타임아웃", "Connection Timeout");
           } else {
-            _handleError("[ERROR 1] 서버 연결 실패", e.toString());
+            _handleError("서버 연결 실패", e.toString());
           }
         }
         _isConnected = false;
@@ -182,7 +184,7 @@ class WebSocketSTTService {
     } catch (e) {
       // "재시도"가 아닐 때만 에러를 보고하도록
       if (!isRetry) {
-        _handleError("[ERROR 1] 서버 연결 실패", e.toString());
+        _handleError("[ERROR] 서버 연결 실패", e.toString());
       }
       _isConnected = false;
       return false;
@@ -264,7 +266,7 @@ class WebSocketSTTService {
       // 2) 오디오 데이터를 서버로 실시간 전송
       _audioStreamSubscription = stream.listen(
         // 오디오가 들어올 때 콜백
-        (audioData) {
+            (audioData) {
           // 바이너리 음성 데이터
           if (_isConnected && _webSocketChannel != null) {
             _webSocketChannel!.sink.add(audioData); // 음성 데이터를 실시간으로 전송
@@ -380,10 +382,10 @@ class WebSocketSTTService {
     _isReconnecting = true; // 재연결 상태 ON
 
     final delay =
-        _reconnectDelays[_reconnectAttempts.clamp(
-          0,
-          _reconnectDelays.length - 1,
-        )]; // clamp(최소,최댓값)
+    _reconnectDelays[_reconnectAttempts.clamp(
+      0,
+      _reconnectDelays.length - 1,
+    )]; // clamp(최소,최댓값)
     _updateStatus("[DEBUG 6] ${delay}초 후 재연결 시도"); // 2, 6, 10초
 
     // 2초 뒤에 [3]으로 이동
@@ -404,7 +406,7 @@ class WebSocketSTTService {
       );
 
       _updateStatus(
-        "[DEBUG] 서버 연결 재시도 ${_reconnectAttempts}/${_maxReconnectAttempts}",
+        "서버 연결 재시도 (${_reconnectAttempts}/${_maxReconnectAttempts})",
       );
       // (호출) [1] WebSocket 서버 연결 - 재연결 시도
       final success = await connectToServer(isRetry: true);
@@ -433,7 +435,7 @@ class WebSocketSTTService {
           _stopReconnectTimer(); // 타이머 중지
           _shouldAutoReconnect = false; // 자동 재연결 끄기
           _isReconnecting = false; // 재연결 상태 OFF
-          _handleError("[ERROR 6] 재연결 실패", "최대 재시도 횟수 초과");
+          _handleError("서버 재연결 실패", "최대 재시도 횟수 초과");
         } else {
           // 재시도 횟수 남으면 다시 시도
           _scheduleReconnect(); // (호출) 2) 재연결 예약
@@ -449,6 +451,14 @@ class WebSocketSTTService {
   void _stopReconnectTimer() {
     _reconnectTimer?.cancel(); // 타이머 객체 취소
     _reconnectTimer = null; // 타이머 객체 삭제
+  }
+
+  // [6-5] 재연결 관련 변수 초기화
+  void resetReconnectState() {
+    _reconnectAttempts = 0;   // 재연결 시도 횟수 0으로 초기화
+    _isReconnecting = false;  // 연결 중 상태 OFF
+    _stopReconnectTimer();    // 타이머 중지
+    debugPrint("[🐟 DEBUG] 재연결 상태 초기화");
   }
 
   // [7] 연결 종료
