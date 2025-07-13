@@ -35,6 +35,8 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
       {}; // 이전 완전 결과 저장 { "en": "Hello" }
   Map<String, String> _currentTranslations = {}; // 번역 결과 저장 { "en": "Hello" }
 
+  static double referenceScreenWidth = 1167.0;
+
   // 현재 발화 언어 (multi모드)
   String? _currentSpeakingLanguage;
 
@@ -102,6 +104,8 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     final double screenWidth = screenSize.width;
     final double screenHeight = screenSize.height;
 
+    final double scaleFactor = screenWidth / referenceScreenWidth;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -116,20 +120,23 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
                 for (int i = 0; i < languages.length; i++)
                   Column(
                     children: [
-                      SizedBox(height: 15), //자막 간 간격 지정
+                      SizedBox(height: 15 * scaleFactor), //자막 간 간격 지정
                       //이전 자막
                       Text(
                         Provider.of<SubtitleSettingsProvider>(
                           context,
                           listen: false,
                         ).getOutputLanguage(languages[i]),
-                        style: TextStyle(color: Colors.white, fontSize: 17),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 17 * scaleFactor,
+                        ),
                       ),
-                      SizedBox(height: 7),
+                      SizedBox(height: 7 * scaleFactor),
                       Container(
                         padding: EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 10,
+                          horizontal: 10 * scaleFactor,
+                          vertical: 10 * scaleFactor,
                         ),
                         width: screenWidth * 0.95,
                         constraints: BoxConstraints(
@@ -154,21 +161,21 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: settings.getFontColor(), //자막 글자 색상 지정
-                            fontSize: settings.getFontSize(
-                              screenWidth,
-                            ), //자막 글자 크기 지정
+                            fontSize:
+                                settings.getFontSize(screenWidth) *
+                                scaleFactor, //자막 글자 크기 지정
                             fontWeight: settings.getFontWeight(),
                             fontStyle: settings.getFontStyle(),
                             textBaseline: null,
                           ),
                         ),
                       ),
-                      SizedBox(height: 5),
+                      SizedBox(height: 5 * scaleFactor),
                       //현재 자막
                       Container(
                         padding: EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 10,
+                          horizontal: 10 * scaleFactor,
+                          vertical: 10 * scaleFactor,
                         ),
                         width: screenWidth * 0.95,
                         constraints: BoxConstraints(
@@ -197,16 +204,16 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: settings.getFontColor(), //자막 글자 색상 지정
-                            fontSize: settings.getFontSize(
-                              screenWidth,
-                            ), //자막 글자 크기 지정
+                            fontSize:
+                                settings.getFontSize(screenWidth) *
+                                scaleFactor, //자막 글자 크기 지정
                             fontWeight: settings.getFontWeight(),
                             fontStyle: settings.getFontStyle(),
                             textBaseline: null,
                           ),
                         ),
                       ),
-                      SizedBox(height: 15), //자막 간 간격 지정
+                      SizedBox(height: 15 * scaleFactor), //자막 간 간격 지정
                     ],
                   ),
               ],
