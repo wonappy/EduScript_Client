@@ -4,7 +4,7 @@ import 'package:client/core/styles/size_core.dart';
 import 'package:client/providers/mode_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/global_core.dart';
+import '../../../core/styles/size_core.dart';
 import 'multi_language_select_dialog.dart';
 
 /// 언어 다중 선택 드롭다운 메뉴

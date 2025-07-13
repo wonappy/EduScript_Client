@@ -46,7 +46,7 @@ class BuildPreviewBlock extends StatelessWidget {
                   title ?? '',
                   style: TextStyle(
                     color: Colors.black,
-                    fontSize: 18,
+                    fontSize: AppSizes.titleFontSize,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
