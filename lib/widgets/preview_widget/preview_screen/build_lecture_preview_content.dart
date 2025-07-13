@@ -23,7 +23,7 @@ class BuildLecturePreviewContent extends StatelessWidget {
           width: screenWidth,
           height: screenHeight,
           decoration: BoxDecoration(
-            color: AppColors.blackFontColor, //배경 색상 지정
+            color: AppColors.blackColor,// Colors.grey[800], //배경 색상 지정
             borderRadius: BorderRadius.circular(8),
           ),
           padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
@@ -60,7 +60,7 @@ class BuildLecturePreviewContent extends StatelessWidget {
                               settings.getBackgroundOpacity() *
                               0.6, //자막 배경 불투명도 지정
                         ),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(5),
                       ),
                       child: Text(
                         settings.getPreviewText(languages[i]), //자막 내용 지정

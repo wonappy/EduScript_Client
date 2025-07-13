@@ -234,7 +234,7 @@ class _StartScreenState extends State<StartScreen> {
           child: ElevatedButton.icon(
             onPressed: () => _selectMode(Mode.lecture),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.blueColor1, // 🔴 버튼 배경색
+              backgroundColor: AppColors.blueColor2, // 🔴 버튼 배경색
               foregroundColor: AppColors.whiteColor1, // 🔴 버튼 폰트색
               elevation: 6,
               shadowColor: Colors.black26,
@@ -273,7 +273,7 @@ class _StartScreenState extends State<StartScreen> {
           child: ElevatedButton.icon(
             onPressed: () => _selectMode(Mode.conference),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.blueColor1, // 🔴 버튼 배경색
+              backgroundColor: AppColors.blueColor2, // 🔴 버튼 배경색
               foregroundColor: AppColors.whiteColor1, // 🔴 버튼 폰트색
               elevation: 6,
               shadowColor: Colors.black26,

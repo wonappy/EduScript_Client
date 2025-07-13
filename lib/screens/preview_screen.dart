@@ -14,7 +14,7 @@ class PreviewScreen extends StatelessWidget {
     final double screenHeight = screenSize.height;
 
     return Scaffold(
-      backgroundColor: AppColors.whiteColor1, // 🔴 배경색
+      backgroundColor: AppColors.whiteColor2, // 🔴 배경색
       body: Padding(
         padding: EdgeInsets.all(screenWidth * 0.015), // 화면 크기의 1.5%를 패딩으로
         child: Row(
