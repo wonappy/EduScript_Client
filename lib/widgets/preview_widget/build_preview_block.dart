@@ -2,6 +2,7 @@
 library;
 
 import 'package:client/core/styles/color_core.dart';
+import 'package:client/core/styles/size_core.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/global_core.dart';
@@ -47,7 +48,7 @@ class BuildPreviewBlock extends StatelessWidget {
                   title ?? '',
                   style: TextStyle(
                     color: Colors.black,
-                    fontSize: getResponsiveFontSize(screenWidth),
+                    fontSize: AppSizes.titleFontSize,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
