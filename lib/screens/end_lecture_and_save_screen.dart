@@ -197,11 +197,6 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
                 setState(() {
                   fileFormat = value;
                 });
-
-                // 파일 형식이 변경되면 재처리
-                if (_refinedData != null) {
-                  _processTranscriptAutomatically();
-                }
               },
               onEmailAddressChanged: (address) {
                 setState(() {
@@ -334,6 +329,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
     _showErrorMessage('파일 저장 중 오류가 발생했습니다: $e');
   }
 }
+
 
   // 서버 파일을 다운로드하는 헬퍼 함수
   Future<String> _downloadServerFile(Map<String, dynamic> fileData, String fileType, String basePath) async {

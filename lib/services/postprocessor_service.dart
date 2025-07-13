@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:client/services/postprocessor_service.dart';
 import 'package:client/services/websocket_stt_service.dart';
+import 'package:client/services/websocket_multiple_speech_service.dart';
 import 'package:client/screens/end_lecture_and_save_screen.dart';
 import 'package:http/http.dart' as http;
 import 'package:client/core/enum_core.dart';
@@ -89,35 +90,33 @@ class PostProcessorService {
     String fileName = 'speech',
     String fileFormat = 'txt', // 파일 형식 (기본값은 txt)
     String? processingMode,
+    List<String>? languageList,
   }) async {
-    // 중복 요청 방지
-    if (_isProcessing) {
-      return _lastResponse; // 마지막 결과 반환
-    }
+  if (_isProcessing) return _lastResponse;
+  if (fullText.trim().isEmpty) return null;
 
-    // 입력 검증
-    if (fullText.trim().isEmpty) {
-      return null;
-    }
+  try {
+    _isProcessing = true;
+    _lastRequest = fullText;
 
-    try {
-      _isProcessing = true;
-      _lastRequest = fullText;
+    final finalProcessingMode = processingMode ?? _processingMode;
 
-      debugPrint("[LLM] 정제 요청 시작 (${fullText.length}자)");
+    // ✅ 자동 언어 선택 로직 추가
+    List<String> resolvedLanguageList = languageList ??
+        (finalProcessingMode == 'lecture'
+            ? _getLectureLanguage()
+            : _getConferenceLanguages());
 
-      final finalProcessingMode = processingMode ?? _processingMode;
-
-      // 요청 데이터 생성
-      final requestBody = {
-        'full_text': fullText,
-        'fileName': fileName,
-        'fileFormat': fileFormat.replaceAll('.', ''),
-        'enable_refine': _enableRefine,
-        'enable_summarize': enableSummarize ?? _enableSummarize,
-        'enable_keypoints': enableKeypoints ?? _enableKeypoints,
-        'processing_mode': finalProcessingMode,
-      };
+    final requestBody = {
+      'full_text': fullText,
+      'fileName': fileName,
+      'fileFormat': fileFormat.replaceAll('.', ''),
+      'enable_refine': _enableRefine,
+      'enable_summarize': enableSummarize ?? _enableSummarize,
+      'enable_keypoints': enableKeypoints ?? _enableKeypoints,
+      'processing_mode': finalProcessingMode,
+      'language_list': resolvedLanguageList,
+    };
 
       debugPrint("요청 데이터 원문 전문 : $fullText");
       debugPrint("[LLM] 서버로 데이터 전송 중...");
@@ -168,4 +167,19 @@ extension ModeExtension on Mode {
         return 'conference';
     }
   }
+}
+
+List<String> _getLectureLanguage() {
+  final lang = WebSocketSTTService().currentInputLanguage;
+  return lang != null ? [lang] : ['ko']; // 기본값은 'ko'
+}
+
+List<String> _getConferenceLanguages() {
+  return WebSocketMultipleSTTService()
+          .languageTextHistory
+          .keys
+          .toList()
+          .cast<String>()
+          .where((lang) => lang.isNotEmpty)
+          .toList();
 }
