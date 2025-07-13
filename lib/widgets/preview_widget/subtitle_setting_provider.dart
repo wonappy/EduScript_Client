@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/global_core.dart';
+import '../../core/enum_core.dart';
+import '../../providers/mode_provider.dart';
 import '../../models/language_mapping_model.dart';
 
 class SubtitleSettingsProvider extends ChangeNotifier {
@@ -15,6 +17,27 @@ class SubtitleSettingsProvider extends ChangeNotifier {
   String _selectedFontColor = '흰색';
   String _selectedBackgroundColor = '흰색';
   String _selectedBackgroundOpacity = '50%';
+
+  // [토론 모드일 때 언어 선택 동기화]
+  // 1) 선택된 음성 언어
+  // void updateInputLanguages(List<String> languages, {Mode? currentMode}) {
+  //   _selectedInputLanguages = languages;
+  //   // 현재 모드가 "토론 모드"일 떄
+  //   if (currentMode == Mode.conference) {
+  //     _selectedOutputLanguages = List.from(languages); // 출력 언어도 동기화
+  //   }
+  //   notifyListeners();
+  // }
+  //
+  // // 2) 선택된 출력 언어
+  // void updateOutputLanguages(List<String> languages, {Mode? currentMode}) {
+  //   _selectedOutputLanguages = languages;
+  //   // 현재 모드가 "토론 모드"일 때
+  //   if (currentMode == Mode.conference) {
+  //     _selectedInputLanguages = List.from(languages); // 입력 언어도 동기화
+  //   }
+  //   notifyListeners();
+  // }
 
   // 🌐 언어 매핑 테이블
   static final Map<String, LanguageMappingModel> _languageMappings = {

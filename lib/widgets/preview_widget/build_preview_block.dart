@@ -1,20 +1,21 @@
 //대기 화면 -> 개별 블록 위젯 생성
 library;
 
+import 'package:client/core/styles/color_core.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/global_core.dart';
 import 'get_block_content.dart';
 
 class BuildPreviewBlock extends StatelessWidget {
-  final String title;
+  final String? title;
   final double screenWidth;
   final double screenHeight;
   final bool showTitle;
 
   const BuildPreviewBlock({
     super.key,
-    required this.title,
+    this.title,
     required this.screenWidth,
     required this.screenHeight,
     this.showTitle = true,
@@ -31,19 +32,27 @@ class BuildPreviewBlock extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 제목 표시
-        if (showTitle && title.isNotEmpty) ...[
+        if (showTitle && title!.isNotEmpty) ...[
           Padding(
             padding: EdgeInsets.only(
               left: 1,
               bottom: screenHeight * 0.01,
             ),
-            child: Text(
-              title,
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: getResponsiveFontSize(screenWidth),
-                fontWeight: FontWeight.bold,
-              ),
+            child: Row(
+              children: [
+                Icon(Icons.desktop_windows,
+                  color: AppColors.blueColor2,
+                  size: 20,),
+                SizedBox(width: 8,),
+                Text(
+                  title ?? '',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: getResponsiveFontSize(screenWidth),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -66,7 +75,7 @@ class BuildPreviewBlock extends StatelessWidget {
               // ],
             ),
             child: GetBlockContent(
-              title: title,
+              title: title!,
               screenHeight: screenHeight,
               screenWidth: screenWidth,
             ),

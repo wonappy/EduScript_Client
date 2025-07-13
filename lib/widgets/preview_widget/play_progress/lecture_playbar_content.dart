@@ -1,5 +1,6 @@
 // UI - 재생, 취소, 일시정지 버튼 컴포넌트들
 
+import 'package:client/core/styles/color_core.dart';
 import 'package:flutter/material.dart';
 
 class LecturePlayBarComponents {
@@ -16,12 +17,20 @@ class LecturePlayBarComponents {
   }) {
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.04,
-        vertical: screenWidth * 0.02,
+        horizontal: screenWidth * 0.01,
+        vertical: screenWidth * 0.01,
       ),
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+        color: AppColors.whiteColor1, // Colors.grey[200],
         borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),  // 더 연한 그림자
+            blurRadius: 10,
+            spreadRadius: 1,                       // 그림자 확산
+            offset: Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -33,6 +42,9 @@ class LecturePlayBarComponents {
               icon: Icons.close,
               onTap: onCancel,
               screenWidth: screenWidth,
+              backgroundColor: AppColors.redColor,
+              borderColor :null,
+              iconColor: AppColors.whiteColor1
             ),
             SizedBox(width: screenWidth * 0.03),
           ],
@@ -51,6 +63,9 @@ class LecturePlayBarComponents {
               icon: Icons.stop,
               onTap: onStop,
               screenWidth: screenWidth,
+                backgroundColor: AppColors.greenColor,
+                borderColor : null,
+                iconColor: AppColors.whiteColor1,
             ),
           ],
 
@@ -76,16 +91,33 @@ class LecturePlayBarComponents {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: screenWidth * 0.12,
-        height: screenWidth * 0.12,
-        decoration: const BoxDecoration(
-          color: Colors.black87,
-          shape: BoxShape.circle,
+        width: screenWidth * 0.07,
+        height: screenWidth * 0.07,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: AppColors.blueColor2, // AppColors.whiteColor1, // AppColors.blueColor2, //Colors.black87,
+          // border: Border.all(
+          //   color: null,  // 테두리 색상
+          //   width: 1.0,                  // 테두리 두께 (선택사항)
+          // ),
+          shape: BoxShape.rectangle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),  // 더 연한 그림자
+              blurRadius: 10,
+              spreadRadius: 1,                       // 그림자 확산
+              offset: Offset(0, 3),
+            ),
+          ],
         ),
         child: Icon(
+          // 아이콘 흰색
           isPlaying ? Icons.pause : Icons.play_arrow,
           color: Colors.white,
-          size: screenWidth * 0.06,
+          size: screenWidth * 0.05,
+          // isPlaying ? Icons.pause : Icons.play_arrow,
+          // color: AppColors.blueColor2,
+          // size: screenWidth * 0.05,
         ),
       ),
     );
@@ -96,12 +128,25 @@ class LecturePlayBarComponents {
     required IconData icon,
     required VoidCallback onTap,
     required double screenWidth,
+    Color? backgroundColor,
+    Color? borderColor,
+    Color? iconColor,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(screenWidth * 0.02),
-        child: Icon(icon, color: Colors.black87, size: screenWidth * 0.05),
+        width: screenWidth * 0.07,
+        height: screenWidth * 0.07,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          border: borderColor != null
+              ? Border.all(color: borderColor, width: 1.0)
+              : null,  // borderColor가 null이면 테두리 없음
+          borderRadius: BorderRadius.circular(12),
+          shape: BoxShape.rectangle,
+        ),
+        //padding: EdgeInsets.all(screenWidth * 0.02),
+        child: Center(child: Icon(icon, color: iconColor, size: screenWidth * 0.05)),
       ),
     );
   }

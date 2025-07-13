@@ -20,3 +20,8 @@ enum ServerConnectionState {
   reconnecting, // 재연결 시도
   failed        // 연결 실패 (최대 재시도 초과)
 }
+
+enum LanguageDialogType {
+  inputLanguage,   // 음성 언어
+  outputLanguage,  // 자막 언어
+}

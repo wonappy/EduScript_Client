@@ -1,5 +1,8 @@
+import 'package:client/core/enum_core.dart';
 import 'package:client/core/styles/color_core.dart';
+import 'package:client/providers/mode_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/global_core.dart';
 import 'multi_language_select_dialog.dart';
 
@@ -13,6 +16,7 @@ class MultiLanguageDropdown extends StatelessWidget {
   final double screenWidth;
   final double screenHeight;
   final Color? backgroundColor;
+  final bool isInputLanguage;
 
   const MultiLanguageDropdown({
     super.key,
@@ -23,6 +27,7 @@ class MultiLanguageDropdown extends StatelessWidget {
     required this.screenWidth,
     required this.screenHeight,
     this.backgroundColor,
+    this.isInputLanguage = false,
   });
 
   String _getDisplayText() {
@@ -36,12 +41,17 @@ class MultiLanguageDropdown extends StatelessWidget {
   }
 
   void _showLanguageDialog(BuildContext context) async {
+    final mode = Provider.of<ModeProvider>(context, listen: false).currentMode;
+    final bool isLectureMode = mode == Mode.lecture; // 강의 모드 true, 토론 모드 false
+
     final result = await showDialog<List<String>>(
       context: context,
       builder:
           (context) => MultiLanguageSelectDialog(
             availableLanguages: availableLanguages,
             selectedLanguages: selectedLanguages,
+            isLectureMode: isLectureMode,
+            isInputLanguage: isInputLanguage,
           ),
     );
 

@@ -1,4 +1,6 @@
 //자막 (프롬프트 느낌 ver)
+import 'package:client/core/styles/color_core.dart';
+import 'package:client/widgets/common/ready_received_dialog_widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -107,7 +109,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
           Container(
             width: screenWidth,
             height: screenHeight,
-            color: widget.backgroundColor, //배경 색상 지정
+            color: AppColors.blackColor, //배경 색상 지정
             child: Column(
               mainAxisAlignment: settings.getAlignment(),
               children: [
@@ -179,7 +181,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
                             alpha:
                                 settings.getBackgroundOpacity(), //자막 배경 불투명도 지정
                           ),
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(5),
                           border:
                               // 발화 중인 언어 테두리 표시
                               isSpeakingLanguage(languages[i])
@@ -418,6 +420,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     bool connectd = await _sttService.connectToServer();
     // 연결 성공 시
     if (connectd) {
+      _showReadyDialog(); // (호출) ready 다이얼로그 메서드
       if (_sttService is WebSocketSTTService) {
         // 싱글 모드
         await _sttService.startSession(
@@ -495,10 +498,24 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     _reconnectionCallbacks(); // (호출) [1] 재연결 콜백 메서드
   }
 
+  // [ready 수신 다이얼로그]
+  void _showReadyDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => ReadyReceivedDialog(
+        onReadyConfirmed: () {
+          debugPrint("[🔴 DEBUG] 서버로부터 ready 수신 - 녹음 시작 가능");
+        },
+      ),
+    );
+  }
   // [재연결 시도 관련 코드]
   // [1] 재연결 콜백 메서드
   void _reconnectionCallbacks() {
     debugPrint("[🔴 DEBUG] _reconnectionCallbacks 메서드 실행");
+
     // 콜백 중복 방지
     _sttService?.onStatusUpdate = null;
     _sttService?.onError = null;
@@ -555,11 +572,27 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
         else if (message.contains("연결 실패")) {
           _serverConnectionState =
               ServerConnectionState.disconnected; // 서버 연결 상태 - 연결 끊김
-          _statusMessage = "서버 연결 실패 : $message"; // UI에 출력할 상태 메시지
+          _statusMessage = "$message"; // UI에 출력할 상태 메시지
         }
       });
       //_showErrorSnackBar(message); // (호출) [2] 에러 메시지 표시
     };
+  }
+
+  Future<void> _restartSTTConnection() async {
+    debugPrint("[🔴 DEBUG] _restartSTTConnection 메서드 실행");
+
+    // 1) 기존 연결 완전히 종료
+    await _sttService.disconnect();
+
+    // 2) 잠깐 대기 (연결이 완전히 정리될 때까지)
+    await Future.delayed(Duration(seconds: 1));
+
+    // 3) 콜백 재등록
+    _setupCallbacks();
+
+    // 4) 새로 연결 시도
+    await _initAndStartService();
   }
 
   // [2] 에러 메시지 표시

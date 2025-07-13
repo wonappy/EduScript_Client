@@ -1,7 +1,9 @@
 /// 자막 언어 및 테마 설정 (Provider 연동)
 library;
 
+import 'package:client/core/enum_core.dart';
 import 'package:client/core/styles/color_core.dart';
+import 'package:client/providers/mode_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/global_core.dart';
@@ -147,10 +149,15 @@ class _BuildSubtitleSettingContentState
                       selectedLanguages: settings.selectedInputLanguages,
                       availableLanguages: inputLanguagesList,
                       onChanged: (List<String> newLanguages) {
-                        settings.updateInputLanguages(newLanguages);
+                        settings.updateInputLanguages(newLanguages); // 음성 언어 선택
+                        final currentMode = context.read<ModeProvider>().currentMode;
+                        if (currentMode == Mode.conference) { // 토론 모드일 때
+                          settings.updateOutputLanguages(newLanguages);  // 음성 언어 = 자막 언어
+                        }
                       },
                       screenWidth: widget.screenWidth,
                       screenHeight: widget.screenHeight,
+                      isInputLanguage: true, // 음성 언어 선택 여부
                     ),
                   ],
                 ),
@@ -179,10 +186,15 @@ class _BuildSubtitleSettingContentState
                   selectedLanguages: settings.selectedOutputLanguages,
                   availableLanguages: outputLanguagesList,
                   onChanged: (List<String> newLanguages) {
-                    settings.updateOutputLanguages(newLanguages);
-                  },
+                    settings.updateOutputLanguages(newLanguages); // 자막 언어 설정
+                    final currentMode = context.read<ModeProvider>().currentMode;
+                    if (currentMode == Mode.conference) { // 토론 모드 시
+                      settings.updateInputLanguages(newLanguages); // 자막 언어 = 음성 언어
+                    }
+                    },
                   screenWidth: widget.screenWidth,
                   screenHeight: widget.screenHeight,
+                  isInputLanguage: false, // 음성 언어 선택 여부 (false -> 자막 언어 선택 중)
                 ),
               ),
               SizedBox(height: 20),
@@ -331,7 +343,7 @@ class _BuildSubtitleSettingContentState
     return Row(
       children: [
         Icon(_getSectionIcon(title),
-        color: Colors.black,
+        color: AppColors.blueColor2,
         size: 20,),
         SizedBox(width: 8,),
         Text(
@@ -418,8 +430,9 @@ class _BuildSubtitleSettingContentState
   return Container(
     padding: EdgeInsets.all(10),
     decoration: BoxDecoration(
-      color: Colors.grey[300],
+      color: Colors.grey[200],
       borderRadius: BorderRadius.circular(7),
+
     ),
     child: child,
   );

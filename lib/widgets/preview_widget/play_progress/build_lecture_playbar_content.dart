@@ -175,6 +175,12 @@ class _BuildLecturePlayBarContentState
       });
       debugPrint('강의 시작 - 모드: ${_currentMode.toString()}');
 
+      // [재연결 관련 변수 초기화]
+      // final service = currentService;
+      // service.resetReconnectState();
+      // service.clearAllData();
+      // service.disconnect();
+
       // final service = currentService; // 현재 서비스 가져오기
       //
       // if (service.isConnected) {
@@ -226,30 +232,23 @@ class _BuildLecturePlayBarContentState
 
   // [2] 취소 -> 타이머 리셋
   void _handleCancel() {
+
+    final service = currentService;
+
+    // 타이머 등 초기화
     TimerManager.reset();
     setState(() {
       hasStarted = false;
     });
 
-    final service = currentService;
-    service.clearAllData();
-    service.disconnect();
-
-    debugPrint('취소');
+    debugPrint('[DEBUG] _handleCancel() - 취소');
   }
 
   // [3] 종료 -> 다이얼로그 창
   void _handleStop() async {
-    TimerManager.reset();
-    debugPrint('강의 종료');
-    setState(() {
-      hasStarted = false;
-    });
-
     final service = currentService;
-    await service.disconnect();
 
-    // 자막 결과 및 통계 로그 출력
+    // 1) 자막 결과 및 통계 로그 출력
     final transcriptHistory = service.transcriptHistory;
     final translationHistory = service.translationHistory;
     final fullTranscript = service.fullTranscriptText;
@@ -261,11 +260,23 @@ class _BuildLecturePlayBarContentState
 
     if (fullTranscript.isNotEmpty) {
       final sample =
-          fullTranscript.length > 200
-              ? "${fullTranscript.substring(0, 200)}..."
-              : fullTranscript;
+      fullTranscript.length > 200
+          ? "${fullTranscript.substring(0, 200)}..."
+          : fullTranscript;
       debugPrint("  - 원문 샘플: $sample");
     }
+
+    // 2) 재연결 관련 변수 초기화
+    service.resetReconnectState();
+    service.clearAllData();
+    service.disconnect();
+
+    // 3) 타이머 삭제
+    TimerManager.reset();
+    debugPrint('[DEBUG] _handelStop() - 강의 종료');
+    setState(() {
+      hasStarted = false;
+    });
 
     _navigateToSaveDialog();
   }

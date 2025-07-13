@@ -7,11 +7,15 @@ import '../../../core/global_core.dart';
 class MultiLanguageSelectDialog extends StatefulWidget {
   final List<String> availableLanguages;
   final List<String> selectedLanguages;
+  final bool isLectureMode;
+  final bool isInputLanguage;
 
   const MultiLanguageSelectDialog({
     super.key,
     required this.availableLanguages,
     required this.selectedLanguages,
+    required this.isLectureMode,
+    required this.isInputLanguage,
   });
 
   @override
@@ -89,19 +93,82 @@ class _MultiLanguageSelectDialogState extends State<MultiLanguageSelectDialog> {
                 itemCount: _filteredLanguages.length,
                 itemBuilder: (context, index) {
                   final language = _filteredLanguages[index];
-                  return CheckboxListTile(
-                    title: Text(language, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),),
-                    value: _tempSelectedLanguages.contains(language),
-                    onChanged: (value) {
-                      setState(() {
-                        if (value == true) {
-                          _tempSelectedLanguages.add(language);
-                        } else {
-                          _tempSelectedLanguages.remove(language);
-                        }
-                      });
-                    },
-                  );
+                  final isSelected = _tempSelectedLanguages.contains(language);
+                  // [1] 강의 모드 + 음성 언어 설정
+                  if (widget.isLectureMode && widget.isInputLanguage) {
+                    return ListTile(
+                      title: Text(language, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),),
+                      trailing: isSelected ? Icon(Icons.check, color: AppColors.blueColor2, size: 24,) : null, // 선택된 언어에 체크 아이콘, 선택 안되니 언어는 null
+                      onTap: () { // 음성 언어를 새로 선택했을 때
+                        setState(() {
+                          _tempSelectedLanguages.clear(); // 기존 선택 지우기
+                          _tempSelectedLanguages.add(language); // 새 언어 추가하기
+                        });
+                      },
+                    );
+                  }
+
+                  // [2-1] 강의 모드 + 출력 언어 설정
+                  else if (widget.isLectureMode && !widget.isInputLanguage) {
+                    return CheckboxListTile(
+                      title: Text(language, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),),
+                      value: _tempSelectedLanguages.contains(language),
+                      // 1) 체크박스 색상 설정
+                      activeColor: AppColors.blueColor2,           // 체크된 상태 배경색
+                      checkColor: Colors.white,                    // 체크 마크 색상
+
+                      // 2) 호버/포커스 색상
+                      hoverColor: AppColors.blueColor2.withOpacity(0.05),
+
+                      // 3) 테두리 색상 (체크되지 않은 상태)
+                      side: BorderSide(
+                        color: _tempSelectedLanguages.contains(language)
+                            ? AppColors.blueColor2
+                            : Colors.grey,
+                        width: 2,
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          if (value == true) {
+                            _tempSelectedLanguages.add(language);
+                          } else {
+                            _tempSelectedLanguages.remove(language);
+                          }
+                        });
+                      },
+                    );
+                  }
+
+                  // [2] 토론 모드
+                  else if (!widget.isLectureMode) {
+                    return CheckboxListTile(
+                      title: Text(language, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),),
+                      value: _tempSelectedLanguages.contains(language),
+                      // 1) 체크박스 색상 설정
+                      activeColor: AppColors.blueColor2,           // 체크된 상태 배경색
+                      checkColor: Colors.white,                    // 체크 마크 색상
+
+                      // 2) 호버/포커스 색상
+                      hoverColor: AppColors.blueColor2.withOpacity(0.05),
+
+                      // 3) 테두리 색상 (체크되지 않은 상태)
+                      side: BorderSide(
+                        color: _tempSelectedLanguages.contains(language)
+                            ? AppColors.blueColor2
+                            : Colors.grey,
+                        width: 2,
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          if (value == true) {
+                            _tempSelectedLanguages.add(language);
+                          } else {
+                            _tempSelectedLanguages.remove(language);
+                          }
+                        });
+                      },
+                    );
+                  }
                 },
               ),
             ),
@@ -110,8 +177,11 @@ class _MultiLanguageSelectDialogState extends State<MultiLanguageSelectDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(
+                ElevatedButton(
                   onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[200],
+                  ),
                   child: Text('취소', style: TextStyle(color: Colors.black),),
                 ),
                 SizedBox(width: 8),

@@ -1,4 +1,5 @@
 import 'package:client/core/enum_core.dart';
+import 'package:client/core/styles/color_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -25,14 +26,14 @@ class ConnectionStatusBar extends StatelessWidget {
     // 서버 연결 상태에 따른 스타일 지정
     switch (serverConnectionState) {
       case ServerConnectionState.reconnecting:  // 재연결
-        backgroundColor = Colors.orange;
+        backgroundColor = Colors.amber.shade600;
         loadingSpinner = true;
         break;
       case ServerConnectionState.failed:        // 연결 실패
-        backgroundColor = Colors.red;
+        backgroundColor = Colors.red.shade600;
         break;
       case ServerConnectionState.disconnected:  // 연결 끊김
-        backgroundColor = Colors.red;
+        backgroundColor = Colors.red.shade600;
         break;
       default:
         backgroundColor = Colors.grey;          // 디폴트
@@ -43,10 +44,30 @@ class ConnectionStatusBar extends StatelessWidget {
 
     return Container(
       width: double.infinity,
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8), // 양쪽 여백
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: backgroundColor,
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(12), // 둥근 모서리
+        boxShadow: [                            // 그림자
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
+          // reconnecting이 아닐 때만 아이콘 표시
+          if (serverConnectionState != ServerConnectionState.reconnecting) ...[
+            Icon(
+              _getStatusIcon(serverConnectionState),
+              color: Colors.white,
+              size: 18,
+            ),
+            SizedBox(width: 8),
+          ],
           // 1) 재연결 상태 시 (로딩 스피너 true)
           // 스피너 출력
           if (loadingSpinner) ...[
@@ -71,15 +92,22 @@ class ConnectionStatusBar extends StatelessWidget {
               ),
             ),
           ),
-
-          // 3) 재시도 횟수 출력
-          if (serverConnectionState == ServerConnectionState.reconnecting)
-            Text(
-              "$reconnectAttempts/3",
-              style: const TextStyle(color: Colors.white70, fontSize: 12), // 🔴 화면 비율에 맞도록 수정
-            ),
         ],
       ),
     );
+  }
+
+  // [아이콘 출력 함수]
+  IconData _getStatusIcon(ServerConnectionState state) {
+    switch (state) {
+      case ServerConnectionState.reconnecting:
+        return Icons.sync;
+      case ServerConnectionState.failed:
+        return Icons.error_outline;
+      case ServerConnectionState.disconnected:
+        return Icons.wifi_off;
+      default:
+        return Icons.info_outline;
+    }
   }
 }
