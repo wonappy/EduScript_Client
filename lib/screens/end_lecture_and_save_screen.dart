@@ -242,65 +242,98 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
 
   // 파일 저장 버튼 클릭 시 처리 (LLM 데이터 포함)
   Future<void> _handleFileSave() async {
-    debugPrint('=== 저장 버튼 클릭 디버그 ===');
-    debugPrint('_refinedData: ${_refinedData != null ? "있음" : "없음"}');
-    debugPrint('_isProcessing: $_isProcessing');
-    debugPrint('_statusMessage: $_statusMessage');
+  debugPrint('=== 저장 버튼 클릭 디버그 ===');
+  debugPrint('_refinedData: ${_refinedData != null ? "있음" : "없음"}');
+  debugPrint('_isProcessing: $_isProcessing');
+  debugPrint('_statusMessage: $_statusMessage');
 
-    if (_refinedData == null) {
-      _showErrorMessage('저장할 데이터가 준비되지 않았습니다');
-      return;
-    }
-
-    if (selectedFilePath == null || selectedFilePath!.isEmpty) {
-      _showErrorMessage('저장 경로를 선택해주세요');
-      return;
-    }
-
-    try {
-      List<String> savedFiles = [];
-      
-      // 선택한 파일 타입에 따라 저장
-      if (isContentFile && _refinedData!.containsKey('refined_result')) {
-        String filePath = await _downloadServerFile(
-          _refinedData!['refined_result'], 
-          '정제된내용', 
-          selectedFilePath!
-        );
-        savedFiles.add(filePath);
-      }
-      
-      if (isSummaryFile && _refinedData!.containsKey('summarized_result')) {
-        String filePath = await _downloadServerFile(
-          _refinedData!['summarized_result'], 
-          '요약', 
-          selectedFilePath!
-        );
-        savedFiles.add(filePath);
-      }
-      
-      if (isMajorFile && _refinedData!.containsKey('keypoints_result')) {
-        String filePath = await _downloadServerFile(
-          _refinedData!['keypoints_result'], 
-          '핵심포인트', 
-          selectedFilePath!
-        );
-        savedFiles.add(filePath);
-      }
-      
-      // 선택한 파일이 없으면 전체 저장
-      if (!isContentFile && !isSummaryFile && !isMajorFile) {
-        _showErrorMessage('저장할 파일 타입을 선택해주세요');
-        return;
-      }
-      
-      Navigator.of(context).pop();
-      _showSuccessMessage('파일이 저장되었습니다\n${savedFiles.join('\n')}');
-      
-    } catch (e) {
-      _showErrorMessage('파일 저장 중 오류가 발생했습니다: $e');
-    }
+  if (_refinedData == null) {
+    _showErrorMessage('저장할 데이터가 준비되지 않았습니다');
+    return;
   }
+
+  if (selectedFilePath == null || selectedFilePath!.isEmpty) {
+    _showErrorMessage('저장 경로를 선택해주세요');
+    return;
+  }
+
+  try {
+    List<String> savedFiles = [];
+
+    // 1. 대표 파일 저장 (기존 방식 유지)
+    if (isContentFile && _refinedData!.containsKey('refined_result')) {
+      String filePath = await _downloadServerFile(
+        _refinedData!['refined_result'],
+        '정제된내용',
+        selectedFilePath!
+      );
+      savedFiles.add(filePath);
+    }
+
+    if (isSummaryFile && _refinedData!.containsKey('summarized_result')) {
+      String filePath = await _downloadServerFile(
+        _refinedData!['summarized_result'],
+        '요약',
+        selectedFilePath!
+      );
+      savedFiles.add(filePath);
+    }
+
+    if (isMajorFile && _refinedData!.containsKey('keypoints_result')) {
+      String filePath = await _downloadServerFile(
+        _refinedData!['keypoints_result'],
+        '핵심포인트',
+        selectedFilePath!
+      );
+      savedFiles.add(filePath);
+    }
+
+    // 2. 다중 파일 저장 (refined_results 등)
+    if (isContentFile && _refinedData!.containsKey('refined_results')) {
+      for (var file in _refinedData!['refined_results']) {
+        String filePath = await _downloadServerFile(
+          file,
+          '정제된내용',
+          selectedFilePath!
+        );
+        savedFiles.add(filePath);
+      }
+    }
+
+    if (isSummaryFile && _refinedData!.containsKey('summarized_results')) {
+      for (var file in _refinedData!['summarized_results']) {
+        String filePath = await _downloadServerFile(
+          file,
+          '요약',
+          selectedFilePath!
+        );
+        savedFiles.add(filePath);
+      }
+    }
+
+    if (isMajorFile && _refinedData!.containsKey('keypoints_results')) {
+      for (var file in _refinedData!['keypoints_results']) {
+        String filePath = await _downloadServerFile(
+          file,
+          '핵심포인트',
+          selectedFilePath!
+        );
+        savedFiles.add(filePath);
+      }
+    }
+
+    if (!isContentFile && !isSummaryFile && !isMajorFile) {
+      _showErrorMessage('저장할 파일 타입을 선택해주세요');
+      return;
+    }
+
+    Navigator.of(context).pop();
+    _showSuccessMessage('파일이 저장되었습니다\n${savedFiles.join('\n')}');
+    
+  } catch (e) {
+    _showErrorMessage('파일 저장 중 오류가 발생했습니다: $e');
+  }
+}
 
   // 서버 파일을 다운로드하는 헬퍼 함수
   Future<String> _downloadServerFile(Map<String, dynamic> fileData, String fileType, String basePath) async {
@@ -310,25 +343,43 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
     
     // Base64 디코딩
     List<int> bytes = base64Decode(base64Data);
-    
-    // 사용자 친화적인 파일명 생성
-    DateTime now = DateTime.now();
-    String timestamp = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
-    
-    String extension = fileFormat.startsWith('.')? fileFormat : '.$fileFormat'; // 파일 형식이 '.'로 시작하지 않으면 추가
-    String userFileName = '${fileName}_${fileType}_$timestamp$extension';
-    
-    // 사용자가 선택한 경로에 저장
-    String fullPath = '$basePath/$userFileName';
-    final file = File(fullPath);
-    await file.writeAsBytes(bytes);
-    
-    debugPrint('[파일 다운로드] 서버파일: $fileName → 로컬파일: $userFileName');
-    debugPrint('[파일 크기] ${fileData['file_size']} bytes');
-    debugPrint('[저장 위치] $fullPath');
-    
-    return fullPath;
-  }
+
+    // 서버에서 전달한 원래 파일명 예: hello_ko_정제된내용.txt
+  String serverFileName = fileData['filename'];
+  
+  // 언어코드 추출 (예: hello_ko_정제된내용 → ko)
+  // 파일명이 예측 가능하다는 전제 하에
+  String langCode = 'unknown';
+  try {
+    List<String> parts = serverFileName.split('_');
+    if (parts.length >= 2) {
+      langCode = parts[parts.length - 2]; // 마지막에서 두 번째 부분이 언어코드일 확률 높음
+    }
+  } catch (_) {}
+
+  // 타임스탬프
+  DateTime now = DateTime.now();
+  String timestamp = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
+
+  // 확장자 처리
+  String extension = fileFormat.startsWith('.') ? fileFormat : '.$fileFormat';
+
+  // 사용자 친화적이고 유니크한 파일명 구성
+  String userFileName = '${fileName}_${fileType}_${langCode}_$timestamp$extension';
+
+  // 전체 경로
+  String fullPath = '$basePath/$userFileName';
+
+  // 파일 저장
+  final file = File(fullPath);
+  await file.writeAsBytes(bytes);
+
+  debugPrint('[파일 다운로드] 서버파일: $serverFileName → 로컬파일: $userFileName');
+  debugPrint('[파일 크기] ${fileData['file_size']} bytes');
+  debugPrint('[저장 위치] $fullPath');
+
+  return fullPath;
+}
 
   // 저장 성공 메시지 표시
   void _showSuccessMessage(String message) {
