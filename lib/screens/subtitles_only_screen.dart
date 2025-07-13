@@ -1,5 +1,5 @@
 //자막 (프롬프트 느낌 ver)
-import 'package:flutter/foundation.dart';
+//import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:html/parser.dart' as html_parser;

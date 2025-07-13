@@ -1,6 +1,6 @@
 import 'package:client/core/styles/color_core.dart';
+import 'package:client/core/styles/size_core.dart';
 import 'package:flutter/material.dart';
-import '../../../core/global_core.dart';
 import 'multi_language_select_dialog.dart';
 
 /// 언어 다중 선택 드롭다운 메뉴
@@ -64,7 +64,7 @@ class MultiLanguageDropdown extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              fontSize: getResponsiveFontSize(screenWidth) * 0.85,
+              fontSize: AppSizes.baseFontSize,
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),
@@ -82,7 +82,7 @@ class MultiLanguageDropdown extends StatelessWidget {
                     _getDisplayText(),
                     style: TextStyle(
                       color: Colors.black,
-                      fontSize: getResponsiveFontSize(screenWidth) * 0.8,
+                      fontSize: AppSizes.baseFontSize,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -90,7 +90,7 @@ class MultiLanguageDropdown extends StatelessWidget {
                   Icon(
                     Icons.keyboard_arrow_down,
                     color: Colors.black,
-                    size: getResponsiveFontSize(screenWidth) * 1.5,
+                    size: AppSizes.baseIconSize,
                   ),
                 ],
               ),

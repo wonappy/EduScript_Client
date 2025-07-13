@@ -1,6 +1,6 @@
 import 'package:client/core/styles/color_core.dart';
+import 'package:client/core/styles/size_core.dart';
 import 'package:flutter/material.dart';
-import '../../../core/global_core.dart';
 
 /// 환경 설정 드롭다운 메뉴 (1) - 위치, 스타일, 크기
 
@@ -72,7 +72,7 @@ class _SettingDropdownState extends State<SettingDropdown> {
           Text(
             widget.title,
             style: TextStyle(
-              fontSize: getResponsiveFontSize(widget.screenWidth) * 0.85,
+              fontSize: AppSizes.baseFontSize,
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),
@@ -119,9 +119,7 @@ class _SettingDropdownState extends State<SettingDropdown> {
                           option, // 선택 항목
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize:
-                                getResponsiveFontSize(widget.screenWidth) *
-                                0.8,
+                            fontSize: AppSizes.smallFontSize,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -150,7 +148,7 @@ class _SettingDropdownState extends State<SettingDropdown> {
                 },
                 borderRadius: BorderRadius.circular(5),
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -158,8 +156,7 @@ class _SettingDropdownState extends State<SettingDropdown> {
                         selectedValue, // 현재 선택된 값으로 표시
                         style: TextStyle(
                           color: Colors.black,
-                          fontSize:
-                              getResponsiveFontSize(widget.screenWidth) * 0.8,
+                          fontSize: AppSizes.baseFontSize,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -167,7 +164,7 @@ class _SettingDropdownState extends State<SettingDropdown> {
                       Icon(
                         Icons.keyboard_arrow_down,
                         color: Colors.black,
-                        size: getResponsiveFontSize(widget.screenWidth) * 1.5,
+                        size: AppSizes.baseIconSize,
                       ),
                     ],
                   ),

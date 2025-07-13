@@ -1,4 +1,5 @@
 // 📁 providers/subtitle_settings_provider.dart
+import 'package:client/core/styles/size_core.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/global_core.dart';
@@ -290,7 +291,7 @@ class SubtitleSettingsProvider extends ChangeNotifier {
   }
 
   double getFontSize(double screenWidth) {
-    double baseSize = getResponsiveFontSize(screenWidth);
+    double baseSize = AppSizes.smallFontSize;
     switch (_selectedFontSize) {
       case '작게':
         return baseSize * 1.0;
