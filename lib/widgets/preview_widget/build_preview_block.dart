@@ -34,16 +34,15 @@ class BuildPreviewBlock extends StatelessWidget {
         // 제목 표시
         if (showTitle && title!.isNotEmpty) ...[
           Padding(
-            padding: EdgeInsets.only(
-              left: 1,
-              bottom: screenHeight * 0.01,
-            ),
+            padding: EdgeInsets.only(left: 1, bottom: screenHeight * 0.01),
             child: Row(
               children: [
-                Icon(Icons.desktop_windows,
+                Icon(
+                  Icons.desktop_windows,
                   color: AppColors.blueColor2,
-                  size: 20,),
-                SizedBox(width: 8,),
+                  size: 20,
+                ),
+                SizedBox(width: 8),
                 Text(
                   title ?? '',
                   style: TextStyle(
@@ -63,7 +62,7 @@ class BuildPreviewBlock extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.transparent, // 연한 회색
               borderRadius: BorderRadius.circular(
-                screenWidth * 0.008,
+                AppSizes.baseRadius,
               ), // 반응형 모서리
               border: Border.all(color: Colors.transparent),
               // boxShadow: [

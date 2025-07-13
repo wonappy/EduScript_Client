@@ -156,7 +156,6 @@ class _BuildLecturePlayBarContentState
       onPlayPause: _handlePlayPause,
       onCancel: _handleCancel,
       onStop: _handleStop,
-      getResponsiveFontSize: _getResponsiveFontSize,
     );
   }
 
@@ -290,11 +289,6 @@ class _BuildLecturePlayBarContentState
         return SaveDialogScreen();
       },
     );
-  }
-
-  // 반응형 폰트 크기 계산
-  double _getResponsiveFontSize(double screenWidth) {
-    return getResponsiveFontSize(screenWidth);
   }
 
   // [STT 서비스 처리] - 모드에 따라 분기

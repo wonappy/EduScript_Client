@@ -505,12 +505,13 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
       barrierDismissible: false,
       builder:
           (context) => ReadyReceivedDialog(
-        onReadyConfirmed: () {
-          debugPrint("[🔴 DEBUG] 서버로부터 ready 수신 - 녹음 시작 가능");
-        },
-      ),
+            onReadyConfirmed: () {
+              debugPrint("[🔴 DEBUG] 서버로부터 ready 수신 - 녹음 시작 가능");
+            },
+          ),
     );
   }
+
   // [재연결 시도 관련 코드]
   // [1] 재연결 콜백 메서드
   void _reconnectionCallbacks() {

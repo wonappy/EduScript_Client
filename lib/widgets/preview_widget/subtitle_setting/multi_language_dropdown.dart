@@ -74,7 +74,7 @@ class MultiLanguageDropdown extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              fontSize: getResponsiveFontSize(screenWidth) * 0.85,
+              fontSize: AppSizes.baseFontSize,
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),
@@ -92,7 +92,7 @@ class MultiLanguageDropdown extends StatelessWidget {
                     _getDisplayText(),
                     style: TextStyle(
                       color: Colors.black,
-                      fontSize: getResponsiveFontSize(screenWidth) * 0.8,
+                      fontSize: AppSizes.baseFontSize,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -100,7 +100,7 @@ class MultiLanguageDropdown extends StatelessWidget {
                   Icon(
                     Icons.keyboard_arrow_down,
                     color: Colors.black,
-                    size: getResponsiveFontSize(screenWidth) * 1.5,
+                    size: AppSizes.baseIconSize,
                   ),
                 ],
               ),
