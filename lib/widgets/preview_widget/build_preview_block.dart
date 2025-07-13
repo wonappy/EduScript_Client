@@ -1,6 +1,7 @@
 //대기 화면 -> 개별 블록 위젯 생성
 library;
 
+import 'package:client/core/styles/size_core.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/global_core.dart';
@@ -33,15 +34,12 @@ class BuildPreviewBlock extends StatelessWidget {
         // 제목 표시
         if (showTitle && title.isNotEmpty) ...[
           Padding(
-            padding: EdgeInsets.only(
-              left: 1,
-              bottom: screenHeight * 0.01,
-            ),
+            padding: EdgeInsets.only(left: 1, bottom: screenHeight * 0.01),
             child: Text(
               title,
               style: TextStyle(
                 color: Colors.black,
-                fontSize: getResponsiveFontSize(screenWidth),
+                fontSize: AppSizes.titleFontSize,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -54,7 +52,7 @@ class BuildPreviewBlock extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.transparent, // 연한 회색
               borderRadius: BorderRadius.circular(
-                screenWidth * 0.008,
+                AppSizes.baseRadius,
               ), // 반응형 모서리
               border: Border.all(color: Colors.transparent),
               // boxShadow: [

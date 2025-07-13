@@ -2,13 +2,12 @@
 library;
 
 import 'package:client/core/styles/color_core.dart';
+import 'package:client/core/styles/size_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/global_core.dart';
 import '../subtitle_setting_provider.dart';
 import 'color_setting_drop_down_widget.dart';
 import 'multi_language_dropdown.dart';
-import 'onoff_switch_state_widget.dart';
 import 'setting_drop_down_widget.dart';
 
 class BuildSubtitleSettingContent extends StatefulWidget {
@@ -43,24 +42,24 @@ class _BuildSubtitleSettingContentState
   Color backContentContainerColor = Color(0xFFC1C1C1);
   Color dropdownWidgetColor = Color(0xFFF6F6F6);
   // 색상 상수 추가
-  static const Color primaryColor = Color(0xFF2196F3);
-  static const Color surfaceColor = Color(0xFFF8F9FA);
-  static const Color cardColor = Colors.white;
-  static const Color shadowColor = Color(0x1A000000);
+  // static const Color primaryColor = Color(0xFF2196F3);
+  // static const Color surfaceColor = Color(0xFFF8F9FA);
+  // static const Color cardColor = Colors.white;
+  // static const Color shadowColor = Color(0x1A000000);
 
   @override
   Widget build(BuildContext context) {
     // provider
-    final settings = context.watch<SubtitleSettingsProvider>();
+    //final settings = context.watch<SubtitleSettingsProvider>();
 
     return Container(
       decoration: BoxDecoration(
         //color: Color(0xFFE8EAED),
         borderRadius: BorderRadius.circular(15),
-      //   gradient: LinearGradient(
-      //   begin: Alignment.topLeft,
-      //   end: Alignment.bottomRight,        
-      // ),
+        //   gradient: LinearGradient(
+        //   begin: Alignment.topLeft,
+        //   end: Alignment.bottomRight,
+        // ),
       ),
 
       child: Column(
@@ -72,15 +71,15 @@ class _BuildSubtitleSettingContentState
                 context,
               ).copyWith(scrollbars: false),
               child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      //_buildScreenShareSection(),
-                      //SizedBox(height: 30),
-                      _buildInputLanguageSection(),
-                      SizedBox(height: 25),
-                      _buildOutputLanguageSection(),
-                    ],
-                  ),
+                child: Column(
+                  children: [
+                    //_buildScreenShareSection(),
+                    //SizedBox(height: 30),
+                    _buildInputLanguageSection(),
+                    SizedBox(height: 25),
+                    _buildOutputLanguageSection(),
+                  ],
+                ),
               ),
             ),
           ),
@@ -138,7 +137,7 @@ class _BuildSubtitleSettingContentState
         SizedBox(height: 10),
         _buildBigContainer(
           child: Column(
-            children: [              
+            children: [
               _buildSmallContainer(
                 child: Column(
                   children: [
@@ -191,8 +190,10 @@ class _BuildSubtitleSettingContentState
                 content: _buildMediumContainer(
                   child: Column(
                     children: [
-                      _buildPositionDropdown(),  _buildDivider(),
-                      _buildStyleDropdown()],
+                      _buildPositionDropdown(),
+                      _buildDivider(),
+                      _buildStyleDropdown(),
+                    ],
                   ),
                 ),
               ),
@@ -201,8 +202,11 @@ class _BuildSubtitleSettingContentState
                 title: "텍스트",
                 content: _buildMediumContainer(
                   child: Column(
-                    children: [_buildSizeDropdown(), 
-                    _buildDivider(), _buildTextColorDropdown()],
+                    children: [
+                      _buildSizeDropdown(),
+                      _buildDivider(),
+                      _buildTextColorDropdown(),
+                    ],
                   ),
                 ),
               ),
@@ -212,7 +216,8 @@ class _BuildSubtitleSettingContentState
                 content: _buildMediumContainer(
                   child: Column(
                     children: [
-                      _buildBackgroundColorDropdown(), _buildDivider(),
+                      _buildBackgroundColorDropdown(),
+                      _buildDivider(),
                       _buildOpacityDropdown(),
                     ],
                   ),
@@ -291,7 +296,7 @@ class _BuildSubtitleSettingContentState
     );
   }
 
-  // 5) 폰트 배경색 드롭다운 
+  // 5) 폰트 배경색 드롭다운
   Widget _buildBackgroundColorDropdown() {
     final settings = context.read<SubtitleSettingsProvider>();
 
@@ -326,104 +331,105 @@ class _BuildSubtitleSettingContentState
   }
 
   // [공통 UI 위젯들] - 기존과 동일
-  // 섹션 타이틀 
+  // 섹션 타이틀
   Widget _buildSectionTitle(String title) {
     return Row(
       children: [
-        Icon(_getSectionIcon(title),
-        color: Colors.black,
-        size: 20,),
-        SizedBox(width: 8,),
+        Icon(_getSectionIcon(title), color: Colors.black, size: 20),
+        SizedBox(width: 8),
         Text(
-        title,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: getResponsiveFontSize(widget.screenWidth),
-          color: Colors.black87,
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: AppSizes.titleFontSize,
+            color: Colors.black87,
+          ),
         ),
-      ),
       ],
     );
   }
-  
-  // 섹션 타이틀 아이콘 
+
+  // 섹션 타이틀 아이콘
   IconData _getSectionIcon(String title) {
-  switch (title) {
-    case '화면 공유 ON/OFF': return Icons.screen_share;
-    case '음성 언어 설정': return Icons.mic;
-    case '출력 언어 설정': return Icons.subtitles;
-    default: return Icons.settings;
+    switch (title) {
+      case '화면 공유 ON/OFF':
+        return Icons.screen_share;
+      case '음성 언어 설정':
+        return Icons.mic;
+      case '출력 언어 설정':
+        return Icons.subtitles;
+      default:
+        return Icons.settings;
+    }
   }
-}
 
   // 서브 섹션 타이틀
   Widget _buildSubSectionTitle(String title) {
     return Row(
-     children: [
-      // Icon(
-      //   _getSubSectionIcon(title),
-      //   color: primaryColor,
-      //   size: 16,
-      // ),
-      //SizedBox(width: 6),
+      children: [
+        // Icon(
+        //   _getSubSectionIcon(title),
+        //   color: primaryColor,
+        //   size: 16,
+        // ),
+        //SizedBox(width: 6),
         Text(
-                title,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: getResponsiveFontSize(widget.screenWidth),
-                  color: Colors.black,
-                ),
-              ),
-     ]
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: AppSizes.baseFontSize,
+            color: Colors.black,
+          ),
+        ),
+      ],
     );
   }
 
-  // 서브 섹션 타이틀 옆 아이콘
-  IconData _getSubSectionIcon(String title) {
-  switch (title) {
-    case '스타일': return Icons.style;
-    case '텍스트': return Icons.text_fields;
-    case '배경': return Icons.wallpaper;
-    default: return Icons.settings;
-  }
-}
+  // // 서브 섹션 타이틀 옆 아이콘
+  // IconData _getSubSectionIcon(String title) {
+  //   switch (title) {
+  //     case '스타일':
+  //       return Icons.style;
+  //     case '텍스트':
+  //       return Icons.text_fields;
+  //     case '배경':
+  //       return Icons.wallpaper;
+  //     default:
+  //       return Icons.settings;
+  //   }
+  // }
 
   // 구분선
   Widget _buildDivider() {
     return Column(
-      children: [
-        Divider(color: Colors.grey, thickness: 1, height: 1),
-      ],
+      children: [Divider(color: Colors.grey, thickness: 1, height: 1)],
     );
   }
-  
-  // 배경 컨테이너
-  Widget _buildBackContainer({required Widget child}) {
+
+  // // 배경 컨테이너
+  // Widget _buildBackContainer({required Widget child}) {
+  //   return Container(
+  //     padding: EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+  //     decoration: BoxDecoration(
+  //       color: Color(0xFFF5F6F8),
+  //       borderRadius: BorderRadius.circular(16),
+  //       border: Border.all(color: Colors.grey.withValues(alpha: 0.1), width: 1),
+  //     ),
+  //     child: child,
+  //   );
+  // }
+
+  // 큰 컨테이너
+  Widget _buildBigContainer({required Widget child}) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+      padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Color(0xFFF5F6F8),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.1),
-          width: 1,
-        ),
+        color: Colors.grey[300],
+        borderRadius: BorderRadius.circular(7),
       ),
       child: child,
     );
   }
-
-  // 큰 컨테이너
-  Widget _buildBigContainer({required Widget child}) {
-  return Container(
-    padding: EdgeInsets.all(10),
-    decoration: BoxDecoration(
-      color: Colors.grey[300],
-      borderRadius: BorderRadius.circular(7),
-    ),
-    child: child,
-  );
-}
 
   // 작은 컨테이너
   Widget _buildSmallContainer({required Widget child}) {
@@ -477,5 +483,4 @@ class _BuildSubtitleSettingContentState
       ],
     );
   }
-
 }
