@@ -1,7 +1,6 @@
 // 대기 화면
 import 'package:client/core/styles/color_core.dart';
 import 'package:flutter/material.dart';
-
 import '../widgets/preview_widget/build_preview_block.dart';
 
 class PreviewScreen extends StatelessWidget {

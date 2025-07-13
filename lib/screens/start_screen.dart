@@ -123,7 +123,6 @@ class _StartScreenState extends State<StartScreen> {
             'EduScript',
             style: TextStyle(
               fontSize: 110, // 🔵 제목 폰트 크기
-              //isWideScreen ? screenWidth * 0.08 : screenWidth * 0.12,
               fontWeight: FontWeight.bold,
               color: AppColors.blueColor1, // 🔴 제목 폰트 색상
               letterSpacing: 2.0,
