@@ -1,5 +1,6 @@
 import 'package:client/core/enum_core.dart';
 import 'package:client/core/styles/color_core.dart';
+import 'package:client/core/styles/size_core.dart';
 import 'package:client/providers/mode_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
