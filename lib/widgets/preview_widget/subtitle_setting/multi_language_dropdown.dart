@@ -4,6 +4,7 @@ import 'package:client/core/styles/size_core.dart';
 import 'package:client/providers/mode_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/styles/size_core.dart';
 import 'multi_language_select_dialog.dart';
 
 /// 언어 다중 선택 드롭다운 메뉴
@@ -44,19 +45,24 @@ class MultiLanguageDropdown extends StatelessWidget {
     final mode = Provider.of<ModeProvider>(context, listen: false).currentMode;
     final bool isLectureMode = mode == Mode.lecture; // 강의 모드 true, 토론 모드 false
 
+    debugPrint("[🌻 DEBUG] 언어 선택 다이얼로그 열기 전 ... [$mode모드 / $selectedLanguages]");
     final result = await showDialog<List<String>>(
       context: context,
       builder:
           (context) => MultiLanguageSelectDialog(
             availableLanguages: availableLanguages,
             selectedLanguages: selectedLanguages,
-            isLectureMode: isLectureMode,
-            isInputLanguage: isInputLanguage,
+            isLectureMode: isLectureMode,     // bool
+            isInputLanguage: isInputLanguage, // bool
           ),
     );
 
+    debugPrint("[🌻 DEBUG] 언어 선택 후 ... [$result]");
+
     if (result != null) {
+      debugPrint("[🌻 DEBUG] onChanged 전 ... [$result]");
       onChanged(result);
+      debugPrint("[🌻 DEBUG] onChanged 후 ... [$result]");
     }
   }
 

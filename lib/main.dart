@@ -16,7 +16,7 @@ void main() async {
   WindowOptions windowOptions = WindowOptions(
     size: const Size(1180, 620), //초기 창 크기
     minimumSize: Size(1180, 620), //최소 크기
-    maximumSize: Size(1300, 750), //최대 크기
+    //maximumSize: Size(1300, 750), //최대 크기
     center: true, // 화면 중간에서 start
     skipTaskbar: false,
     titleBarStyle: TitleBarStyle.normal,
@@ -27,7 +27,7 @@ void main() async {
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
-    windowManager.setMaximizable(false);
+    //windowManager.setMaximizable(false);
   });
 
   runApp(

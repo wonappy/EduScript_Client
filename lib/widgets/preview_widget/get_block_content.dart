@@ -23,7 +23,7 @@ class GetBlockContent extends StatelessWidget {
     switch (title) {
       case '화면 미리보기':
         return BuildLecturePreviewContent();
-      case '강의 시작':
+      case '':
         return BuildLecturePlayBarContent(
           screenWidth: screenWidth,
           screenHeight: screenHeight,

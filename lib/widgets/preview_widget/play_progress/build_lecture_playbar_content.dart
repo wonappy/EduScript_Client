@@ -174,36 +174,30 @@ class _BuildLecturePlayBarContentState
       });
       debugPrint('강의 시작 - 모드: ${_currentMode.toString()}');
 
-      // [재연결 관련 변수 초기화]
-      // final service = currentService;
-      // service.resetReconnectState();
-      // service.clearAllData();
-      // service.disconnect();
+      final service = currentService; // 현재 서비스 가져오기
 
-      // final service = currentService; // 현재 서비스 가져오기
-      //
-      // if (service.isConnected) {
-      //   await service.startRecording();
-      //   debugPrint("기존 연결로 녹음 재시작");
-      // } else {
-      //   // Provider에서 언어 설정 가져오기
-      //   final subtitleSettings = context.read<SubtitleSettingsProvider>();
-      //   final inputLanguageCodes = subtitleSettings.getInputLanguageCodes();
-      //   final outputLanguageCodes = subtitleSettings.getOutputLanguageCodes();
-      //
-      //   debugPrint("🌐 언어 설정:");
-      //   debugPrint(
-      //     "  입력: ${subtitleSettings.selectedInputLanguages} -> $inputLanguageCodes",
-      //   );
-      //   debugPrint(
-      //     "  출력: ${subtitleSettings.selectedOutputLanguages} -> $outputLanguageCodes",
-      //   );
-      //
-      //   await _startSTTService(
-      //     inputLanguageCodes: inputLanguageCodes,
-      //     outputLanguageCodes: outputLanguageCodes,
-      //   );
-      // }
+      if (service.isConnected) {
+        await service.startRecording();
+        debugPrint("기존 연결로 녹음 재시작");
+      } else {
+        // Provider에서 언어 설정 가져오기
+        final subtitleSettings = context.read<SubtitleSettingsProvider>();
+        final inputLanguageCodes = subtitleSettings.getInputLanguageCodes();
+        final outputLanguageCodes = subtitleSettings.getOutputLanguageCodes();
+
+        debugPrint("🌐 언어 설정:");
+        debugPrint(
+          "  입력: ${subtitleSettings.selectedInputLanguages} -> $inputLanguageCodes",
+        );
+        debugPrint(
+          "  출력: ${subtitleSettings.selectedOutputLanguages} -> $outputLanguageCodes",
+        );
+
+        await _startSTTService(
+          inputLanguageCodes: inputLanguageCodes,
+          outputLanguageCodes: outputLanguageCodes,
+        );
+      }
 
       // 화면 전환
       if (mounted) {
@@ -231,16 +225,20 @@ class _BuildLecturePlayBarContentState
 
   // [2] 취소 -> 타이머 리셋
   void _handleCancel() {
+    final service = currentService; // 현재 활성화된 STT/MultipleSTT 서비스 인스턴스를 가져옵니다.
 
-    final service = currentService;
+    // 1) 서버 연결 종료 및 데이터 초기화
+    service.resetReconnectState(); // 재연결 상태 초기화
+    service.clearAllData();        // 누적된 모든 데이터 (텍스트 기록 등) 초기화
+    service.disconnect();          // WebSocket 연결 끊기
 
-    // 타이머 등 초기화
-    TimerManager.reset();
+    // 2) 타이머 및 UI 상태 초기화
+    TimerManager.reset(); // 타이머를 0으로 리셋
     setState(() {
-      hasStarted = false;
+      hasStarted = false; // UI의 '시작됨' 상태를 리셋합니다.
     });
 
-    debugPrint('[DEBUG] _handleCancel() - 취소');
+    debugPrint('[DEBUG] _handleCancel() - 취소 및 서비스 연결 해제 완료');
   }
 
   // [3] 종료 -> 다이얼로그 창

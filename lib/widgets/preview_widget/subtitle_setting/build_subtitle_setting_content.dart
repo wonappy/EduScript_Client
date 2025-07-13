@@ -53,7 +53,7 @@ class _BuildSubtitleSettingContentState
   Widget build(BuildContext context) {
     // provider
     //final settings = context.watch<SubtitleSettingsProvider>();
-
+    final settings = context.watch<SubtitleSettingsProvider>();
     return Container(
       decoration: BoxDecoration(
         //color: Color(0xFFE8EAED),
