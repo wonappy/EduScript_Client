@@ -87,8 +87,8 @@ class LecturePlayBarComponents {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: screenWidth * 0.07,
-        height: screenWidth * 0.07,
+        width: screenWidth * 0.05,
+        height: screenWidth * 0.05,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           color:
@@ -112,7 +112,7 @@ class LecturePlayBarComponents {
           // 아이콘 흰색
           isPlaying ? Icons.pause : Icons.play_arrow,
           color: Colors.white,
-          size: screenWidth * 0.05,
+          size: screenWidth * 0.04,
           // isPlaying ? Icons.pause : Icons.play_arrow,
           // color: AppColors.blueColor2,
           // size: screenWidth * 0.05,
@@ -133,8 +133,8 @@ class LecturePlayBarComponents {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: screenWidth * 0.07,
-        height: screenWidth * 0.07,
+        width: screenWidth * 0.05,
+        height: screenWidth * 0.05,
         decoration: BoxDecoration(
           color: backgroundColor,
           border:
@@ -146,7 +146,7 @@ class LecturePlayBarComponents {
         ),
         //padding: EdgeInsets.all(screenWidth * 0.02),
         child: Center(
-          child: Icon(icon, color: iconColor, size: screenWidth * 0.05),
+          child: Icon(icon, color: iconColor, size: screenWidth * 0.04),
         ),
       ),
     );

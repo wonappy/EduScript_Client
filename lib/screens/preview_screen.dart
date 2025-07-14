@@ -26,7 +26,7 @@ class PreviewScreen extends StatelessWidget {
                 children: [
                   // 강의 화면 미리보기
                   Expanded(
-                    flex: 7, // 왼쪽 영역의 70%
+                    flex: 8, // 왼쪽 영역의 70%
                     child: BuildPreviewBlock(
                       title: '화면 미리보기',
                       screenWidth: screenWidth * 0.6,
@@ -36,7 +36,7 @@ class PreviewScreen extends StatelessWidget {
                   SizedBox(height: 18), // 2% 간격
                   // 강의 시작
                   Expanded(
-                    flex: 3, // 왼쪽 영역의 30%
+                    flex: 2, // 왼쪽 영역의 30%
                     child: BuildPreviewBlock(
                       title: '',
                       screenWidth: screenWidth * 0.6,

@@ -36,6 +36,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
   Map<String, String> _currentTranslations = {}; // 번역 결과 저장 { "en": "Hello" }
 
   static double referenceScreenWidth = 1167.0;
+  bool _dialogShown = false;
 
   // 현재 발화 언어 (multi모드)
   String? _currentSpeakingLanguage;
@@ -72,7 +73,10 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     _setupCallbacks();
 
     // 3) 화면이 그려진 직후, 딱 한 번만 서비스 시작 요청
+    debugPrint("[🔴 INIT] PostFrameCallback 등록");
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      debugPrint("[🔴 INIT] PostFrameCallback 실행됨");
+      debugPrint("[🔴 INIT] _initAndStartService 호출 시작");
       _initAndStartService();
     });
   }
@@ -425,9 +429,19 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
 
     // 2) 웹소켓 연결
     bool connectd = await _sttService.connectToServer();
+
     // 연결 성공 시
     if (connectd) {
-      _showReadyDialog(); // (호출) ready 다이얼로그 메서드
+      debugPrint("[📌 DEBUG] 다이얼로그 호출 전");
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        debugPrint("[📌 DEBUG] PostFrameCallback 실행됨");
+        if (mounted) {
+          debugPrint("[📌 DEBUG] mounted == true, Ready 다이얼로그 표시 시도 ...");
+          _showReadyDialog();
+        } else {
+          debugPrint("[📌 DEBUG] mounted == false, Ready 다이얼로그 표시 불가");
+        }
+      });
       if (_sttService is WebSocketSTTService) {
         // 싱글 모드
         await _sttService.startSession(
@@ -507,6 +521,9 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
 
   // [ready 수신 다이얼로그]
   void _showReadyDialog() {
+    if (_dialogShown) return;
+    _dialogShown = true;
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -516,7 +533,9 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
               debugPrint("[🔴 DEBUG] 서버로부터 ready 수신 - 녹음 시작 가능");
             },
           ),
-    );
+    ).then((_) {
+      _dialogShown = false;
+    });
   }
 
   // [재연결 시도 관련 코드]
@@ -555,6 +574,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
               ServerConnectionState.connected; // 서버 연결 상태 - 연결 성공
           _statusMessage = "서버에 연결되었습니다."; // UI에 출력할 상태 메시지
         }
+
         // 3) 연결 종료
         else if (status.contains("연결 종료")) {
           _serverConnectionState =

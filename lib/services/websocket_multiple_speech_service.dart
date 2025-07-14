@@ -201,18 +201,18 @@ class WebSocketMultipleSTTService {
     required List<String> inputLanguages, // 입력 언어 국가 (다중)
     required List<String> targetLanguages, // 출력 언어 국가 (다중)
   }) async {
-    debugPrint("[DEBUG 2] startSession 메서드 실행");
+    debugPrint("[🐟DEBUG 2] startSession 메서드 실행");
 
     // 연결이 끊겼을 때
     if (!_isConnected || _webSocketChannel == null) {
-      _handleError("[DEBUG 2] 세션 시작 실패", "서버가 연결 되지 않았습니다");
+      _handleError("[🐟DEBUG 2] 세션 시작 실패", "서버가 연결 되지 않았습니다");
       return false;
     }
 
     try {
       // 1) 마이크 권한 확인
       if (!await _checkMicrophonePermission()) {
-        _handleError("[DEBUG 2] 세션 시작 실패", "마이크 권한이 필요합니다");
+        _handleError("[🐟DEBUG 2] 세션 시작 실패", "마이크 권한이 필요합니다");
         return false;
       }
 
