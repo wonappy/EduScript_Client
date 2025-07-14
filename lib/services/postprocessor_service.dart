@@ -10,7 +10,7 @@ import 'package:client/core/enum_core.dart';
 
 class PostProcessorService {
   // http 통신 설정
-  final String _serverBaseUrl = "http://10.101.171.148:8000"; // 서버 엔드포인트
+  final String _serverBaseUrl = "http://10.101.170.201:8000"; // 서버 엔드포인트
 
   final String _serverEndpoint = "/api/routes/language/refinement";
 
@@ -92,31 +92,32 @@ class PostProcessorService {
     String? processingMode,
     List<String>? languageList,
   }) async {
-  if (_isProcessing) return _lastResponse;
-  if (fullText.trim().isEmpty) return null;
+    if (_isProcessing) return _lastResponse;
+    if (fullText.trim().isEmpty) return null;
 
-  try {
-    _isProcessing = true;
-    _lastRequest = fullText;
+    try {
+      _isProcessing = true;
+      _lastRequest = fullText;
 
-    final finalProcessingMode = processingMode ?? _processingMode;
+      final finalProcessingMode = processingMode ?? _processingMode;
 
-    // ✅ 자동 언어 선택 로직 추가
-    List<String> resolvedLanguageList = languageList ??
-        (finalProcessingMode == 'lecture'
-            ? _getLectureLanguage()
-            : _getConferenceLanguages());
+      // ✅ 자동 언어 선택 로직 추가
+      List<String> resolvedLanguageList =
+          languageList ??
+          (finalProcessingMode == 'lecture'
+              ? _getLectureLanguage()
+              : _getConferenceLanguages());
 
-    final requestBody = {
-      'full_text': fullText,
-      'fileName': fileName,
-      'fileFormat': fileFormat.replaceAll('.', ''),
-      'enable_refine': _enableRefine,
-      'enable_summarize': enableSummarize ?? _enableSummarize,
-      'enable_keypoints': enableKeypoints ?? _enableKeypoints,
-      'processing_mode': finalProcessingMode,
-      'language_list': resolvedLanguageList,
-    };
+      final requestBody = {
+        'full_text': fullText,
+        'fileName': fileName,
+        'fileFormat': fileFormat.replaceAll('.', ''),
+        'enable_refine': _enableRefine,
+        'enable_summarize': enableSummarize ?? _enableSummarize,
+        'enable_keypoints': enableKeypoints ?? _enableKeypoints,
+        'processing_mode': finalProcessingMode,
+        'language_list': resolvedLanguageList,
+      };
 
       debugPrint("요청 데이터 원문 전문 : $fullText");
       debugPrint("[LLM] 서버로 데이터 전송 중...");
