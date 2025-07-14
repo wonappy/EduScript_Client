@@ -37,7 +37,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
   String _savingMessage = '';
 
   final PostProcessorService _llmService = PostProcessorService();
-  
+
   // WebSocketSTTService? _sttService;
   // WebSocketMultipleSTTService? _multipleSTTService;
 
@@ -58,12 +58,12 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
+
     // 모드 설정 (한 번만)
     if (_currentMode == null) {
       _currentMode = Provider.of<ModeProvider>(context, listen: false).currentMode;
       debugPrint("🔥 현재 모드: ${_currentMode.toString()}");
-      
+
       // // 모드에 따라 적절한 STT 서비스 선택
       // if (_currentMode == Mode.conference) {
       //   _multipleSTTService  = Provider.of<WebSocketMultipleSTTService>(context, listen: false);
@@ -72,8 +72,9 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
       //   _sttService = Provider.of<WebSocketSTTService>(context, listen: false);
       //   debugPrint("🔥 Single STT 서비스 사용");
       // }
-      
+
       // 자동으로 LLM 정제 실행
+
     }
   }
 
@@ -90,12 +91,12 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
    // 자동으로 STT 내용을 LLM으로 정제
   Future<void> _processTranscriptAutomatically() async {
     final transcriptText = widget.fullTranscript;
-    
+
     debugPrint('🔍 STT 텍스트 확인:');
     debugPrint('  - 모드: ${_currentMode.toString()}');
     debugPrint('  - 텍스트 길이: ${transcriptText.length}');
     debugPrint('  - 텍스트 내용: "$transcriptText"');
-    
+
     if (transcriptText.trim().isEmpty) {
       setState(() {
         _statusMessage = '정제할 텍스트가 없습니다';
@@ -255,6 +256,9 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
   Future<void> _handleFileSave() async {
   debugPrint('=== 저장 버튼 클릭 디버그 ===');
 
+
+
+
   if (selectedFilePath == null || selectedFilePath!.isEmpty) {
     _showErrorMessage('저장 경로를 선택해주세요');
     return;
@@ -288,10 +292,14 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
       _showErrorMessage('파일 생성에 실패했습니다');
       setState(() => _isSaving = false);
       return;
+
+
+
     }
 
     _refinedData = result;
     List<String> savedFiles = [];
+
 
     /// 공통 저장 함수
     Future<void> saveItem(String key, String label) async {
@@ -327,6 +335,11 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
     if (isContentFile) {
       await saveItem('refined_result', '정제된내용');
       await saveList('refined_results', '정제된내용');
+
+
+
+
+
     }
 
     if (isSummaryFile) {
@@ -341,6 +354,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
 
     Navigator.of(context).pop();
     _showSuccessMessage('파일이 저장되었습니다:\n${savedFiles.join('\n')}');
+
   } catch (e) {
     _showErrorMessage('파일 저장 중 오류 발생: $e');
   } finally {
@@ -358,13 +372,13 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
     // 서버 파일 정보
     //String fileName = fileData['filename']; // 서버에서 생성한 파일명
     String base64Data = fileData['data'];
-    
+
     // Base64 디코딩
     List<int> bytes = base64Decode(base64Data);
 
     // 서버에서 전달한 원래 파일명 예: hello_ko_정제된내용.txt
   String serverFileName = fileData['filename'];
-  
+
   // 언어코드 추출 (예: hello_ko_정제된내용 → ko)
   // 파일명이 예측 가능하다는 전제 하에
   String langCode = 'unknown';
