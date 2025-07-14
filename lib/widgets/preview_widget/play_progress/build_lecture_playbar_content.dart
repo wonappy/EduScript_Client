@@ -275,16 +275,16 @@ class _BuildLecturePlayBarContentState
       hasStarted = false;
     });
 
-    _navigateToSaveDialog();
+    _navigateToSaveDialog(transcriptHistory, translationHistory, fullTranscript);
   }
 
   // [4] 다이얼로그 (저장 옵션 선택)
-  Future<void> _navigateToSaveDialog() async {
+  Future<void> _navigateToSaveDialog(List<String> transcriptHistory, List<Map<String, String>> translationHistory, String fullTranscript) async {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return SaveDialogScreen();
+        return SaveDialogScreen(transcriptHistory: transcriptHistory, translationHistory: translationHistory, fullTranscript: fullTranscript,);
       },
     );
   }

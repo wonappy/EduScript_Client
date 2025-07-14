@@ -493,6 +493,7 @@ class WebSocketMultipleSTTService {
 
   // [7] 연결 종료
   Future<void> disconnect() async {
+    debugPrint("[DEBUG 7] disconnect 메서드 실행 (연결 종료)");
     try {
       // 1) 녹음 중지
       await stopRecording();
