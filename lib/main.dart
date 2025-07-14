@@ -51,7 +51,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: true, //디버깅 모드
+      debugShowCheckedModeBanner: false, //디버깅 모드
       title: 'EduScript',
       //theme: testTheme,
       home: const StartScreen(),
