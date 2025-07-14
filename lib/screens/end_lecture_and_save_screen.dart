@@ -12,7 +12,11 @@ import '../providers/mode_provider.dart';
 import '../core/enum_core.dart';
 
 class SaveDialogScreen extends StatefulWidget {
-  const SaveDialogScreen({super.key});
+  final List<String> transcriptHistory;
+  final List<Map<String, String>> translationHistory;
+  final String fullTranscript;
+  
+  const SaveDialogScreen({super.key, required this.transcriptHistory, required this.translationHistory, required this.fullTranscript});
 
   @override
   State<SaveDialogScreen> createState() => _SaveDialogScreenState();
@@ -29,11 +33,13 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
   String fileFormat = '.txt'; //파일 형식 (기본값은 .txt)
   String emailAddress = ''; //이메일 주소
   String emailDomain = 'naver.com'; //이메일 도메인 기본값
+  bool _isSaving = false;
+  String _savingMessage = '';
 
   final PostProcessorService _llmService = PostProcessorService();
-  
-  WebSocketSTTService? _sttService;
-  WebSocketMultipleSTTService? _multipleSTTService;
+
+  // WebSocketSTTService? _sttService;
+  // WebSocketMultipleSTTService? _multipleSTTService;
 
   bool _isProcessing = false;
   String _statusMessage = '';
@@ -52,45 +58,45 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
+
     // 모드 설정 (한 번만)
     if (_currentMode == null) {
       _currentMode = Provider.of<ModeProvider>(context, listen: false).currentMode;
       debugPrint("🔥 현재 모드: ${_currentMode.toString()}");
-      
-      // 모드에 따라 적절한 STT 서비스 선택
-      if (_currentMode == Mode.conference) {
-        _multipleSTTService  = Provider.of<WebSocketMultipleSTTService>(context, listen: false);
-        debugPrint("🔥 Multiple STT 서비스 사용");
-      } else {
-        _sttService = Provider.of<WebSocketSTTService>(context, listen: false);
-        debugPrint("🔥 Single STT 서비스 사용");
-      }
-      
+
+      // // 모드에 따라 적절한 STT 서비스 선택
+      // if (_currentMode == Mode.conference) {
+      //   _multipleSTTService  = Provider.of<WebSocketMultipleSTTService>(context, listen: false);
+      //   debugPrint("🔥 Multiple STT 서비스 사용");
+      // } else {
+      //   _sttService = Provider.of<WebSocketSTTService>(context, listen: false);
+      //   debugPrint("🔥 Single STT 서비스 사용");
+      // }
+
       // 자동으로 LLM 정제 실행
-      _processTranscriptAutomatically();
+
     }
   }
 
-  // 현재 STT 서비스의 텍스트 가져오기
-  String get _currentTranscriptText {
-    if (_currentMode == Mode.conference && _multipleSTTService != null) {
-      return _multipleSTTService!.fullTranscriptText;
-    } else if (_sttService != null) {
-      return _sttService!.fullTranscriptText;
-    }
-    return '';
-  }
+  // // 현재 STT 서비스의 텍스트 가져오기
+  // String get _currentTranscriptText {
+  //   if (_currentMode == Mode.conference && _multipleSTTService != null) {
+  //     return _multipleSTTService!.fullTranscriptText;
+  //   } else if (_sttService != null) {
+  //     return _sttService!.fullTranscriptText;
+  //   }
+  //   return '';
+  // }
 
    // 자동으로 STT 내용을 LLM으로 정제
   Future<void> _processTranscriptAutomatically() async {
-    final transcriptText = _currentTranscriptText;
-    
+    final transcriptText = widget.fullTranscript;
+
     debugPrint('🔍 STT 텍스트 확인:');
     debugPrint('  - 모드: ${_currentMode.toString()}');
     debugPrint('  - 텍스트 길이: ${transcriptText.length}');
     debugPrint('  - 텍스트 내용: "$transcriptText"');
-    
+
     if (transcriptText.trim().isEmpty) {
       setState(() {
         _statusMessage = '정제할 텍스트가 없습니다';
@@ -151,14 +157,14 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
       child: Container(
         width: 800,
         padding: const EdgeInsets.all(25),
-        child: _isProcessing
+        child: _isSaving
           ? Column(
               mainAxisSize: MainAxisSize.min,
               children: const [
                 CircularProgressIndicator(),
                 SizedBox(height: 20),
                 Text(
-                  'AI가 내용을 정제 중입니다...',
+                  '저장중 ...',
                   style: TextStyle(fontSize: 16),
                 ),
               ],
@@ -249,97 +255,116 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
   // 파일 저장 버튼 클릭 시 처리 (LLM 데이터 포함)
   Future<void> _handleFileSave() async {
   debugPrint('=== 저장 버튼 클릭 디버그 ===');
-  debugPrint('_refinedData: ${_refinedData != null ? "있음" : "없음"}');
-  debugPrint('_isProcessing: $_isProcessing');
-  debugPrint('_statusMessage: $_statusMessage');
 
-  if (_refinedData == null) {
-    _showErrorMessage('저장할 데이터가 준비되지 않았습니다');
-    return;
-  }
+
+
 
   if (selectedFilePath == null || selectedFilePath!.isEmpty) {
     _showErrorMessage('저장 경로를 선택해주세요');
     return;
   }
 
+  if (!isContentFile && !isSummaryFile && !isMajorFile) {
+    _showErrorMessage('저장할 파일 타입을 선택해주세요');
+    return;
+  }
+
+  setState(() {
+    _isSaving = true;
+    _savingMessage = 'AI가 파일 생성 중입니다...';
+  });
+
   try {
+    final apiMode = _currentMode!.apiValue;
+    final transcriptText = widget.fullTranscript;
+
+    // ✅ LLM 호출 (서버에서 파일 포맷 생성)
+    final result = await _llmService.refineText(
+      fullText: transcriptText,
+      enableSummarize: isSummaryFile,
+      enableKeypoints: isMajorFile,
+      fileFormat: fileFormat.replaceAll('.', ''),
+      fileName: fileName,
+      processingMode: apiMode,
+    );
+
+    if (result == null) {
+      _showErrorMessage('파일 생성에 실패했습니다');
+      setState(() => _isSaving = false);
+      return;
+
+
+
+    }
+
+    _refinedData = result;
     List<String> savedFiles = [];
 
-    // 1. 대표 파일 저장 (기존 방식 유지)
-    if (isContentFile && _refinedData!.containsKey('refined_result')) {
-      String filePath = await _downloadServerFile(
-        _refinedData!['refined_result'],
-        '정제된내용',
-        selectedFilePath!
-      );
-      savedFiles.add(filePath);
-    }
 
-    if (isSummaryFile && _refinedData!.containsKey('summarized_result')) {
-      String filePath = await _downloadServerFile(
-        _refinedData!['summarized_result'],
-        '요약',
-        selectedFilePath!
-      );
-      savedFiles.add(filePath);
-    }
-
-    if (isMajorFile && _refinedData!.containsKey('keypoints_result')) {
-      String filePath = await _downloadServerFile(
-        _refinedData!['keypoints_result'],
-        '핵심포인트',
-        selectedFilePath!
-      );
-      savedFiles.add(filePath);
-    }
-
-    // 2. 다중 파일 저장 (refined_results 등)
-    if (isContentFile && _refinedData!.containsKey('refined_results')) {
-      for (var file in _refinedData!['refined_results']) {
+    /// 공통 저장 함수
+    Future<void> saveItem(String key, String label) async {
+      if (_refinedData!.containsKey(key)) {
+        _savingMessage = '$label 저장 중...';
+        setState(() {});
         String filePath = await _downloadServerFile(
-          file,
-          '정제된내용',
+          _refinedData![key],
+          label,
           selectedFilePath!
         );
         savedFiles.add(filePath);
       }
     }
 
-    if (isSummaryFile && _refinedData!.containsKey('summarized_results')) {
-      for (var file in _refinedData!['summarized_results']) {
-        String filePath = await _downloadServerFile(
-          file,
-          '요약',
-          selectedFilePath!
-        );
-        savedFiles.add(filePath);
+    /// 다중 저장 함수
+    Future<void> saveList(String key, String label) async {
+      if (_refinedData!.containsKey(key)) {
+        for (var file in _refinedData![key]) {
+          _savingMessage = '$label 저장 중...';
+          setState(() {});
+          String filePath = await _downloadServerFile(
+            file,
+            label,
+            selectedFilePath!
+          );
+          savedFiles.add(filePath);
+        }
       }
     }
 
-    if (isMajorFile && _refinedData!.containsKey('keypoints_results')) {
-      for (var file in _refinedData!['keypoints_results']) {
-        String filePath = await _downloadServerFile(
-          file,
-          '핵심포인트',
-          selectedFilePath!
-        );
-        savedFiles.add(filePath);
-      }
+    // ✅ 저장 실행
+    if (isContentFile) {
+      await saveItem('refined_result', '정제된내용');
+      await saveList('refined_results', '정제된내용');
+
+
+
+
+
     }
 
-    if (!isContentFile && !isSummaryFile && !isMajorFile) {
-      _showErrorMessage('저장할 파일 타입을 선택해주세요');
-      return;
+    if (isSummaryFile) {
+      await saveItem('summarized_result', '요약');
+      await saveList('summarized_results', '요약');
+    }
+
+    if (isMajorFile) {
+      await saveItem('keypoints_result', '핵심포인트');
+      await saveList('keypoints_results', '핵심포인트');
     }
 
     Navigator.of(context).pop();
-    _showSuccessMessage('파일이 저장되었습니다\n${savedFiles.join('\n')}');
-    
+    _showSuccessMessage('파일이 저장되었습니다:\n${savedFiles.join('\n')}');
+
   } catch (e) {
-    _showErrorMessage('파일 저장 중 오류가 발생했습니다: $e');
+    _showErrorMessage('파일 저장 중 오류 발생: $e');
+  } finally {
+    setState(() {
+      _isSaving = false;
+      _savingMessage = '';
+    });
   }
 }
+
 
 
   // 서버 파일을 다운로드하는 헬퍼 함수
@@ -347,13 +372,13 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
     // 서버 파일 정보
     //String fileName = fileData['filename']; // 서버에서 생성한 파일명
     String base64Data = fileData['data'];
-    
+
     // Base64 디코딩
     List<int> bytes = base64Decode(base64Data);
 
     // 서버에서 전달한 원래 파일명 예: hello_ko_정제된내용.txt
   String serverFileName = fileData['filename'];
-  
+
   // 언어코드 추출 (예: hello_ko_정제된내용 → ko)
   // 파일명이 예측 가능하다는 전제 하에
   String langCode = 'unknown';
