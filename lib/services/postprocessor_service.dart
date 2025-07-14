@@ -170,16 +170,11 @@ extension ModeExtension on Mode {
 }
 
 List<String> _getLectureLanguage() {
-  final lang = WebSocketSTTService().currentInputLanguage;
-  return lang != null ? [lang] : ['ko']; // 기본값은 'ko'
+  final lang = WebSocketSTTService().currentTargetLanguages;
+  return lang != null ? lang : ['ko']; // 기본값은 'ko'
 }
 
 List<String> _getConferenceLanguages() {
-  return WebSocketMultipleSTTService()
-          .languageTextHistory
-          .keys
-          .toList()
-          .cast<String>()
-          .where((lang) => lang.isNotEmpty)
-          .toList();
+  final lang = WebSocketMultipleSTTService().currentTargetLanguages;
+  return lang != null ? lang : ['ko']; // 기본값은 'ko'
 }
