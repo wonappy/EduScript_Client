@@ -218,6 +218,7 @@ class WebSocketMultipleSTTService {
 
       // 2) 언어 설정 정보 생성
       final configMessage = MultipleConfigMessage(
+        type: 'setting',
         inputLanguages: inputLanguages,
         targetLanguages: targetLanguages,
       );
@@ -493,6 +494,7 @@ class WebSocketMultipleSTTService {
 
   // [7] 연결 종료
   Future<void> disconnect() async {
+    debugPrint("[DEBUG 7] disconnect 메서드 실행 (연결 종료)");
     try {
       // 1) 재연결 중지
       _shouldAutoReconnect = false; // 수동 종료 시 자동 재연결 비활성화
@@ -500,6 +502,7 @@ class WebSocketMultipleSTTService {
       // 2) 녹음 중지
       await stopRecording();
       // 3) WebSocket 연결 종료
+
       await _webSocketChannel?.sink.close();
       _webSocketChannel = null;
 
