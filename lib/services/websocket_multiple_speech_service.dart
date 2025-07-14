@@ -201,18 +201,18 @@ class WebSocketMultipleSTTService {
     required List<String> inputLanguages, // 입력 언어 국가 (다중)
     required List<String> targetLanguages, // 출력 언어 국가 (다중)
   }) async {
-    debugPrint("[DEBUG 2] startSession 메서드 실행");
+    debugPrint("[🐟DEBUG 2] startSession 메서드 실행");
 
     // 연결이 끊겼을 때
     if (!_isConnected || _webSocketChannel == null) {
-      _handleError("[DEBUG 2] 세션 시작 실패", "서버가 연결 되지 않았습니다");
+      _handleError("[🐟DEBUG 2] 세션 시작 실패", "서버가 연결 되지 않았습니다");
       return false;
     }
 
     try {
       // 1) 마이크 권한 확인
       if (!await _checkMicrophonePermission()) {
-        _handleError("[DEBUG 2] 세션 시작 실패", "마이크 권한이 필요합니다");
+        _handleError("[🐟DEBUG 2] 세션 시작 실패", "마이크 권한이 필요합니다");
         return false;
       }
 
@@ -495,18 +495,20 @@ class WebSocketMultipleSTTService {
   Future<void> disconnect() async {
     debugPrint("[DEBUG 7] disconnect 메서드 실행 (연결 종료)");
     try {
-      // 1) 녹음 중지
+      // 1) 재연결 중지
+      _shouldAutoReconnect = false; // 수동 종료 시 자동 재연결 비활성화
+      _stopReconnectTimer(); // 재연결 타이머 중지
+      // 2) 녹음 중지
       await stopRecording();
-
-      // 2) WebSocket 연결 종료
+      // 3) WebSocket 연결 종료
       await _webSocketChannel?.sink.close();
       _webSocketChannel = null;
 
-      _isConnected = false;
-      _isSessionReady = false;
-      _updateStatus(">> [6] 연결 종료 완료");
+      _isConnected = false; // 세션 연결 종료
+      _isSessionReady = false;  // 세션 준비 상태 종료
+      _updateStatus("[DEBUG 7] 연결 종료 완료");
     } catch (e) {
-      _handleError("연결 종료 중 오류", e.toString());
+      _handleError("[ERROR 7] 연결 종료 중 오류", e.toString());
     }
   }
 

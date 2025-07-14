@@ -554,6 +554,12 @@ class WebSocketSTTService {
         _isSessionReady = true;
         _updateStatus("✅ ${statusMsg.message ?? '세션 준비 완료'}");
 
+        // ready 수신 후, 지연
+        // Future.delayed(Duration(milliseconds: 500), () {
+        //   if (_isSessionReady && !_isRecording) {
+        //     startRecording();
+        //   }
+        // });
         startRecording(); // 녹음 시작
         break;
       case 'error':
