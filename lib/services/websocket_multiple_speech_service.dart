@@ -493,7 +493,6 @@ class WebSocketMultipleSTTService {
 
   // [7] 연결 종료
   Future<void> disconnect() async {
-    debugPrint("[DEBUG 7] disconnect 메서드 실행 (연결 종료)");
     try {
       // 1) 재연결 중지
       _shouldAutoReconnect = false; // 수동 종료 시 자동 재연결 비활성화
