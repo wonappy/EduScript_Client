@@ -483,10 +483,6 @@ class WebSocketSTTService {
     }
   }
 
-  // 🐟 클리아언트에서 언제 오디오를 보내는지
-
-  // 🐟 클리아언트 오디오 전송 부분 확인
-
   // [헬퍼 함수]
   // +) 번역 데이터 초기화
   void _clearTranslationData() {
