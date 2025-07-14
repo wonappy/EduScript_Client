@@ -483,6 +483,10 @@ class WebSocketSTTService {
     }
   }
 
+  // 🐟 클리아언트에서 언제 오디오를 보내는지
+
+  // 🐟 클리아언트 오디오 전송 부분 확인
+
   // [헬퍼 함수]
   // +) 번역 데이터 초기화
   void _clearTranslationData() {
@@ -536,6 +540,12 @@ class WebSocketSTTService {
         _isSessionReady = true;
         _updateStatus("✅ ${statusMsg.message ?? '세션 준비 완료'}");
 
+        // ready 수신 후, 지연
+        // Future.delayed(Duration(milliseconds: 500), () {
+        //   if (_isSessionReady && !_isRecording) {
+        //     startRecording();
+        //   }
+        // });
         startRecording(); // 녹음 시작
         break;
       case 'error':
