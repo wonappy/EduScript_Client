@@ -4,7 +4,9 @@ library;
 import 'package:client/core/styles/color_core.dart';
 import 'package:client/core/styles/size_core.dart';
 import 'package:flutter/material.dart';
-import 'get_block_content.dart';
+import 'package:client/core/styles/size_core.dart';
+import 'package:client/widgets/preview_widget/get_block_content.dart';
+
 
 class BuildPreviewBlock extends StatelessWidget {
   final String? title;

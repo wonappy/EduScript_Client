@@ -26,6 +26,7 @@ class WebSocketSTTService {
   bool _isSessionReady = false; // 음성 인식 세션 준비 여부
   bool _isReconnecting = false; // 재연결 상태
   int _countWebSocketChannel = 0;
+  String? _transcriptBackup;
 
   // [오디오 녹음 관련]
   final AudioRecorder _audioRecorder = AudioRecorder(); // 오디오 캡쳐 객체
@@ -76,7 +77,16 @@ class WebSocketSTTService {
       List.unmodifiable(_translationHistory);
 
   // 전체 원문 텍스트 (하나의 문자열로) -> LLM 활용
-  String get fullTranscriptText => _transcriptHistory.join(' ');
+  String get fullTranscriptText {
+  if (_transcriptHistory.isNotEmpty) {
+    return _transcriptHistory.join(' ');
+  } else if (_transcriptBackup != null) {
+    debugPrint("[DEBUG] 백업된 원문 사용");
+    return _transcriptBackup!;
+  } else {
+    return '';
+  }
+}
 
   // [1] WebSocket 연결 (상태 응답 - StatusMessage)
   Future<bool> connectToServer({bool isRetry = false}) async {
@@ -204,6 +214,11 @@ class WebSocketSTTService {
       // 연결 상태 false || 웹소캣 객체 == null
       _handleError("[ERROR 2] 세션 시작 실패", "서버가 연결되지 않았습니다");
       return false;
+    }
+
+    if(_isRecording){
+      debugPrint("이미 녹음 중인 상태에서 세션 재시작 요청은 무시됨.");
+      return true;
     }
 
     try {
@@ -465,6 +480,9 @@ class WebSocketSTTService {
   Future<void> disconnect() async {
     debugPrint("[DEBUG 7] disconnect 메서드 실행 (연결 종료)");
     try {
+      debugPrint('[DEBUG] 백업 직전 원문: ${fullTranscriptText}');
+      _transcriptBackup = _transcriptHistory.join(' ');
+
       // 1) 재연결 중지
       _shouldAutoReconnect = false; // 수동 종료 시 자동 재연결 비활성화
       _stopReconnectTimer(); // 재연결 타이머 중지
@@ -590,9 +608,7 @@ class WebSocketSTTService {
         debugPrint("$lang: ${result.resultText}");
 
         // 입력 언어의 텍스트를 원문으로 저장
-        if (lang == _currentInputLanguage) {
-          originalText = result.resultText;
-        }
+        originalText ??= result.resultText;
       });
 
       // 2) 원문 자막 저장소에 추가

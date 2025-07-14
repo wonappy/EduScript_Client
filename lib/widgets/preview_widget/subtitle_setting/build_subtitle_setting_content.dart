@@ -450,7 +450,7 @@ class _BuildSubtitleSettingContentState
       child: child,
     );
   }
-
+  
   // 작은 컨테이너
   Widget _buildSmallContainer({required Widget child}) {
     return Container(

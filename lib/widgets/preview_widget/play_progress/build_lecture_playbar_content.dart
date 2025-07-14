@@ -10,7 +10,7 @@ import 'package:client/services/websocket_multiple_speech_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/enum_core.dart';
-import '../../../core/global_core.dart';
+// import '../../../core/global_core.dart';
 import '../../../providers/mode_provider.dart';
 import '../subtitle_setting_provider.dart';
 import 'time_manager.dart';
@@ -275,16 +275,16 @@ class _BuildLecturePlayBarContentState
       hasStarted = false;
     });
 
-    _navigateToSaveDialog();
+    _navigateToSaveDialog(transcriptHistory, translationHistory, fullTranscript);
   }
 
   // [4] 다이얼로그 (저장 옵션 선택)
-  Future<void> _navigateToSaveDialog() async {
+  Future<void> _navigateToSaveDialog(List<String> transcriptHistory, List<Map<String, String>> translationHistory, String fullTranscript) async {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return SaveDialogScreen();
+        return SaveDialogScreen(transcriptHistory: transcriptHistory, translationHistory: translationHistory, fullTranscript: fullTranscript,);
       },
     );
   }
