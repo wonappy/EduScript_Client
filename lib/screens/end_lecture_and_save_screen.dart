@@ -164,9 +164,9 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SaveDialogComponents.buildMainSection(
-                  isContentFileSelected: isContentFile,
-                  isSummaryFileSelected: isSummaryFile,
-                  isMajorFileSelected: isMajorFile,
+                  isContentFileSelected: isContentFile, //첫번째 체크박스
+                  isSummaryFileSelected: isSummaryFile, //두번째 체크박스
+                  isMajorFileSelected: isMajorFile, //세번째 체크박스 (이 체크박스의 경우 회의모드에선 필요하지 않음)
                   selectedLocation: selectedLocation,
                   fileName: fileName,
                   fileFormat: fileFormat,
@@ -252,6 +252,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
     }
   }
 
+//강의모드에서 파일 저장 처리
   Future<void> handleLectureFileSave() async {
   if (!_validateBeforeSave()) return;
 
@@ -295,6 +296,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
   }
 }
 
+//회의모드에서 파일 저장 처리
 Future<void> handleConferenceFileSave() async {
   if (!_validateBeforeSave()) return;
 
@@ -330,6 +332,8 @@ Future<void> handleConferenceFileSave() async {
   }
 }
 
+// 유효성 검사
+// 저장 전에 필요한 조건들을 확인하는 메소드
 bool _validateBeforeSave() {
   if (selectedFilePath == null || selectedFilePath!.isEmpty) {
     _showErrorMessage('저장 경로를 선택해주세요');
@@ -346,6 +350,8 @@ bool _validateBeforeSave() {
   return true;
 }
 
+// 저장 시작 상태로 변경
+// 메시지를 표시하고 상태를 업데이트
 void _startSaving(String message) {
   setState(() {
     _isSaving = true;
@@ -353,6 +359,8 @@ void _startSaving(String message) {
   });
 }
 
+// 저장 완료 후 처리
+// 저장이 완료되면 다이얼로그를 닫고 성공 메시지를 표시
 void _finishSave(List<String> paths) {
   Navigator.of(context).pop();
   _showSuccessMessage('파일이 저장되었습니다:\n${paths.join('\n')}');
@@ -362,6 +370,8 @@ void _finishSave(List<String> paths) {
   });
 }
 
+// 저장 실패 처리
+// 에러 메시지를 표시하고 상태를 업데이트
 void _failSave(String message) {
   _showErrorMessage(message);
   setState(() {
@@ -370,6 +380,7 @@ void _failSave(String message) {
   });
 }
 
+// 파일 저장 헬퍼 함수들
 Future<void> _saveItem(String key, String label, List<String> resultList) async {
   if (_refinedData!.containsKey(key)) {
     _savingMessage = '$label 저장 중...';
@@ -379,6 +390,7 @@ Future<void> _saveItem(String key, String label, List<String> resultList) async 
   }
 }
 
+// 복수개의 파일을 저장하는 헬퍼 함수
 Future<void> _saveList(String key, String label, List<String> resultList) async {
   if (_refinedData!.containsKey(key)) {
     for (var file in _refinedData![key]) {
