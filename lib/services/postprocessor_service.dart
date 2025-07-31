@@ -9,6 +9,7 @@ import 'package:client/screens/end_lecture_and_save_screen.dart';
 import 'package:http/http.dart' as http;
 import 'package:client/core/enum_core.dart';
 
+// end_lecture_and_save_screen 으로 넘길때 _llm-service로 넘김
 abstract class BasePostProcessorService {
   Future<Map<String, dynamic>?> refineText({
     required String fullText,
@@ -20,9 +21,11 @@ abstract class BasePostProcessorService {
     bool enableNote,
     });
 
+  // 언어 목록을 반환하는 메소드 (ko, en)
   List<String> resolvedLanguages();
 }
 
+// 강의용 정제 요청 서비스
 class LecturePostProcessorService implements BasePostProcessorService {
   @override
   Future<Map<String, dynamic>?> refineText({
@@ -48,12 +51,14 @@ class LecturePostProcessorService implements BasePostProcessorService {
     return await _postToServer(body, "lecture");
   }
 
+  // 자녀 클래스에서 구현된 언어 목록을 반환
   @override
   List<String> resolvedLanguages() {
     return WebSocketSTTService().currentTargetLanguages ?? ['ko'];
   }
 }
 
+// 회의용 정제 요청 서비스
 class ConferencePostProcessorService implements BasePostProcessorService {
   @override
   Future<Map<String, dynamic>?> refineText({
@@ -78,16 +83,18 @@ class ConferencePostProcessorService implements BasePostProcessorService {
     return await _postToServer(body, "conference");
   }
 
+  // 자녀 클래스에서 구현된 언어 목록을 반환
   @override
   List<String> resolvedLanguages() {
     return WebSocketMultipleSTTService().currentTargetLanguages ?? ['ko'];
   }
 }
 
-
+  // 서버에 정제 POST 요청을 보내는 메소드
   Future<Map<String, dynamic>?> _postToServer(Map<String, dynamic> body, String processingMode,) async {
   try {
     final mode = body['processing_mode'] ?? processingMode;
+    // 회의면 위, 강의면 아래
     final endpoint = mode == 'conference'
         ? "/api/routes/language/refinement/conference"
         : "/api/routes/language/refinement";
