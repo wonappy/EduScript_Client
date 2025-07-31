@@ -10,6 +10,17 @@ enum Mode {
   conference, // 회의 모드
 }
 
+extension ModeExtension on Mode{
+  String get apiValue {
+    switch (this) {
+      case Mode.lecture:
+        return "lecture";
+      case Mode.conference:
+        return "conference";
+    }
+  }
+}
+
 //자막 언어 종류
 enum Language { en, ko, jp }
 

@@ -319,6 +319,10 @@ class _BuildLecturePlayBarContentState
     } // 세션 - 멀티 모드
     else if (service is WebSocketMultipleSTTService) {
       debugPrint("[🧸 DEBUG] 멀티 모드 세션 시작");
+      sessionStarted = await service.startSession(
+    inputLanguages: inputLanguageCodes,
+    targetLanguages: outputLanguageCodes,
+  );
     }
 
     // 세션 결과
