@@ -109,4 +109,3 @@ class ConferencePostProcessorService implements BasePostProcessorService {
     return null;
   }
 }
-

@@ -1,4 +1,5 @@
 //변수
+
 final String serverBaseUrl = "ws://10.101.168.238:8000"; // 서버 엔드포인트
 final String httpBaseUrl = "http://10.101.168.238:8000"; // 서버 엔드포인트
 

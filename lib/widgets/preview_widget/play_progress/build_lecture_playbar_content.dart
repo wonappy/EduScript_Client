@@ -229,8 +229,8 @@ class _BuildLecturePlayBarContentState
 
     // 1) 서버 연결 종료 및 데이터 초기화
     service.resetReconnectState(); // 재연결 상태 초기화
-    service.clearAllData();        // 누적된 모든 데이터 (텍스트 기록 등) 초기화
-    service.disconnect();          // WebSocket 연결 끊기
+    service.clearAllData(); // 누적된 모든 데이터 (텍스트 기록 등) 초기화
+    service.disconnect(); // WebSocket 연결 끊기
 
     // 2) 타이머 및 UI 상태 초기화
     TimerManager.reset(); // 타이머를 0으로 리셋
@@ -257,9 +257,9 @@ class _BuildLecturePlayBarContentState
 
     if (fullTranscript.isNotEmpty) {
       final sample =
-      fullTranscript.length > 200
-          ? "${fullTranscript.substring(0, 200)}..."
-          : fullTranscript;
+          fullTranscript.length > 200
+              ? "${fullTranscript.substring(0, 200)}..."
+              : fullTranscript;
       debugPrint("  - 원문 샘플: $sample");
     }
 
@@ -275,16 +275,28 @@ class _BuildLecturePlayBarContentState
       hasStarted = false;
     });
 
-    _navigateToSaveDialog(transcriptHistory, translationHistory, fullTranscript);
+    _navigateToSaveDialog(
+      transcriptHistory,
+      translationHistory,
+      fullTranscript,
+    );
   }
 
   // [4] 다이얼로그 (저장 옵션 선택)
-  Future<void> _navigateToSaveDialog(List<String> transcriptHistory, List<Map<String, String>> translationHistory, String fullTranscript) async {
+  Future<void> _navigateToSaveDialog(
+    List<String> transcriptHistory,
+    List<Map<String, String>> translationHistory,
+    String fullTranscript,
+  ) async {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return SaveDialogScreen(transcriptHistory: transcriptHistory, translationHistory: translationHistory, fullTranscript: fullTranscript,);
+        return SaveDialogScreen(
+          transcriptHistory: transcriptHistory,
+          translationHistory: translationHistory,
+          fullTranscript: fullTranscript,
+        );
       },
     );
   }
