@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
+import 'package:client/core/global_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:client/services/postprocessor_service.dart';
 import 'package:client/services/websocket_stt_service.dart';
@@ -8,174 +9,103 @@ import 'package:client/screens/end_lecture_and_save_screen.dart';
 import 'package:http/http.dart' as http;
 import 'package:client/core/enum_core.dart';
 
-class PostProcessorService {
-  // http 통신 설정
-  final String _serverBaseUrl = "http://10.101.170.201:8000"; // 서버 엔드포인트
-
-  final String _serverEndpoint = "/api/routes/language/refinement";
-
-  bool _isProcessing = false;
-  String? _lastRequest;
-  String _fileFormat = 'txt';
-  String _processingMode = 'lecture';
-  Map<String, dynamic>? _lastResponse;
-
-  // [요청 설정]
-  bool _enableRefine = true;
-  bool _enableSummarize = false;
-  bool _enableKeypoints = false;
-
-  // [싱글톤 패턴]
-  static final PostProcessorService _instance =
-      PostProcessorService._internal();
-  factory PostProcessorService() => _instance;
-  PostProcessorService._internal();
-
-  // [Getter]
-  bool get isProcessing => _isProcessing;
-  String? get lastRequest => _lastRequest;
-  String get fileName => ""; // 파일 이름 (기본값)
-  String get fileFormat => _fileFormat;
-  String get processingMode => _processingMode;
-  Map<String, dynamic>? get lastResponse => _lastResponse;
-  bool get enableRefine => _enableRefine;
-  bool get enableSummarize => _enableSummarize;
-  bool get enableKeypoints => _enableKeypoints;
-
-  // [설정 변경]
-  void updateSettings({
-    bool? enableRefine,
-    bool? enableSummarize,
-    bool? enableKeypoints,
-    String? processingMode,
-  }) {
-    if (enableRefine != null) _enableRefine = enableRefine;
-    if (enableSummarize != null) _enableSummarize = enableSummarize;
-    if (enableKeypoints != null) _enableKeypoints = enableKeypoints;
-    if (processingMode != null) _processingMode = processingMode;
-  }
-
-  void setProcessingMode(String mode) {
-    _processingMode = mode;
-    debugPrint("[LLM] 처리 모드 변경: $mode");
-  }
-
-  // [메인 기능] STT 서비스와 연동하여 정제 요청
-  Future<Map<String, dynamic>?> processSTTTranscript({
-    bool? enableSummarize,
-    bool? enableKeypoints,
-    String? processingMode,
-  }) async {
-    final sttService = WebSocketSTTService();
-    final fullText = sttService.fullTranscriptText;
-
-    if (fullText.trim().isEmpty) {
-      debugPrint("[LLM] 오류: STT 서비스에 정제할 텍스트가 없습니다");
-      return null;
-    }
-
-    return await refineText(
-      fullText: fullText,
-      enableSummarize: enableSummarize,
-      enableKeypoints: enableKeypoints,
-      processingMode: processingMode,
-    );
-  }
-
-  // [핵심 기능] 텍스트 정제 요청
+abstract class BasePostProcessorService {
   Future<Map<String, dynamic>?> refineText({
     required String fullText,
-    bool? enableSummarize,
-    bool? enableKeypoints,
-    String fileName = 'speech',
-    String fileFormat = 'txt', // 파일 형식 (기본값은 txt)
-    String? processingMode,
-    List<String>? languageList,
+    required String fileName,
+    required String fileFormat,
+    bool enableSummarize,
+    bool enableKeypoints,
+    bool enableScript,
+    bool enableNote,
+    });
+
+  List<String> resolvedLanguages();
+}
+
+class LecturePostProcessorService implements BasePostProcessorService {
+  @override
+  Future<Map<String, dynamic>?> refineText({
+    required String fullText,
+    required String fileName,
+    required String fileFormat,
+    bool enableSummarize = false,
+    bool enableKeypoints = false,
+    bool enableScript = false,
+    bool enableNote = false,
   }) async {
-    if (_isProcessing) return _lastResponse;
-    if (fullText.trim().isEmpty) return null;
+    final body = {
+      "full_text": fullText,
+      "fileName": fileName,
+      "fileFormat": fileFormat,
+      "language_list": resolvedLanguages(),
+      "enable_refine": true,
+      "enable_summarize": enableSummarize,
+      "enable_keypoints": enableKeypoints,
+      "processing_mode": "lecture"
+    };
 
-    try {
-      _isProcessing = true;
-      _lastRequest = fullText;
+    return await _postToServer(body, "lecture");
+  }
 
-      final finalProcessingMode = processingMode ?? _processingMode;
-
-      // ✅ 자동 언어 선택 로직 추가
-      List<String> resolvedLanguageList =
-          languageList ??
-          (finalProcessingMode == 'lecture'
-              ? _getLectureLanguage()
-              : _getConferenceLanguages());
-
-      final requestBody = {
-        'full_text': fullText,
-        'fileName': fileName,
-        'fileFormat': fileFormat.replaceAll('.', ''),
-        'enable_refine': _enableRefine,
-        'enable_summarize': enableSummarize ?? _enableSummarize,
-        'enable_keypoints': enableKeypoints ?? _enableKeypoints,
-        'processing_mode': finalProcessingMode,
-        'language_list': resolvedLanguageList,
-      };
-
-      debugPrint("요청 데이터 원문 전문 : $fullText");
-      debugPrint("[LLM] 서버로 데이터 전송 중...");
-
-      // HTTP POST 요청
-      final response = await http.post(
-        Uri.parse('$_serverBaseUrl$_serverEndpoint'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode(requestBody),
-      );
-
-      // 응답 처리
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body) as Map<String, dynamic>;
-        _lastResponse = responseData;
-
-        debugPrint("[LLM] ✅ 정제 완료!");
-        //_printResults(responseData); // 결과 출력
-
-        return responseData;
-      } else {
-        final errorMsg = "서버 오류 (${response.statusCode}): ${response.body}";
-        debugPrint("[LLM] ❌ $errorMsg");
-        return null;
-      }
-    } on TimeoutException {
-      debugPrint("[LLM] ❌ 요청 타임아웃 (30초 초과)");
-      return null;
-    } catch (e) {
-      debugPrint("[LLM] ❌ 네트워크 오류: $e");
-      return null;
-    } finally {
-      _isProcessing = false;
-    }
+  @override
+  List<String> resolvedLanguages() {
+    return WebSocketSTTService().currentTargetLanguages ?? ['ko'];
   }
 }
 
-// 2. Mode enum과 문자열 변환 유틸리티
-extension ModeExtension on Mode {
-  String get apiValue {
-    switch (this) {
-      case Mode.lecture:
-        return 'lecture';
-      case Mode.conference:
-        return 'conference';
-    }
+class ConferencePostProcessorService implements BasePostProcessorService {
+  @override
+  Future<Map<String, dynamic>?> refineText({
+    required String fullText,
+    required String fileName,
+    required String fileFormat,
+    bool enableSummarize = false, // note
+    bool enableKeypoints = false, // 무시됨
+    bool enableScript = true,
+    bool enableNote = false,
+  }) async {
+    final body = {
+      "full_text": fullText,
+      "fileName": fileName,
+      "fileFormat": fileFormat,
+      "language_list": resolvedLanguages(),
+      "enable_script": enableScript,
+      "enable_note": enableNote,
+      "processing_mode": "conference"
+    };
+
+    return await _postToServer(body, "conference");
+  }
+
+  @override
+  List<String> resolvedLanguages() {
+    return WebSocketMultipleSTTService().currentTargetLanguages ?? ['ko'];
   }
 }
 
-List<String> _getLectureLanguage() {
-  final lang = WebSocketSTTService().currentTargetLanguages;
-  return lang != null ? lang : ['ko']; // 기본값은 'ko'
-}
 
-List<String> _getConferenceLanguages() {
-  final lang = WebSocketMultipleSTTService().currentTargetLanguages;
-  return lang != null ? lang : ['ko']; // 기본값은 'ko'
+  Future<Map<String, dynamic>?> _postToServer(Map<String, dynamic> body, String processingMode,) async {
+  try {
+    final mode = body['processing_mode'] ?? processingMode;
+    final endpoint = mode == 'conference'
+        ? "/api/routes/language/refinement/conference"
+        : "/api/routes/language/refinement";
+
+    final response = await http.post(
+      Uri.parse("$httpBaseUrl$endpoint"),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      debugPrint("❌ 서버 오류: ${response.body}");
+      return null;
+    }
+  } catch (e) {
+    debugPrint("❌ 네트워크 오류: $e");
+    return null;
+  }
 }
