@@ -114,7 +114,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
 
       debugPrint("🔥 응답 결과: $result");
       if (result != null) {
-        debugPrint("🔥 refined_result 존재: ${result.containsKey('refined_result')}");
+        debugPrint("🔥 script_results 존재: ${result.containsKey('script_results')}");
         debugPrint("🔥 total_files: ${result['total_files']}");
       }
 
@@ -167,6 +167,10 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
                   isContentFileSelected: isContentFile, //첫번째 체크박스
                   isSummaryFileSelected: isSummaryFile, //두번째 체크박스
                   isMajorFileSelected: isMajorFile, //세번째 체크박스 (이 체크박스의 경우 회의모드에선 필요하지 않음)
+                  showMajorFileCheckbox: _currentMode == Mode.lecture, // 강의 모드에서만 표시
+                  contentLabel: _currentMode == Mode.lecture ? '정제된 발화 내용 파일' : '정제된 토론 발화 내용',
+                  summaryLabel: _currentMode == Mode.lecture ? '강의 내용 요약 파일' : '토론 정리본',
+                  majorLabel: _currentMode == Mode.lecture ? '주요 내용 파일 (과제 마감일 혹은 학사일정에 관련된 내용입니다.)' : '', // null이면 표시 X
                   selectedLocation: selectedLocation,
                   fileName: fileName,
                   fileFormat: fileFormat,
@@ -306,13 +310,18 @@ Future<void> handleConferenceFileSave() async {
   try {
     final result = await _llmService.refineText(
       fullText: transcriptText,
-      enableSummarize: isSummaryFile, // note
-      fileFormat: fileFormat.replaceAll('.', ''),
       fileName: fileName,
+      fileFormat: fileFormat.replaceAll('.', ''),  
+      enableNote: isSummaryFile, // note     
     );
 
     if (result == null) return _failSave('파일 생성에 실패했습니다');
     _refinedData = result;
+
+    print("🧾 서버 응답 전체: ${jsonEncode(result)}");
+    print("📦 script_results runtimeType: ${result['script_results']?.runtimeType}");
+    print("📦 script_results 내용: ${result['script_results']}");
+
 
     List<String> savedFiles = [];
 
