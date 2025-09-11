@@ -7,6 +7,10 @@ class SaveDialogComponents {
     required bool isContentFileSelected, // 내용 파일 선택 여부
     required bool isSummaryFileSelected, // 요약 파일 선택 여부
     required bool isMajorFileSelected, // 주요 내용 파일 선택 여부
+    required bool showMajorFileCheckbox, // (회의모드) 주요 내용 파일 체크박스 표시 여부
+    required String contentLabel, // 내용 파일 체크박스 레이블
+    required String summaryLabel, // 요약 파일 체크박스 레이블
+    required String majorLabel, // null이면 표시 X
     required String selectedLocation, // 저장 위치
     required String? selectedFilePath, // 선택된 파일 경로
     required String fileName, // 파일명 (사용자 입력)
@@ -120,22 +124,25 @@ class SaveDialogComponents {
                           child: Column(
                             children: [
                               buildCheckbox(
-                                '정제된 발화 내용 파일',
+                                contentLabel,
                                 isContentFileSelected,
                                 onContentFileChanged,
                               ),
                               const SizedBox(height: 12),
                               buildCheckbox(
-                                '강의 내용 요약 파일',
+                                summaryLabel,
                                 isSummaryFileSelected,
                                 onSummaryFileChanged,
                               ),
                               const SizedBox(height: 12),
+                              if(showMajorFileCheckbox)...[
                               buildCheckbox(
-                                '주요 내용 파일 (과제 마감일 혹은 학사일정에 관련된 내용입니다.)',
+                                majorLabel,
                                 isMajorFileSelected,
                                 onMajorFileChanged,
                               ),
+                              const SizedBox(height: 12),
+                              ],
                             ],
                           ),
                         ),
