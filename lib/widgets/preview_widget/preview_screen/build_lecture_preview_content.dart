@@ -51,6 +51,7 @@ class BuildLecturePreviewContent extends StatelessWidget {
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 17 * scaleFactor,
+                        backgroundColor: Colors.black.withOpacity(0.5),
                       ),
                     ),
                     SizedBox(height: 7 * scaleFactor),
