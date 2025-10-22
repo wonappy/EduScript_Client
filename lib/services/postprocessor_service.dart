@@ -100,7 +100,7 @@ class ConferencePostProcessorService implements BasePostProcessorService {
         : "/api/routes/language/refinement";
 
     final response = await http.post(
-      Uri.parse("$httpBaseUrl$endpoint"),
+      Uri.parse("${GlobalCore.httpBaseUrl.trim()}$endpoint"),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(body),
     );

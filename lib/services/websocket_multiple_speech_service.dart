@@ -119,7 +119,7 @@ class WebSocketMultipleSTTService {
       }
 
       // 2) 서버에 WebSocket 연결 시도
-      final uri = Uri.parse('$serverBaseUrl$_serverEndpoint'); // 서버 엔드포인트
+      final uri = Uri.parse('${GlobalCore.serverBaseUrl.trim()}$_serverEndpoint'); // 서버 엔드포인트
       _webSocketChannel = WebSocketChannel.connect(uri); // WebSocket 연결
 
       // 3) 서버 연결 완료 확인 - Completer
