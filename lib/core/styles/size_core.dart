@@ -9,6 +9,7 @@ class AppSizes {
   static const double titleFontSize = 18.0;
   static const double largeFontSize = 40.0;
   static const double smallFontSize = 12.0;
+  static const double timerFontSize = 50.0;
 
   // 패딩/마진
   static const double basePadding = 16.0;

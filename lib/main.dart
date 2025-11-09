@@ -7,9 +7,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'core/global_core.dart';
+
 void main() async {
+
   //<최소 창 크기 제한>
   WidgetsFlutterBinding.ensureInitialized();
+
+  // [0] GlobalCore 할당
+  await GlobalCore.loadConfig();
+
   //[1] 창 관리자 초기화
   await windowManager.ensureInitialized();
   //[2] 창 옵션 지정
@@ -29,6 +36,8 @@ void main() async {
     await windowManager.focus();
     //windowManager.setMaximizable(false);
   });
+
+
 
   runApp(
     MultiProvider(

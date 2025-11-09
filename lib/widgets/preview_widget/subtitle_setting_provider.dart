@@ -17,7 +17,7 @@ class SubtitleSettingsProvider extends ChangeNotifier {
   String _selectedFontSize = '중간';
   String _selectedFontColor = '흰색';
   String _selectedBackgroundColor = '흰색';
-  String _selectedBackgroundOpacity = '50%';
+  String _selectedBackgroundOpacity = '0%';
 
   // [토론 모드일 때 언어 선택 동기화]
   // 1) 선택된 음성 언어
@@ -316,15 +316,17 @@ class SubtitleSettingsProvider extends ChangeNotifier {
   double getFontSize(double screenWidth) {
     double baseSize = AppSizes.smallFontSize;
     switch (_selectedFontSize) {
-      case '작게':
-        return baseSize * 1.0;
-      case '크게':
-        return baseSize * 1.4;
-      case '매우 크게':
+      case '매우 작게':
         return baseSize * 1.7;
       case '중간':
+        return baseSize * 2.6;
+      case '크게':
+        return baseSize * 2.9;
+      case '매우 크게':
+        return baseSize * 3.2;
+      case '작게':
       default:
-        return baseSize * 1.2;
+        return baseSize * 2.3;
     }
   }
 
