@@ -290,7 +290,7 @@ class _BuildSubtitleSettingContentState
     return SettingDropdown(
       title: "크기",
       initialValue: settings.selectedFontSize,
-      options: ["작게", "중간", "크게", "매우 크게"],
+      options: ["매우 작게", "작게", "중간", "크게", "매우 크게"],
       onChanged: (String newSize) {
         settings.updateFontSize(newSize);
       },

@@ -91,6 +91,7 @@ class WebSocketSTTService {
   // [1] WebSocket 연결 (상태 응답 - StatusMessage)
   Future<bool> connectToServer({bool isRetry = false}) async {
     debugPrint("[DEBUG 1] connectToServer 메서드 실행 (웹소켓 연결)");
+    debugPrint("[WebSocket URL로 연결] ${GlobalCore.serverBaseUrl.trim()}$_serverEndpoint");
 
     // 기존 웹소켓 정리
     if (_webSocketChannel != null) {
@@ -121,8 +122,9 @@ class WebSocketSTTService {
       }
 
       // 2) 서버에 WebSocket 연결 시도
-      final uri = Uri.parse('$serverBaseUrl$_serverEndpoint'); // 서버 엔드포인트
-      _webSocketChannel = WebSocketChannel.connect(uri); // WebSocket 연결
+      final uri = Uri.parse('${GlobalCore.serverBaseUrl.trim()}$_serverEndpoint'); // 서버 엔드포인트
+      _webSocketChannel = WebSocketChannel.connect(uri);
+      debugPrint("[Final URI] $uri"); // WebSocket 연결
       _countWebSocketChannel++;
       //debugPrint("[🐟 DEBUG 1] 새로운 웹소켓 할당 - $_countWebSocketChannel번째");
       // -> 재연결 시 새로운 웹소켓 채널을 할당 받으면, 기존에 생성되었던 웹소켓 채널은 자동 삭제됨
