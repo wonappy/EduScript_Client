@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:record/record.dart'; // 마이크 오디오 녹음
 import 'package:permission_handler/permission_handler.dart'; // 마이크 권한 관리
+import 'package:wakelock_plus/wakelock_plus.dart'; // 절전 모드 진입 방지
 
 import 'dart:convert'; // JSON 데이터 변환 (인코딩, 디코딩)
 import 'dart:typed_data'; // 바이너리 오디오 데이터 처리
@@ -280,7 +281,10 @@ class WebSocketSTTService {
         ),
       );
 
-      // 2) 오디오 데이터를 서버로 실시간 전송
+      // 2) 절전 모드 진입 방지 활성화
+      await WakelockPlus.enable();
+
+      // 3) 오디오 데이터를 서버로 실시간 전송
       _audioStreamSubscription = stream.listen(
         // 오디오가 들어올 때 콜백
             (audioData) {
@@ -294,7 +298,7 @@ class WebSocketSTTService {
         },
       );
 
-      // 3) 상태 업데이트
+      // 4) 상태 업데이트
       _isRecording = true;
       _updateStatus("🎤 음성 녹음 시작");
       return true;
@@ -314,8 +318,8 @@ class WebSocketSTTService {
 
     try {
       await _audioStreamSubscription?.cancel();
-      await _audioRecorder.stop();
-
+      await _audioRecorder.stop();  // 오디오 녹음 중지
+      await WakelockPlus.disable(); // 절전 모드 진입 방지 비활성화
       _audioStreamSubscription = null;
       _isRecording = false;
 
@@ -487,10 +491,12 @@ class WebSocketSTTService {
 
       // 1) 재연결 중지
       _shouldAutoReconnect = false; // 수동 종료 시 자동 재연결 비활성화
-      _stopReconnectTimer(); // 재연결 타이머 중지
+      _stopReconnectTimer();        // 재연결 타이머 중지
       // 2) 녹음 중지
       await stopRecording();
-      // 3) WebSocket 연결 종료
+      // 3) 절전 모드 진입 방지 비활성화
+      await WakelockPlus.disable();
+      // 4) WebSocket 연결 종료
       await _webSocketChannel?.sink.close();
       _webSocketChannel = null;
 
