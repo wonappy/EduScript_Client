@@ -1,7 +1,7 @@
 //자막 (프롬프트 느낌 ver)
 import 'package:client/core/styles/color_core.dart';
 import 'package:client/widgets/common/ready_received_dialog_widget.dart';
-import 'package:flutter/foundation.dart';
+//import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:html/parser.dart' as html_parser;
@@ -451,7 +451,9 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     final inputLanguageCodes = settings.getInputLanguageCodes(); // 입력 언어 설정
     final outputLanguageCodes = settings.getOutputLanguageCodes(); // 출력 언어 설정
 
-    debugPrint("[🔴 INIT-service] 입력 언어 - $inputLanguageCodes / 출력 언어 $outputLanguageCodes");
+    debugPrint(
+      "[🔴 INIT-service] 입력 언어 - $inputLanguageCodes / 출력 언어 $outputLanguageCodes",
+    );
 
     // 2) 웹소켓 연결
     bool connectd = await _sttService.connectToServer();
@@ -601,7 +603,6 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
               ServerConnectionState.connected; // 서버 연결 상태 - 연결 성공
           _statusMessage = "서버에 연결되었습니다."; // UI에 출력할 상태 메시지
         }
-
         // 3) 연결 종료
         else if (status.contains("연결 종료")) {
           _serverConnectionState =
@@ -627,14 +628,14 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
         else if (message.contains("연결 실패")) {
           _serverConnectionState =
               ServerConnectionState.disconnected; // 서버 연결 상태 - 연결 끊김
-          _statusMessage = "$message"; // UI에 출력할 상태 메시지
+          _statusMessage = message; // UI에 출력할 상태 메시지
         }
       });
       //_showErrorSnackBar(message); // (호출) [2] 에러 메시지 표시
     };
   }
 
-  Future<void> _restartSTTConnection() async {
+  Future<void> restartSTTConnection() async {
     debugPrint("[🔴 DEBUG] _restartSTTConnection 메서드 실행");
 
     // 1) 기존 연결 완전히 종료
@@ -651,7 +652,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
   }
 
   // [2] 에러 메시지 표시
-  void _showErrorSnackBar(String message) {
+  void showErrorSnackBar(String message) {
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
