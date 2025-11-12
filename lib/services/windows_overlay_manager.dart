@@ -166,15 +166,15 @@ class WindowsOverlayManager {
       SetTextColor(hdc, _flutterColorToWin32Color(Colors.white)); // 글씨 색상 (흰색)
 
       final hBrushBackground = CreateSolidBrush(
-        RGB(0, 0, 0), // 현재 인식 중 자막 배경 색상
+        RGB(0, 0, 0), // recognizing 중 자막 배경 색상
       );
-      final hBrushOldBackground = CreateSolidBrush(
-        RGB(50, 50, 50),
-      ); // 인식 완료 자막 배경 색상
+      // final hBrushOldBackground = CreateSolidBrush(
+      //   RGB(50, 50, 50),
+      // ); // recognized 자막 배경 색상
 
       // 레이아웃 값 정의
       final double scaleFactor = screenSize.width / 1167.0;
-      final int spacingSmall = (7 * scaleFactor).round();
+      // final int spacingSmall = (7 * scaleFactor).round();
       final int spacingMedium = (15 * scaleFactor).round();
       final int padding = (10 * scaleFactor).round(); // 상하좌우 패딩
       final int drawFormat = DT_CENTER | DT_WORDBREAK | DT_NOCLIP; // 자동 줄 바꿈
@@ -188,23 +188,23 @@ class WindowsOverlayManager {
       if (alignment == MainAxisAlignment.start) {
         int currentY = rcClient.ref.top + spacingMedium; // Y 시작점
         for (final lang in _lastLanguages) {
-          final textConfirmed = _findSubtitleText(lang, true, settings);
+          //final textConfirmed = _findSubtitleText(lang, true, settings); // recognized
           final textCurrent = _findSubtitleText(lang, false, settings);
 
-          if (textConfirmed.isNotEmpty) {
-            currentY = _drawTextWithBackground(
-              hdc,
-              textConfirmed,
-              currentY,
-              drawFormat,
-              padding,
-              rcClient.ref,
-              hBrushOldBackground,
-              false,
-              maxWidth,
-            );
-            currentY += spacingSmall;
-          }
+          // if (textConfirmed.isNotEmpty) { // recognized
+          //   currentY = _drawTextWithBackground(
+          //     hdc,
+          //     textConfirmed,
+          //     currentY,
+          //     drawFormat,
+          //     padding,
+          //     rcClient.ref,
+          //     hBrushOldBackground,
+          //     false,
+          //     maxWidth,
+          //   );
+          //   currentY += spacingSmall;
+          // }
           if (textCurrent.isNotEmpty) {
             currentY = _drawTextWithBackground(
               hdc,
@@ -226,20 +226,20 @@ class WindowsOverlayManager {
         final rcCalc = calloc<RECT>();
 
         for (final lang in _lastLanguages) {
-          final textConfirmed = _findSubtitleText(lang, true, settings);
+          // final textConfirmed = _findSubtitleText(lang, true, settings); // recognized
           final textCurrent = _findSubtitleText(lang, false, settings);
 
-          if (textConfirmed.isNotEmpty) {
-            SetRect(rcCalc, 0, 0, maxWidth, 0);
-            DrawText(
-              hdc,
-              textConfirmed.toNativeUtf16(),
-              -1,
-              rcCalc,
-              DT_CALCRECT | drawFormat,
-            );
-            totalHeight += rcCalc.ref.bottom + (padding * 2) + spacingSmall;
-          }
+          // if (textConfirmed.isNotEmpty) { // recognized
+          //   SetRect(rcCalc, 0, 0, maxWidth, 0);
+          //   DrawText(
+          //     hdc,
+          //     textConfirmed.toNativeUtf16(),
+          //     -1,
+          //     rcCalc,
+          //     DT_CALCRECT | drawFormat,
+          //   );
+          //   totalHeight += rcCalc.ref.bottom + (padding * 2) + spacingSmall;
+          // }
           if (textCurrent.isNotEmpty) {
             SetRect(rcCalc, 0, 0, maxWidth, 0);
             DrawText(
@@ -259,22 +259,22 @@ class WindowsOverlayManager {
 
         // 3. 위에서 아래로 그리기
         for (final lang in _lastLanguages) {
-          final textConfirmed = _findSubtitleText(lang, true, settings);
+          //final textConfirmed = _findSubtitleText(lang, true, settings); // recognized
           final textCurrent = _findSubtitleText(lang, false, settings);
-          if (textConfirmed.isNotEmpty) {
-            currentY = _drawTextWithBackground(
-              hdc,
-              textConfirmed,
-              currentY,
-              drawFormat,
-              padding,
-              rcClient.ref,
-              hBrushOldBackground,
-              false,
-              maxWidth,
-            );
-            currentY += spacingSmall;
-          }
+          // if (textConfirmed.isNotEmpty) { // recognized
+          //   currentY = _drawTextWithBackground(
+          //     hdc,
+          //     textConfirmed,
+          //     currentY,
+          //     drawFormat,
+          //     padding,
+          //     rcClient.ref,
+          //     hBrushOldBackground,
+          //     false,
+          //     maxWidth,
+          //   );
+          //   currentY += spacingSmall;
+          // }
           if (textCurrent.isNotEmpty) {
             currentY = _drawTextWithBackground(
               hdc,
@@ -293,7 +293,7 @@ class WindowsOverlayManager {
       } else {
         int currentY = rcClient.ref.bottom - spacingMedium; // Y 시작점
         for (final lang in _lastLanguages.reversed) {
-          final textConfirmed = _findSubtitleText(lang, true, settings);
+          //final textConfirmed = _findSubtitleText(lang, true, settings); // recognized
           final textCurrent = _findSubtitleText(lang, false, settings);
 
           if (textCurrent.isNotEmpty) {
@@ -308,28 +308,28 @@ class WindowsOverlayManager {
               true,
               maxWidth,
             );
-            currentY -= spacingSmall;
-          }
-          if (textConfirmed.isNotEmpty) {
-            currentY = _drawTextWithBackground(
-              hdc,
-              textConfirmed,
-              currentY,
-              drawFormat,
-              padding,
-              rcClient.ref,
-              hBrushOldBackground,
-              true,
-              maxWidth,
-            );
             currentY -= spacingMedium;
           }
+          // if (textConfirmed.isNotEmpty) { // recognized
+          //   currentY = _drawTextWithBackground(
+          //     hdc,
+          //     textConfirmed,
+          //     currentY,
+          //     drawFormat,
+          //     padding,
+          //     rcClient.ref,
+          //     hBrushOldBackground,
+          //     true,
+          //     maxWidth,
+          //   );
+          //   currentY -= spacingMedium;
+          // }
         }
       }
 
       // GDI 리소스 정리
       DeleteObject(hBrushBackground);
-      DeleteObject(hBrushOldBackground);
+      //DeleteObject(hBrushOldBackground); // recognized
       SelectObject(hdc, hOldFont);
       DeleteObject(hFont);
     }
