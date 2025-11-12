@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import '../subtitle_setting_provider.dart';
 import 'color_setting_drop_down_widget.dart';
 import 'multi_language_dropdown.dart';
+import 'onoff_switch_state_widget.dart';
 import 'setting_drop_down_widget.dart';
 
 class BuildSubtitleSettingContent extends StatefulWidget {
@@ -75,7 +76,7 @@ class _BuildSubtitleSettingContentState
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    //_buildScreenShareSection(),
+                    _buildScreenShareSection(),
                     //SizedBox(height: 30),
                     _buildInputLanguageSection(),
                     SizedBox(height: 25),
@@ -91,43 +92,45 @@ class _BuildSubtitleSettingContentState
   }
 
   // [섹션 별 빌더]
-  // 1) 화면 공유 섹션
-  // Widget _buildScreenShareSection() {
-  //   final settings = context.read<SubtitleSettingsProvider>();
-  //
-  //   return Column(
-  //     children: [
-  //       _buildSectionTitle("화면 공유"),
-  //       SizedBox(height: 10,),
-  //       _buildBigContainer(
-  //         child: Column(
-  //           children: [
-  //             _buildSmallContainer(
-  //               child: Row(
-  //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //                 children: [
-  //                   //_buildSectionTitle('화면 공유 ON/OFF'),
-  //                   Text("화면 공유 ON/OFF",
-  //                   style: TextStyle(
-  //                     fontSize: getResponsiveFontSize(widget.screenWidth) * 0.8,
-  //                     fontWeight: FontWeight.bold,
-  //                     color: Colors.black,
-  //                   ),),
-  //                   OnOffSwitch(
-  //                     initialValue: settings.screenSharedEnabled,
-  //                     onChanged: (bool newValue) {
-  //                       settings.updateScreenSharedEnabled(newValue);
-  //                     },
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
+  //1) 화면 공유 섹션
+  Widget _buildScreenShareSection() {
+    final settings = context.read<SubtitleSettingsProvider>();
+
+    return Column(
+      children: [
+        _buildSectionTitle("화면 공유"),
+        SizedBox(height: 10),
+        _buildBigContainer(
+          child: Column(
+            children: [
+              _buildSmallContainer(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    //_buildSectionTitle('화면 공유 ON/OFF'),
+                    Text(
+                      "화면 공유 ON/OFF",
+                      style: TextStyle(
+                        fontSize: AppSizes.baseFontSize,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    OnOffSwitch(
+                      initialValue: settings.screenSharedEnabled,
+                      onChanged: (bool newValue) {
+                        settings.updateScreenSharedEnabled(newValue);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
   // 2) 입력 언어 설정 섹션
   Widget _buildInputLanguageSection() {
@@ -450,7 +453,7 @@ class _BuildSubtitleSettingContentState
       child: child,
     );
   }
-  
+
   // 작은 컨테이너
   Widget _buildSmallContainer({required Widget child}) {
     return Container(
