@@ -143,7 +143,7 @@ class WindowsOverlayManager {
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
   }
 
-  /// 5. [그리기] WM_PAINT의 실제 그리기 로직 (상/중/하 정렬 구현)
+  /// 5. 실제 그리기 로직 (상/중/하 정렬 구현)
   static void _onPaint(int hwnd) {
     final ps = calloc<PAINTSTRUCT>();
     final hdc = BeginPaint(hwnd, ps);
@@ -177,7 +177,7 @@ class WindowsOverlayManager {
       // final int spacingSmall = (7 * scaleFactor).round();
       final int spacingMedium = (15 * scaleFactor).round();
       final int padding = (10 * scaleFactor).round(); // 상하좌우 패딩
-      final int drawFormat = DT_CENTER | DT_WORDBREAK | DT_NOCLIP; // 자동 줄 바꿈
+      final int drawFormat = DT_LEFT | DT_WORDBREAK | DT_NOCLIP; // 자동 줄 바꿈
 
       // 자막의 최대 가로 폭 (화면의 90%)
       final int maxWidth = (rcClient.ref.right * 0.9).round();
@@ -190,6 +190,7 @@ class WindowsOverlayManager {
         for (final lang in _lastLanguages) {
           //final textConfirmed = _findSubtitleText(lang, true, settings); // recognized
           final textCurrent = _findSubtitleText(lang, false, settings);
+          final String processedText = _truncateText(textCurrent);
 
           // if (textConfirmed.isNotEmpty) { // recognized
           //   currentY = _drawTextWithBackground(
@@ -205,10 +206,10 @@ class WindowsOverlayManager {
           //   );
           //   currentY += spacingSmall;
           // }
-          if (textCurrent.isNotEmpty) {
+          if (processedText.isNotEmpty) {
             currentY = _drawTextWithBackground(
               hdc,
-              textCurrent,
+              processedText,
               currentY,
               drawFormat,
               padding,
@@ -228,6 +229,7 @@ class WindowsOverlayManager {
         for (final lang in _lastLanguages) {
           // final textConfirmed = _findSubtitleText(lang, true, settings); // recognized
           final textCurrent = _findSubtitleText(lang, false, settings);
+          final String processedText = _truncateText(textCurrent);
 
           // if (textConfirmed.isNotEmpty) { // recognized
           //   SetRect(rcCalc, 0, 0, maxWidth, 0);
@@ -240,11 +242,11 @@ class WindowsOverlayManager {
           //   );
           //   totalHeight += rcCalc.ref.bottom + (padding * 2) + spacingSmall;
           // }
-          if (textCurrent.isNotEmpty) {
+          if (processedText.isNotEmpty) {
             SetRect(rcCalc, 0, 0, maxWidth, 0);
             DrawText(
               hdc,
-              textCurrent.toNativeUtf16(),
+              processedText.toNativeUtf16(),
               -1,
               rcCalc,
               DT_CALCRECT | drawFormat,
@@ -261,6 +263,8 @@ class WindowsOverlayManager {
         for (final lang in _lastLanguages) {
           //final textConfirmed = _findSubtitleText(lang, true, settings); // recognized
           final textCurrent = _findSubtitleText(lang, false, settings);
+          final String processedText = _truncateText(textCurrent);
+
           // if (textConfirmed.isNotEmpty) { // recognized
           //   currentY = _drawTextWithBackground(
           //     hdc,
@@ -275,10 +279,10 @@ class WindowsOverlayManager {
           //   );
           //   currentY += spacingSmall;
           // }
-          if (textCurrent.isNotEmpty) {
+          if (processedText.isNotEmpty) {
             currentY = _drawTextWithBackground(
               hdc,
-              textCurrent,
+              processedText,
               currentY,
               drawFormat,
               padding,
@@ -295,11 +299,12 @@ class WindowsOverlayManager {
         for (final lang in _lastLanguages.reversed) {
           //final textConfirmed = _findSubtitleText(lang, true, settings); // recognized
           final textCurrent = _findSubtitleText(lang, false, settings);
+          final String processedText = _truncateText(textCurrent);
 
-          if (textCurrent.isNotEmpty) {
+          if (processedText.isNotEmpty) {
             currentY = _drawTextWithBackground(
               hdc,
-              textCurrent,
+              processedText,
               currentY,
               drawFormat,
               padding,
@@ -456,7 +461,7 @@ class WindowsOverlayManager {
     final int bgWidth =
         (textWidth > maxWidth ? maxWidth : textWidth) + (padding * 2);
     final int bgHeight = textHeight + (padding * 2);
-    final int bgLeft = (rcClient.right - bgWidth) ~/ 2; // 화면 중앙
+    final int bgLeft = (rcClient.right * 0.05).round();
 
     final rcBg = calloc<RECT>();
     int nextY;
@@ -474,9 +479,45 @@ class WindowsOverlayManager {
     }
 
     FillRect(hdc, rcBg, hBrush);
-    DrawText(hdc, text.toNativeUtf16(), -1, rcBg, drawFormat | DT_VCENTER);
+    DrawText(hdc, text.toNativeUtf16(), -1, rcBg, drawFormat | DT_TOP);
 
     calloc.free(rcBg);
     return nextY;
+  }
+
+  /// 10. 구두점 기준 자막 길이 제한 (최대 2문장) -> 마지막 2문장씩 자름
+  static String _truncateText(String text) {
+    if (text == "...") {
+      return text;
+    }
+
+    // 구두점 나열 (한국어, 영어, 일본어, 중국어 마침표/물음표/느낌표)
+    final RegExp punctuation = RegExp(r'([.?!。？！])');
+    final List<RegExpMatch> matches = punctuation.allMatches(text).toList();
+    final int count = matches.length;
+
+    // 원본 텍스트
+    String textToProcess = text;
+
+    // 구두점 1개 + 이어지는 문장일 때 문장 분할
+    if (count == 1 && text.length > matches.last.end) {
+      final int splitIndex = matches.first.end;
+      textToProcess = text.substring(splitIndex);
+    } else if (count >= 2) {
+      // 구두점 2개 이상일 때 문장 분할
+      final int splitIndex = matches.elementAt(count - 2).end;
+      textToProcess = text.substring(splitIndex);
+    }
+
+    //'.' 기준 줄 바꿈
+    String result = textToProcess.replaceAllMapped(punctuation, (match) {
+      return '${match.group(1)}\n';
+    });
+
+    // 중복 줄 바꿈, 공백 정리
+    result = result.replaceAll(RegExp(r'(\n\s*)+'), '\n');
+    result = result.trim();
+
+    return result;
   }
 }
