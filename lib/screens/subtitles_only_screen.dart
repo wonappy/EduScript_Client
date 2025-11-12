@@ -246,8 +246,20 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
             bottom: 16,
             right: 16,
             child: IconButton(
-              onPressed: () {
-                Navigator.pop(context);
+              onPressed: () async {
+                debugPrint("[자막 ONLY 모드] Close 버튼 클릭");
+
+                // 1) Close 버튼 클릭 후, 녹음 일시 정지
+                if(_sttService != null) {
+                  await _sttService.stopRecording();
+                  debugPrint("[자막 ONLY 모드] Close 버튼 클릭 후, 녹음 일시 정지");
+                }
+
+                // 2) 이전 화면으로 전환 (녹음 일시 정지가 완료되면)
+                // 화면 전환 + 상태 변화 전달
+                if(mounted) {
+                  Navigator.pop(context, true);
+                }
               },
               icon: const Icon(Icons.close_rounded),
               iconSize: 32,

@@ -171,13 +171,13 @@ class _BuildLecturePlayBarContentState
   void _handlePlayPause() async {
     // 1) 재생 버튼 눌렀을 때
     if (!TimerManager.isPlaying) {
-      // 자막 모드 확인
+      // 자막 모드 확인 (화면 공유 or 자막 ONLY)
       final subtitleSettings = context.read<SubtitleSettingsProvider>();
-      //"화면 공유" 모드가 켜져 있는데
+      // -> "화면 공유" 모드가 켜져 있는데
       if (subtitleSettings.screenSharedEnabled) {
-        // OS 확인
+        // -> 사용자 PC의 OS 확인 (윈도우가 아닐 때)
         if (!Platform.isWindows) {
-          // Mac/Linux면 경고창 띄우기 (Win32 API를 호출할 수 없음)
+          // -> 경고창 띄우기 (Mac/Linux면 Win32 API를 호출할 수 없음)
           if (mounted) {
             showDialog(
               context: context,
@@ -231,19 +231,23 @@ class _BuildLecturePlayBarContentState
         );
       }
 
-      // 화면 전환
+      // 화면 전환 및 상태 업데이트
       if (mounted) {
+        dynamic result; // 상태 변수 (Close 버튼 클릭 여부)
+
+        // 화면 공유 모드 && 윈도우 환경일 때 
+        // 1) 화면 공유 모드 (오버레이) 화면 전환
         if (subtitleSettings.screenSharedEnabled && Platform.isWindows) {
-          // 화면 공유(오버레이) 화면 출력
-          Navigator.push(
+          result = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => const SharedWithSubtitlesScreen(),
             ),
           );
-        } else {
-          // 자막 only 화면 출력
-          Navigator.push(
+        }
+        // 2) 자막 only 화면 전환
+        else {          
+          result = await Navigator.push(
             context,
             MaterialPageRoute(
               builder:
@@ -255,9 +259,18 @@ class _BuildLecturePlayBarContentState
             ),
           );
         }
+
+        // [UI UPDATE] UI 화면 갱신
+        // (Close 버튼 클릭으로 true를 받았을 때)
+        if (result == true) {
+          debugPrint("[UI UPDATE] Close 버튼 클릭 -> 녹음 일시 정지");
+          TimerManager.pause(); // 타이머 일시 정지
+          setState(() {
+          });
+        }
       }
     }
-    // 일시정지 상태일 때
+    // 2) 일시 정지 상태일 때
     else {
       TimerManager.pause(); // 타이머 일시정지
       final service = currentService;
