@@ -61,7 +61,8 @@ class WindowsOverlayManager {
       WS_EX_TOPMOST | // 항상 최상위 레이어
           WS_EX_LAYERED | // 투명도 사용
           WS_EX_TRANSPARENT | // 마우스 이벤트 통과(무시)
-          WS_EX_COMPOSITED, // 더블 버퍼링 (화면 재생성 과정에서 깜빡힘 제거)
+          WS_EX_COMPOSITED | // 더블 버퍼링 (화면 재생성 과정에서 깜빡힘 제거)
+          WS_EX_TOOLWINDOW, //작업 표시줄 숨기기
       _wndClassName.toNativeUtf16(),
       'Flutter Subtitle Overlay'.toNativeUtf16(),
       WS_POPUP,
