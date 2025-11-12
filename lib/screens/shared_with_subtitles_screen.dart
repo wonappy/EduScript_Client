@@ -112,6 +112,7 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
                   style: TextStyle(color: Colors.white, fontSize: 18),
                 ),
                 const SizedBox(height: 32),
+                // [자막 중지 버튼]
                 ElevatedButton.icon(
                   icon: const Icon(Icons.stop_rounded),
                   label: const Text("자막 중지"),
@@ -123,8 +124,20 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
                       vertical: 12,
                     ),
                   ),
-                  onPressed: () {
-                    Navigator.pop(context);
+                  onPressed: () async {
+                    debugPrint("[화면 공유 모드] 자막 중지 버튼 클릭");
+
+                    // 1) 자막 중지 버튼 클릭 후, 녹음 일시 정지
+                    if(_sttService != null) {
+                      await _sttService.stopRecording();
+                      debugPrint("[화면 공유 모드] 자막 중지 버튼 클릭 후, 녹음 일시 정지");
+                    }
+
+                    // 2) 이전 화면으로 전환 (녹음 일시 정지가 완료되면)
+                    // 화면 전환 + 상태 변화 전달
+                    if(mounted) {
+                      Navigator.pop(context, true);
+                    }                    
                   },
                 ),
               ],

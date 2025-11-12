@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:record/record.dart'; // 마이크 오디오 녹음
 import 'package:permission_handler/permission_handler.dart'; // 마이크 권한 관리
+import 'package:wakelock_plus/wakelock_plus.dart'; // 절전 모드 진입 방지
 
 import 'dart:convert'; // JSON 데이터 변환 (인코딩, 디코딩)
 import 'dart:typed_data'; // 바이너리 오디오 데이터 처리
@@ -272,7 +273,10 @@ class WebSocketMultipleSTTService {
         ),
       );
 
-      // 2) 오디오 스트림 리스너: 데이터를 버퍼에 추가
+      // 2) 절전 모드 진입 방지 활성화
+      await WakelockPlus.enable();
+
+      // 3) 오디오 스트림 리스너: 데이터를 버퍼에 추가
       _audioStreamSubscription = stream.listen(
         (audioData) {
           _audioBuffer.addAll(audioData);
@@ -282,7 +286,7 @@ class WebSocketMultipleSTTService {
         },
       );
 
-      // 3) 버퍼 타이머 설정: 250ms 마다 버퍼의 데이터를 서버로 전송
+      // 4) 버퍼 타이머 설정: 250ms 마다 버퍼의 데이터를 서버로 전송
       _bufferSendTimer?.cancel(); // 기존 타이머가 있다면 취소
       _bufferSendTimer = Timer.periodic(const Duration(milliseconds: 250), (
         timer,
@@ -312,7 +316,7 @@ class WebSocketMultipleSTTService {
       //   },
       // );
 
-      // 4) 상태 업데이트
+      // 5) 상태 업데이트
       _isRecording = true;
       _updateStatus("🎤 음성 녹음 시작");
       return true;
@@ -332,6 +336,7 @@ class WebSocketMultipleSTTService {
     try {
       await _audioStreamSubscription?.cancel();
       await _audioRecorder.stop();
+      await WakelockPlus.disable(); // 절전 모드 진입 방지 비활성화
 
       _audioStreamSubscription = null;
       _isRecording = false;
@@ -501,8 +506,9 @@ class WebSocketMultipleSTTService {
       _stopReconnectTimer(); // 재연결 타이머 중지
       // 2) 녹음 중지
       await stopRecording();
-      // 3) WebSocket 연결 종료
-
+      // 3) 절전 모드 진입 방지 비활성화
+      await WakelockPlus.disable();
+      // 4) WebSocket 연결 종료
       await _webSocketChannel?.sink.close();
       _webSocketChannel = null;
 

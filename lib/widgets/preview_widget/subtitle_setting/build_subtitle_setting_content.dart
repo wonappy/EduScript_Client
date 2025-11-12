@@ -77,7 +77,7 @@ class _BuildSubtitleSettingContentState
                 child: Column(
                   children: [
                     _buildScreenShareSection(),
-                    //SizedBox(height: 30),
+                    SizedBox(height: 30),
                     _buildInputLanguageSection(),
                     SizedBox(height: 25),
                     _buildOutputLanguageSection(),
