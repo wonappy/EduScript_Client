@@ -9,7 +9,7 @@ import '../../models/language_mapping_model.dart';
 
 class SubtitleSettingsProvider extends ChangeNotifier {
   // init
-  bool _screenSharedEnabled = true;
+  bool _screenSharedEnabled = false;
   List<String> _selectedInputLanguages = ['한국어'];
   List<String> _selectedOutputLanguages = ['한국어'];
   String _selectedPosition = '중앙';
@@ -237,6 +237,7 @@ class SubtitleSettingsProvider extends ChangeNotifier {
   void updateScreenSharedEnabled(bool enabled) {
     _screenSharedEnabled = enabled;
     notifyListeners(); // 👈 UI에게 "데이터 바뀌었어!" 알림
+    debugPrint("🖥️ 화면 공유(오버레이) 모드: $screenSharedEnabled");
   }
 
   void updateInputLanguages(List<String> languages) {

@@ -9,8 +9,11 @@ import 'package:client/screens/subtitles_only_screen.dart';
 import 'package:client/services/websocket_multiple_speech_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import 'dart:io' show Platform; //OS 확인
+import '../../../screens/shared_with_subtitles_screen.dart'; // 오버레이 화면
+
 import '../../../core/enum_core.dart';
-// import '../../../core/global_core.dart';
 import '../../../providers/mode_provider.dart';
 import '../subtitle_setting_provider.dart';
 import 'time_manager.dart';
@@ -168,6 +171,35 @@ class _BuildLecturePlayBarContentState
   void _handlePlayPause() async {
     // 1) 재생 버튼 눌렀을 때
     if (!TimerManager.isPlaying) {
+      // 자막 모드 확인
+      final subtitleSettings = context.read<SubtitleSettingsProvider>();
+      //"화면 공유" 모드가 켜져 있는데
+      if (subtitleSettings.screenSharedEnabled) {
+        // OS 확인
+        if (!Platform.isWindows) {
+          // Mac/Linux면 경고창 띄우기 (Win32 API를 호출할 수 없음)
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder:
+                  (context) => AlertDialog(
+                    title: const Text('기능 안내'),
+                    content: const Text(
+                      '화면 공유 자막(오버레이) 기능은 Windows에서만 사용할 수 있습니다.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('확인'),
+                      ),
+                    ],
+                  ),
+            );
+          }
+          // Navigator.push 전에 return (강의 시작 중단)
+          return;
+        }
+      }
       TimerManager.start(); // 타이머 실행
       setState(() {
         hasStarted = true;
@@ -201,17 +233,28 @@ class _BuildLecturePlayBarContentState
 
       // 화면 전환
       if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) => SubtitlesOnlyScreen(
-                  subWordFont: "default",
-                  backgroundColor: Colors.black,
-                  subSpacing: 20,
-                ),
-          ),
-        );
+        if (subtitleSettings.screenSharedEnabled && Platform.isWindows) {
+          // 화면 공유(오버레이) 화면 출력
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const SharedWithSubtitlesScreen(),
+            ),
+          );
+        } else {
+          // 자막 only 화면 출력
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) => SubtitlesOnlyScreen(
+                    subWordFont: "default",
+                    backgroundColor: Colors.black,
+                    subSpacing: 20,
+                  ),
+            ),
+          );
+        }
       }
     }
     // 일시정지 상태일 때
@@ -332,9 +375,9 @@ class _BuildLecturePlayBarContentState
     else if (service is WebSocketMultipleSTTService) {
       debugPrint("[🧸 DEBUG] 멀티 모드 세션 시작");
       sessionStarted = await service.startSession(
-    inputLanguages: inputLanguageCodes,
-    targetLanguages: outputLanguageCodes,
-  );
+        inputLanguages: inputLanguageCodes,
+        targetLanguages: outputLanguageCodes,
+      );
     }
 
     // 세션 결과
