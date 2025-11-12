@@ -1,4 +1,6 @@
 //오버레이 자막 창
+
+import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:client/core/styles/color_core.dart';
 import 'package:client/services/windows_overlay_manager.dart';
@@ -33,8 +35,11 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
   Map<String, String> _currentTranslations = {};
   String? _currentSpeakingLanguage;
 
-  // Win32 오버레이 매니저
+  // Win32 오버레이
   WindowsOverlayManager? _overlayManager;
+
+  // 타이머
+  Timer? _clearTimer;
 
   @override
   void initState() {
@@ -150,6 +155,9 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
 
   @override
   void dispose() {
+    // 타이머 제거
+    _clearTimer?.cancel();
+
     // Win32 오버레이 윈도우 제거
     _overlayManager?.dispose();
 
@@ -178,11 +186,18 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
         speackLanguage,
       ) {
         debugPrint("✅ [SharedScreen] Multi STT 콜백! isFinal: $isFinal");
+        _clearTimer?.cancel();
 
         _currentSpeakingLanguage = speackLanguage;
         if (isFinal) {
           _confirmedTranslations = Map.from(_currentTranslations);
           _currentTranslations.clear();
+
+          // 자막 없을 경우 조금 대기 후 자막 초기화
+          _clearTimer = Timer(const Duration(seconds: 5), () {
+            debugPrint("[Timer] 5초 경과. 자막을 초기화합니다.");
+            WindowsOverlayManager.clearStaticData();
+          });
         } else {
           _currentTranslations.clear();
           translations.forEach((lang, result) {
@@ -197,11 +212,19 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
       // single 모드
       _sttService.onTranslationReceived = (translations, isFinal) {
         debugPrint("✅ [SharedScreen] Single STT 콜백! isFinal: $isFinal");
+        _clearTimer?.cancel();
 
         // setState가 아니라, 상태 변수만 직접 업데이트
         if (isFinal) {
           _confirmedTranslations = Map.from(_currentTranslations);
           _currentTranslations.clear();
+
+          // 자막 없을 경우 조금 대기 후 자막 초기화
+          _clearTimer = Timer(const Duration(seconds: 5), () {
+            debugPrint("[Timer] 5초 경과. 자막을 초기화합니다.");
+            WindowsOverlayManager.clearStaticData();
+            _updateOverlay();
+          });
         } else {
           _currentTranslations.clear();
           translations.forEach((lang, result) {
