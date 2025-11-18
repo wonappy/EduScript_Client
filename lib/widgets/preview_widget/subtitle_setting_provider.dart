@@ -233,48 +233,57 @@ class SubtitleSettingsProvider extends ChangeNotifier {
     return googleCode;
   }
 
-  // update
+  // [자막 설정 업데이트 알림]
+  // 1) 화면 공유(오버레이) 모드 변경
   void updateScreenSharedEnabled(bool enabled) {
     _screenSharedEnabled = enabled;
-    notifyListeners(); // 👈 UI에게 "데이터 바뀌었어!" 알림
-    debugPrint("🖥️ 화면 공유(오버레이) 모드: $screenSharedEnabled");
+    notifyListeners(); // UI에게 업데이트 사항 알림
+    debugPrint("화면 공유(오버레이) 모드 : $screenSharedEnabled");
   }
 
+  // 2) 입력 언어 설정 변경
   void updateInputLanguages(List<String> languages) {
     _selectedInputLanguages = languages;
     notifyListeners();
   }
 
+  // 3) 출력 언어 설정 변경
   void updateOutputLanguages(List<String> languages) {
     _selectedOutputLanguages = languages;
     notifyListeners();
   }
 
+  // 4) 자막 위치 설정 변경
   void updatePosition(String position) {
     _selectedPosition = position;
     notifyListeners();
   }
 
+  // 5) 폰트 스타일 설정 변경
   void updateFontStyle(String style) {
     _selectedFontStyle = style;
     notifyListeners();
   }
 
+  // 6) 폰트 크기 설정 변경
   void updateFontSize(String size) {
     _selectedFontSize = size;
     notifyListeners();
   }
 
+  // 7) 폰트 색상 설정 변경
   void updateFontColor(String color) {
     _selectedFontColor = color;
     notifyListeners();
   }
 
+  // 8) 자막 배경색 설정 변경
   void updateBackgroundColor(String color) {
     _selectedBackgroundColor = color;
     notifyListeners();
   }
 
+  // 9) 자막 배경색 투명도 설정 변경
   void updateBackgroundOpacity(String opacity) {
     _selectedBackgroundOpacity = opacity;
     notifyListeners();
