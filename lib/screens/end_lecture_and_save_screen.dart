@@ -256,8 +256,8 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
     }
   }
 
-//강의모드에서 파일 저장 처리
-  Future<void> handleLectureFileSave() async {
+// 강의모드에서 파일 저장 처리
+Future<void> handleLectureFileSave() async {
   if (!_validateBeforeSave()) return;
 
   final transcriptText = widget.fullTranscript;
@@ -279,19 +279,34 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
 
     List<String> savedFiles = [];
 
+    // 정제된 내용 파일
     if (isContentFile) {
-      await _saveItem('refined_result', '정제된내용', savedFiles);
-      await _saveList('refined_results', '정제된내용', savedFiles);
+      await _saveResultGroup(
+        singleKey: 'refined_result',
+        listKey: 'refined_results',
+        label: '정제된내용',
+        resultList: savedFiles,
+      );
     }
 
+    // 요약 파일
     if (isSummaryFile) {
-      await _saveItem('summarized_result', '요약', savedFiles);
-      await _saveList('summarized_results', '요약', savedFiles);
+      await _saveResultGroup(
+        singleKey: 'summarized_result',
+        listKey: 'summarized_results',
+        label: '요약',
+        resultList: savedFiles,
+      );
     }
 
+    // 핵심 포인트 파일
     if (isMajorFile) {
-      await _saveItem('keypoints_result', '핵심포인트', savedFiles);
-      await _saveList('keypoints_results', '핵심포인트', savedFiles);
+      await _saveResultGroup(
+        singleKey: 'keypoints_result',
+        listKey: 'keypoints_results',
+        label: '핵심포인트',
+        resultList: savedFiles,
+      );
     }
 
     _finishSave(savedFiles);
@@ -300,7 +315,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
   }
 }
 
-//회의모드에서 파일 저장 처리
+// 회의모드에서 파일 저장 처리
 Future<void> handleConferenceFileSave() async {
   if (!_validateBeforeSave()) return;
 
@@ -311,33 +326,68 @@ Future<void> handleConferenceFileSave() async {
     final result = await _llmService.refineText(
       fullText: transcriptText,
       fileName: fileName,
-      fileFormat: fileFormat.replaceAll('.', ''),  
-      enableNote: isSummaryFile, // note     
+      fileFormat: fileFormat.replaceAll('.', ''),
+      enableNote: isSummaryFile, // note
+      // 회의 모드는 현재 스크립트/노트 중심이라
+      // enableScript 등은 서버 설계에 맞춰 필요시 추가 가능
     );
 
     if (result == null) return _failSave('파일 생성에 실패했습니다');
     _refinedData = result;
 
-    print("🧾 서버 응답 전체: ${jsonEncode(result)}");
-    print("📦 script_results runtimeType: ${result['script_results']?.runtimeType}");
-    print("📦 script_results 내용: ${result['script_results']}");
-
+    debugPrint("서버 응답 전체: ${jsonEncode(result)}");
+    debugPrint("script_results runtimeType: ${result['script_results']?.runtimeType}");
+    debugPrint("script_results 내용: ${result['script_results']}");
 
     List<String> savedFiles = [];
 
+    // 회의 스크립트
     if (isContentFile) {
-      await _saveItem('script_result', '스크립트', savedFiles);
-      await _saveList('script_results', '스크립트', savedFiles);
+      await _saveResultGroup(
+        singleKey: 'script_result',
+        listKey: 'script_results',
+        label: '스크립트',
+        resultList: savedFiles,
+      );
     }
 
+    // 요약 노트
     if (isSummaryFile) {
-      await _saveItem('note_result', '요약노트', savedFiles);
-      await _saveList('note_results', '요약노트', savedFiles);
+      await _saveResultGroup(
+        singleKey: 'note_result',
+        listKey: 'note_results',
+        label: '요약노트',
+        resultList: savedFiles,
+      );
     }
 
     _finishSave(savedFiles);
   } catch (e) {
     _failSave('회의 파일 저장 중 오류 발생: $e');
+  }
+}
+
+// 단일 결과 / 복수 결과를 한 번만 저장하도록 도와주는 헬퍼
+Future<void> _saveResultGroup({
+  required String singleKey,
+  required String listKey,
+  required String label,
+  required List<String> resultList,
+}) async {
+  if (_refinedData == null) return;
+
+  // 1) 리스트 키가 있으면 우선 사용 (다국어 등 여러 개일 때)
+  if (_refinedData!.containsKey(listKey) &&
+      _refinedData![listKey] != null &&
+      (_refinedData![listKey] as List).isNotEmpty) {
+    await _saveList(listKey, label, resultList);
+    return;
+  }
+
+  // 2) 리스트 키 없으면 단일 키 사용 (단일 결과일 때)
+  if (_refinedData!.containsKey(singleKey) &&
+      _refinedData![singleKey] != null) {
+    await _saveItem(singleKey, label, resultList);
   }
 }
 
