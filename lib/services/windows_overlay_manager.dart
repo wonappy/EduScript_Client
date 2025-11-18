@@ -169,21 +169,36 @@ class WindowsOverlayManager {
       final hBrushBackground = CreateSolidBrush(
         RGB(0, 0, 0), // recognizing 중 자막 배경 색상
       );
-      // final hBrushOldBackground = CreateSolidBrush(
-      //   RGB(50, 50, 50),
-      // ); // recognized 자막 배경 색상
+
+      //자막 정렬
+      final MainAxisAlignment alignment = settings.getAlignment();
+      final CrossAxisAlignment horizontalAlignment =
+          settings.getHorizontalAlignment();
+
+      int textAlignFlag;
+      switch (horizontalAlignment) {
+        case CrossAxisAlignment.center:
+          textAlignFlag = DT_CENTER;
+          break;
+        case CrossAxisAlignment.end:
+          textAlignFlag = DT_RIGHT;
+          break;
+        case CrossAxisAlignment.start:
+        default:
+          textAlignFlag = DT_LEFT;
+          break;
+      }
 
       // 레이아웃 값 정의
       final double scaleFactor = screenSize.width / 1167.0;
       // final int spacingSmall = (7 * scaleFactor).round();
       final int spacingMedium = (15 * scaleFactor).round();
       final int padding = (10 * scaleFactor).round(); // 상하좌우 패딩
-      final int drawFormat = DT_LEFT | DT_WORDBREAK | DT_NOCLIP; // 자동 줄 바꿈
+      final int drawFormat =
+          textAlignFlag | DT_WORDBREAK | DT_NOCLIP; // 자동 줄 바꿈
 
       // 자막의 최대 가로 폭 (화면의 90%)
       final int maxWidth = (rcClient.ref.right * 0.9).round();
-
-      final MainAxisAlignment alignment = settings.getAlignment();
 
       // Alignment.topCenter
       if (alignment == MainAxisAlignment.start) {
@@ -193,20 +208,6 @@ class WindowsOverlayManager {
           final textCurrent = _findSubtitleText(lang, false, settings);
           final String processedText = _truncateText(textCurrent);
 
-          // if (textConfirmed.isNotEmpty) { // recognized
-          //   currentY = _drawTextWithBackground(
-          //     hdc,
-          //     textConfirmed,
-          //     currentY,
-          //     drawFormat,
-          //     padding,
-          //     rcClient.ref,
-          //     hBrushOldBackground,
-          //     false,
-          //     maxWidth,
-          //   );
-          //   currentY += spacingSmall;
-          // }
           if (processedText.isNotEmpty) {
             currentY = _drawTextWithBackground(
               hdc,
@@ -218,6 +219,7 @@ class WindowsOverlayManager {
               hBrushBackground,
               false,
               maxWidth,
+              horizontalAlignment,
             );
             currentY += spacingMedium;
           }
@@ -232,17 +234,6 @@ class WindowsOverlayManager {
           final textCurrent = _findSubtitleText(lang, false, settings);
           final String processedText = _truncateText(textCurrent);
 
-          // if (textConfirmed.isNotEmpty) { // recognized
-          //   SetRect(rcCalc, 0, 0, maxWidth, 0);
-          //   DrawText(
-          //     hdc,
-          //     textConfirmed.toNativeUtf16(),
-          //     -1,
-          //     rcCalc,
-          //     DT_CALCRECT | drawFormat,
-          //   );
-          //   totalHeight += rcCalc.ref.bottom + (padding * 2) + spacingSmall;
-          // }
           if (processedText.isNotEmpty) {
             SetRect(rcCalc, 0, 0, maxWidth, 0);
             DrawText(
@@ -266,20 +257,6 @@ class WindowsOverlayManager {
           final textCurrent = _findSubtitleText(lang, false, settings);
           final String processedText = _truncateText(textCurrent);
 
-          // if (textConfirmed.isNotEmpty) { // recognized
-          //   currentY = _drawTextWithBackground(
-          //     hdc,
-          //     textConfirmed,
-          //     currentY,
-          //     drawFormat,
-          //     padding,
-          //     rcClient.ref,
-          //     hBrushOldBackground,
-          //     false,
-          //     maxWidth,
-          //   );
-          //   currentY += spacingSmall;
-          // }
           if (processedText.isNotEmpty) {
             currentY = _drawTextWithBackground(
               hdc,
@@ -291,6 +268,7 @@ class WindowsOverlayManager {
               hBrushBackground,
               false,
               maxWidth,
+              horizontalAlignment,
             );
             currentY += spacingMedium;
           }
@@ -313,23 +291,10 @@ class WindowsOverlayManager {
               hBrushBackground,
               true,
               maxWidth,
+              horizontalAlignment,
             );
             currentY -= spacingMedium;
           }
-          // if (textConfirmed.isNotEmpty) { // recognized
-          //   currentY = _drawTextWithBackground(
-          //     hdc,
-          //     textConfirmed,
-          //     currentY,
-          //     drawFormat,
-          //     padding,
-          //     rcClient.ref,
-          //     hBrushOldBackground,
-          //     true,
-          //     maxWidth,
-          //   );
-          //   currentY -= spacingMedium;
-          // }
         }
       }
 
@@ -448,6 +413,7 @@ class WindowsOverlayManager {
     int hBrush, // HBRUSH
     bool drawUpwards,
     int maxWidth,
+    CrossAxisAlignment hAlign,
   ) {
     // 1. 텍스트 크기 계산
     final rcCalc = calloc<RECT>();
@@ -462,7 +428,14 @@ class WindowsOverlayManager {
     final int bgWidth =
         (textWidth > maxWidth ? maxWidth : textWidth) + (padding * 2);
     final int bgHeight = textHeight + (padding * 2);
-    final int bgLeft = (rcClient.right * 0.05).round();
+    final int bgLeft;
+    if (hAlign == CrossAxisAlignment.start) {
+      bgLeft = (rcClient.right * 0.05).round();
+    } else if (hAlign == CrossAxisAlignment.center) {
+      bgLeft = (rcClient.right - bgWidth) ~/ 2;
+    } else {
+      bgLeft = (rcClient.right * 0.95).round() - bgWidth;
+    }
 
     final rcBg = calloc<RECT>();
     int nextY;
