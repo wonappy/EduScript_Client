@@ -6,8 +6,8 @@ import 'package:flutter/services.dart' show rootBundle;
 /// IP 설정 config
 class GlobalCore {
   // 기본 IP (localhost)
-  static String serverBaseUrl = "ws://192.168.0.149:8000"; // 서버 엔드포인트
-  static String httpBaseUrl = "http://192.168.0.149:8000"; // 서버 엔드포인트
+  static String serverBaseUrl = "ws://127.0.0.1:8000"; // 서버 엔드포인트
+  static String httpBaseUrl = "http://127.0.0.1:8000"; // 서버 엔드포인트
   static String configPath = "";
   static Future<void> loadConfig() async {
     if (kIsWeb) return; // 실제 실행 중인 경우에만 파일 접근 시도
