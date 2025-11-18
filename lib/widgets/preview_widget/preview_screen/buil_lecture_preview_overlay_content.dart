@@ -42,7 +42,7 @@ class BuildLecturePreviewOverlayContent extends StatelessWidget {
           //자막 설정
           child: Column(
             mainAxisAlignment: settings.getAlignment(),
-            crossAxisAlignment: CrossAxisAlignment.start, // 왼쪽 정렬 지정
+            crossAxisAlignment: settings.getHorizontalAlignment(),
             children: [
               for (int i = 0; i < languages.length; i++)
                 Padding(

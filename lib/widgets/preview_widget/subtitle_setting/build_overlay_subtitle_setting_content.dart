@@ -30,7 +30,6 @@ class BuildOverlaySubtitleSettingContent extends StatefulWidget {
 
 class _BuildSubtitleSettingContentState
     extends State<BuildOverlaySubtitleSettingContent> {
-
   List<String> inputLanguagesList = ['한국어', '영어', '일본어', '중국어'];
   List<String> outputLanguagesList = ['한국어', '영어', '일본어', '중국어'];
   Color backContentContainerColor = Color(0xFFC1C1C1);
@@ -41,9 +40,7 @@ class _BuildSubtitleSettingContentState
     // provider
     final settings = context.watch<SubtitleSettingsProvider>();
     return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(15)),
 
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -194,7 +191,7 @@ class _BuildSubtitleSettingContentState
                     children: [
                       _buildPositionDropdown(),
                       _buildDivider(),
-                      _buildAlignmentDropdown()
+                      _buildAlignmentDropdown(),
                     ],
                   ),
                 ),
@@ -203,11 +200,7 @@ class _BuildSubtitleSettingContentState
               _buildSubSection(
                 title: "텍스트",
                 content: _buildMediumContainer(
-                  child: Column(
-                    children: [
-                      _buildSizeDropdown(),
-                    ],
-                  ),
+                  child: Column(children: [_buildSizeDropdown()]),
                 ),
               ),
             ],
@@ -240,10 +233,10 @@ class _BuildSubtitleSettingContentState
 
     return SettingDropdown(
       title: "가로 정렬",
-      initialValue: settings.selectedPosition,
+      initialValue: settings.selectedHorizontalPosition,
       options: ["좌측", "중앙", "우측"],
       onChanged: (String newPosition) {
-        settings.updatePosition(newPosition);
+        settings.updateHorizontalPosition(newPosition);
       },
       screenWidth: widget.screenWidth,
       screenHeight: widget.screenHeight,

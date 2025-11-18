@@ -13,6 +13,7 @@ class SubtitleSettingsProvider extends ChangeNotifier {
   List<String> _selectedInputLanguages = ['한국어'];
   List<String> _selectedOutputLanguages = ['한국어'];
   String _selectedPosition = '중앙';
+  String _selectedHorizontalPosition = '좌측';
   String _selectedFontStyle = '기본';
   String _selectedFontSize = '중간';
   String _selectedFontColor = '흰색';
@@ -182,6 +183,7 @@ class SubtitleSettingsProvider extends ChangeNotifier {
   List<String> get selectedInputLanguages => _selectedInputLanguages;
   List<String> get selectedOutputLanguages => _selectedOutputLanguages;
   String get selectedPosition => _selectedPosition;
+  String get selectedHorizontalPosition => _selectedHorizontalPosition;
   String get selectedFontStyle => _selectedFontStyle;
   String get selectedFontSize => _selectedFontSize;
   String get selectedFontColor => _selectedFontColor;
@@ -259,6 +261,12 @@ class SubtitleSettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // 4-1) 자막 가로 위치 설정 변경
+  void updateHorizontalPosition(String position) {
+    _selectedHorizontalPosition = position;
+    notifyListeners();
+  }
+
   // 5) 폰트 스타일 설정 변경
   void updateFontStyle(String style) {
     _selectedFontStyle = style;
@@ -312,6 +320,19 @@ class SubtitleSettingsProvider extends ChangeNotifier {
       case '하단':
       default:
         return MainAxisAlignment.end;
+    }
+  }
+
+  CrossAxisAlignment getHorizontalAlignment() {
+    switch (_selectedHorizontalPosition) {
+      case '좌측':
+        return CrossAxisAlignment.start; // 왼쪽 정렬
+      case '중앙':
+        return CrossAxisAlignment.center; // 가운데 정렬
+      case '우측':
+        return CrossAxisAlignment.end; // 오른쪽 정렬
+      default:
+        return CrossAxisAlignment.start; // 기본값
     }
   }
 
