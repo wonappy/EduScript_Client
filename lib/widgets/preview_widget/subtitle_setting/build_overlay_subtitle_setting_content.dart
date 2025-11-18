@@ -1,4 +1,4 @@
-/// 자막 ONLY 모드일 때, 자막 설정 창 구성 (Provider 연동)
+/// 화면 공유(오버레이) 모드일 때, 자막 설정 창 구성 (Provider 연동)
 library;
 
 import 'package:client/core/enum_core.dart';
@@ -13,56 +13,36 @@ import 'multi_language_dropdown.dart';
 import 'onoff_switch_state_widget.dart';
 import 'setting_drop_down_widget.dart';
 
-class BuildSubtitleSettingContent extends StatefulWidget {
+class BuildOverlaySubtitleSettingContent extends StatefulWidget {
   final double screenWidth;
   final double screenHeight;
 
-  const BuildSubtitleSettingContent({
+  const BuildOverlaySubtitleSettingContent({
     super.key,
     required this.screenWidth,
     required this.screenHeight,
   });
 
   @override
-  State<BuildSubtitleSettingContent> createState() =>
+  State<BuildOverlaySubtitleSettingContent> createState() =>
       _BuildSubtitleSettingContentState();
 }
 
 class _BuildSubtitleSettingContentState
-    extends State<BuildSubtitleSettingContent> {
-  // bool screenSharedEnabled = true;
-  // List<String> selectedInputLanguages = ['한국어'];
-  // List<String> selectedOutputLanguages = ['한국어'];
-  // String selectedPosition = '하단';
-  // String selectedFontStyle = '기본';
-  // String selectedFontSize = '중간';
-  // String selectedFontColor = '흰색';
-  // String selectedBackgroundColor = '흰색';
-  // String selectedBackgroundOpacity = '50%';
+    extends State<BuildOverlaySubtitleSettingContent> {
 
   List<String> inputLanguagesList = ['한국어', '영어', '일본어', '중국어'];
   List<String> outputLanguagesList = ['한국어', '영어', '일본어', '중국어'];
   Color backContentContainerColor = Color(0xFFC1C1C1);
   Color dropdownWidgetColor = Color(0xFFF6F6F6);
-  // 색상 상수 추가
-  // static const Color primaryColor = Color(0xFF2196F3);
-  // static const Color surfaceColor = Color(0xFFF8F9FA);
-  // static const Color cardColor = Colors.white;
-  // static const Color shadowColor = Color(0x1A000000);
 
   @override
   Widget build(BuildContext context) {
     // provider
-    //final settings = context.watch<SubtitleSettingsProvider>();
     final settings = context.watch<SubtitleSettingsProvider>();
     return Container(
       decoration: BoxDecoration(
-        //color: Color(0xFFE8EAED),
         borderRadius: BorderRadius.circular(15),
-        //   gradient: LinearGradient(
-        //   begin: Alignment.topLeft,
-        //   end: Alignment.bottomRight,
-        // ),
       ),
 
       child: Column(
@@ -214,7 +194,7 @@ class _BuildSubtitleSettingContentState
                     children: [
                       _buildPositionDropdown(),
                       _buildDivider(),
-                      _buildStyleDropdown(),
+                      _buildAlignmentDropdown()
                     ],
                   ),
                 ),
@@ -226,21 +206,6 @@ class _BuildSubtitleSettingContentState
                   child: Column(
                     children: [
                       _buildSizeDropdown(),
-                      _buildDivider(),
-                      _buildTextColorDropdown(),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: 20),
-              _buildSubSection(
-                title: "배경",
-                content: _buildMediumContainer(
-                  child: Column(
-                    children: [
-                      _buildBackgroundColorDropdown(),
-                      _buildDivider(),
-                      _buildOpacityDropdown(),
                     ],
                   ),
                 ),
@@ -253,12 +218,12 @@ class _BuildSubtitleSettingContentState
   }
 
   // [개별 드롭다운] - 모두 Provider 연결
-  // 1) 정렬 드롭다운
+  // 1) 위치 드롭다운
   Widget _buildPositionDropdown() {
     final settings = context.read<SubtitleSettingsProvider>();
 
     return SettingDropdown(
-      title: "정렬",
+      title: "세로 정렬",
       initialValue: settings.selectedPosition,
       options: ["상단", "중앙", "하단"],
       onChanged: (String newPosition) {
@@ -269,23 +234,23 @@ class _BuildSubtitleSettingContentState
     );
   }
 
-  // 2) 스타일 드롭다운
-  Widget _buildStyleDropdown() {
+  // 1) 위치 드롭다운
+  Widget _buildAlignmentDropdown() {
     final settings = context.read<SubtitleSettingsProvider>();
 
     return SettingDropdown(
-      title: "스타일",
-      initialValue: settings.selectedFontStyle,
-      options: ["기본", "굵게", "이탤릭"],
-      onChanged: (String newStyle) {
-        settings.updateFontStyle(newStyle);
+      title: "가로 정렬",
+      initialValue: settings.selectedPosition,
+      options: ["좌측", "중앙", "우측"],
+      onChanged: (String newPosition) {
+        settings.updatePosition(newPosition);
       },
       screenWidth: widget.screenWidth,
       screenHeight: widget.screenHeight,
     );
   }
 
-  // 3) 폰트 사이즈 드롭다운
+  // 2) 폰트 크기 드롭다운
   Widget _buildSizeDropdown() {
     final settings = context.read<SubtitleSettingsProvider>();
 
@@ -298,57 +263,6 @@ class _BuildSubtitleSettingContentState
       },
       screenWidth: widget.screenWidth,
       screenHeight: widget.screenHeight,
-    );
-  }
-
-  // 4) 폰트 색상 드롭다운
-  Widget _buildTextColorDropdown() {
-    final settings = context.read<SubtitleSettingsProvider>();
-
-    return ColorSettingDropDown(
-      title: "색상",
-      initialValue: settings.selectedFontColor,
-      options: ["빨강", "주황", "노랑", "초록", "파랑", "보라", "검정", "흰색"],
-      onChanged: (String newColor) {
-        settings.updateFontColor(newColor);
-      },
-      screenWidth: widget.screenWidth,
-      screenHeight: widget.screenHeight,
-      isColorSelector: true,
-    );
-  }
-
-  // 5) 폰트 배경색 드롭다운
-  Widget _buildBackgroundColorDropdown() {
-    final settings = context.read<SubtitleSettingsProvider>();
-
-    return ColorSettingDropDown(
-      title: "색상",
-      initialValue: settings.selectedBackgroundColor,
-      options: ["빨강", "주황", "노랑", "초록", "파랑", "보라", "검정", "흰색"],
-      onChanged: (String newColor) {
-        settings.updateBackgroundColor(newColor);
-      },
-      screenWidth: widget.screenWidth,
-      screenHeight: widget.screenHeight,
-      isColorSelector: true,
-    );
-  }
-
-  // 6) 배경색 불투명도 드롭다운
-  Widget _buildOpacityDropdown() {
-    final settings = context.read<SubtitleSettingsProvider>();
-
-    return ColorSettingDropDown(
-      title: "불투명도",
-      initialValue: settings.selectedBackgroundOpacity,
-      options: ["0%", "25%", "50%", "75%", "100%"],
-      onChanged: (String newOpacity) {
-        settings.updateBackgroundOpacity(newOpacity);
-      },
-      screenWidth: widget.screenWidth,
-      screenHeight: widget.screenHeight,
-      isColorSelector: false,
     );
   }
 
@@ -407,39 +321,12 @@ class _BuildSubtitleSettingContentState
     );
   }
 
-  // // 서브 섹션 타이틀 옆 아이콘
-  // IconData _getSubSectionIcon(String title) {
-  //   switch (title) {
-  //     case '스타일':
-  //       return Icons.style;
-  //     case '텍스트':
-  //       return Icons.text_fields;
-  //     case '배경':
-  //       return Icons.wallpaper;
-  //     default:
-  //       return Icons.settings;
-  //   }
-  // }
-
   // 구분선
   Widget _buildDivider() {
     return Column(
       children: [Divider(color: Colors.grey, thickness: 1, height: 1)],
     );
   }
-
-  // // 배경 컨테이너
-  // Widget _buildBackContainer({required Widget child}) {
-  //   return Container(
-  //     padding: EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-  //     decoration: BoxDecoration(
-  //       color: Color(0xFFF5F6F8),
-  //       borderRadius: BorderRadius.circular(16),
-  //       border: Border.all(color: Colors.grey.withValues(alpha: 0.1), width: 1),
-  //     ),
-  //     child: child,
-  //   );
-  // }
 
   // 큰 컨테이너
   Widget _buildBigContainer({required Widget child}) {
@@ -460,13 +347,6 @@ class _BuildSubtitleSettingContentState
       decoration: BoxDecoration(
         color: AppColors.whiteColor1,
         borderRadius: BorderRadius.circular(7),
-        // boxShadow: [
-        //   BoxShadow(
-        //     color: Colors.black.withValues(alpha: 0.2),
-        //     blurRadius: 3,
-        //     offset: Offset(0, 4),
-        //   ),
-        // ],
       ),
       child: child,
     );
@@ -479,13 +359,6 @@ class _BuildSubtitleSettingContentState
       decoration: BoxDecoration(
         color: AppColors.whiteColor1,
         borderRadius: BorderRadius.circular(8),
-        // boxShadow: [
-        //   BoxShadow(
-        //     color: Colors.black.withValues(alpha: 0.05),
-        //     blurRadius: 4,
-        //     offset: Offset(0, 1),
-        //   ),
-        // ],
       ),
       child: child,
     );
@@ -501,7 +374,6 @@ class _BuildSubtitleSettingContentState
         _buildSubSectionTitle(title),
         SizedBox(height: spacing),
         content,
-        // SizedBox(height: 20),
       ],
     );
   }
