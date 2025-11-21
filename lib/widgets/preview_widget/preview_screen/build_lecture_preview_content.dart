@@ -42,53 +42,53 @@ class BuildLecturePreviewContent extends StatelessWidget {
                 Column(
                   children: [
                     SizedBox(height: 15 * scaleFactor), //자막 간 간격 지정
-                    //이전 자막
-                    Text(
-                      Provider.of<SubtitleSettingsProvider>(
-                        context,
-                        listen: false,
-                      ).getOutputLanguage(languages[i]),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 17 * scaleFactor,
-                        backgroundColor: Colors.black.withOpacity(0.5),
-                      ),
-                    ),
-                    SizedBox(height: 7 * scaleFactor),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 10 * scaleFactor,
-                        vertical: 7 * scaleFactor,
-                      ),
-                      width: screenWidth * 0.95,
-                      constraints: BoxConstraints(
-                        maxHeight: screenHeight * 0.5,
-                      ),
-                      //최대 자막 컨테이너 높이
-                      decoration: BoxDecoration(
-                        color: settings.getBackgroundColor().withValues(
-                          //자막 배경 색상 지정
-                          alpha:
-                              settings.getBackgroundOpacity() *
-                              0.6, //자막 배경 불투명도 지정
-                        ),
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      child: Text(
-                        settings.getPreviewText(languages[i]), //자막 내용 지정
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: settings.getFontColor(), //자막 글자 색상 지정
-                          fontSize:
-                              settings.getFontSize(screenWidth) *
-                              scaleFactor, //자막 글자 크기 지정
-                          fontWeight: settings.getFontWeight(),
-                          fontStyle: settings.getFontStyle(),
-                          textBaseline: null,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 5 * scaleFactor), //자막 간 간격 지정
+                    // // //이전 자막
+                    // // Text(
+                    // //   Provider.of<SubtitleSettingsProvider>(
+                    // //     context,
+                    // //     listen: false,
+                    // //   ).getOutputLanguage(languages[i]),
+                    // //   style: TextStyle(
+                    // //     color: Colors.white,
+                    // //     fontSize: 17 * scaleFactor,
+                    // //     backgroundColor: Colors.black.withOpacity(0.5),
+                    // //   ),
+                    // // ),
+                    // // SizedBox(height: 7 * scaleFactor),
+                    // Container(
+                    //   padding: EdgeInsets.symmetric(
+                    //     horizontal: 10 * scaleFactor,
+                    //     vertical: 7 * scaleFactor,
+                    //   ),
+                    //   width: screenWidth * 0.95,
+                    //   constraints: BoxConstraints(
+                    //     maxHeight: screenHeight * 0.5,
+                    //   ),
+                    //   //최대 자막 컨테이너 높이
+                    //   decoration: BoxDecoration(
+                    //     color: settings.getBackgroundColor().withValues(
+                    //       //자막 배경 색상 지정
+                    //       alpha:
+                    //           settings.getBackgroundOpacity() *
+                    //           0.6, //자막 배경 불투명도 지정
+                    //     ),
+                    //     borderRadius: BorderRadius.circular(5),
+                    //   ),
+                    //   child: Text(
+                    //     settings.getPreviewText(languages[i]), //자막 내용 지정
+                    //     textAlign: TextAlign.center,
+                    //     style: TextStyle(
+                    //       color: settings.getFontColor(), //자막 글자 색상 지정
+                    //       fontSize:
+                    //           settings.getFontSize(screenWidth) *
+                    //           scaleFactor, //자막 글자 크기 지정
+                    //       fontWeight: settings.getFontWeight(),
+                    //       fontStyle: settings.getFontStyle(),
+                    //       textBaseline: null,
+                    //     ),
+                    //   ),
+                    // ),
+                    // SizedBox(height: 5 * scaleFactor), //자막 간 간격 지정
                     Container(
                       padding: EdgeInsets.symmetric(
                         horizontal: 10 * scaleFactor,

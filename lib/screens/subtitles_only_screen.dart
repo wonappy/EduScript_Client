@@ -1,4 +1,6 @@
 //자막 (프롬프트 느낌 ver)
+import 'dart:async';
+
 import 'package:client/core/styles/color_core.dart';
 import 'package:client/widgets/common/ready_received_dialog_widget.dart';
 //import 'package:flutter/foundation.dart';
@@ -7,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:html/parser.dart' as html_parser;
 
 import '../core/enum_core.dart';
+import '../core/styles/size_core.dart';
 import '../providers/mode_provider.dart';
 import '../services/websocket_multiple_speech_service.dart';
 import '../services/websocket_stt_service.dart';
@@ -47,6 +50,16 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
   String _statusMessage = ""; // 연결 상태 메시지 -> UI 화면에 출력
   int _reconnectAttempts = 0; // 재연결 시도 횟수
 
+  // 음성 인식 중 상태 변수 (recognizing true : 음성 인식 중, recognizing false : 음성 인식 x )
+  bool _recognizing = false;
+  // ... 애니메이션
+  int _dotCount = 0;
+  Timer? _dotTimer;
+  static const int _dotTimerMilleSecond = 200;
+  // 음성 인식 중 출력 타이머
+  Timer? _recognizingTimer;
+  static const int _recognizingTimerMilleSecond = 400;
+
   @override
   void initState() {
     super.initState();
@@ -80,10 +93,25 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
       debugPrint("[🔴 INIT] _initAndStartService 호출 시작");
       _initAndStartService();
     });
+
+    //음성 인식 점 갯수 애니메이션 적용
+    _dotTimer = Timer.periodic(
+      const Duration(milliseconds: _dotTimerMilleSecond),
+      (timer) {
+        if (mounted && _recognizing) {
+          setState(() {
+            _dotCount = (_dotCount + 1) % 3;
+          });
+        }
+      },
+    );
   }
 
   @override
   void dispose() {
+    // 타이머
+    _dotTimer?.cancel();
+    _recognizingTimer?.cancel();
     // 콜백 해제
     if (_sttService.onTranslationReceived != null) {
       _sttService.onTranslationReceived = null;
@@ -126,28 +154,17 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
                   Column(
                     children: [
                       SizedBox(height: 15 * scaleFactor), //자막 간 간격 지정
-                      //이전 자막
-                      Text(
-                        Provider.of<SubtitleSettingsProvider>(
-                          context,
-                          listen: false,
-                        ).getOutputLanguage(languages[i]),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17 * scaleFactor,
-                        ),
-                      ),
-                      SizedBox(height: 7 * scaleFactor),
+                      //recognized 자막
                       Container(
                         padding: EdgeInsets.symmetric(
                           horizontal: 10 * scaleFactor,
                           vertical: 10 * scaleFactor,
                         ),
                         width: screenWidth * 0.95,
-                        constraints: BoxConstraints(
-                          maxHeight: screenHeight * 0.2,
-                        ),
                         //최대 자막 컨테이너 높이
+                        // constraints: BoxConstraints(
+                        //   maxHeight: screenHeight * 0.2,
+                        // ),
                         decoration: BoxDecoration(
                           color: settings.getBackgroundColor().withValues(
                             //자막 배경 색상 지정
@@ -177,54 +194,53 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
                       ),
                       SizedBox(height: 5 * scaleFactor),
                       //현재 자막
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 10 * scaleFactor,
-                          vertical: 10 * scaleFactor,
-                        ),
-                        width: screenWidth * 0.95,
-                        constraints: BoxConstraints(
-                          maxHeight: screenHeight * 0.5,
-                        ),
-                        //최대 자막 컨테이너 높이
-                        decoration: BoxDecoration(
-                          color: settings.getBackgroundColor().withValues(
-                            //자막 배경 색상 지정
-                            alpha:
-                                settings.getBackgroundOpacity(), //자막 배경 불투명도 지정
-                          ),
-                          borderRadius: BorderRadius.circular(5),
-                          border:
-                              // 발화 중인 언어 테두리 표시
-                              isSpeakingLanguage(languages[i])
-                                  ? Border.all(color: Colors.blue, width: 1.5)
-                                  : null,
-                        ),
-                        child: Text(
-                          _getSubtitleText(
-                            languages[i],
-                            settings,
-                            false,
-                          ), //자막 내용 지정
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: settings.getFontColor(), //자막 글자 색상 지정
-                            fontSize:
-                                settings.getFontSize(screenWidth) *
-                                scaleFactor, //자막 글자 크기 지정
-                            fontWeight: settings.getFontWeight(),
-                            fontStyle: settings.getFontStyle(),
-                            textBaseline: null,
-                          ),
-                        ),
-                      ),
+                      // Container(
+                      //   padding: EdgeInsets.symmetric(
+                      //     horizontal: 10 * scaleFactor,
+                      //     vertical: 10 * scaleFactor,
+                      //   ),
+                      //   width: screenWidth * 0.95,
+                      //   constraints: BoxConstraints(
+                      //     maxHeight: screenHeight * 0.5,
+                      //   ),
+                      //   //최대 자막 컨테이너 높이
+                      //   decoration: BoxDecoration(
+                      //     color: settings.getBackgroundColor().withValues(
+                      //       //자막 배경 색상 지정
+                      //       alpha:
+                      //           settings.getBackgroundOpacity(), //자막 배경 불투명도 지정
+                      //     ),
+                      //     borderRadius: BorderRadius.circular(5),
+                      //     border:
+                      //         // 발화 중인 언어 테두리 표시
+                      //         isSpeakingLanguage(languages[i])
+                      //             ? Border.all(color: Colors.blue, width: 1.5)
+                      //             : null,
+                      //   ),
+                      //   child: Text(
+                      //     _getSubtitleText(
+                      //       languages[i],
+                      //       settings,
+                      //       false,
+                      //     ), //자막 내용 지정
+                      //     textAlign: TextAlign.center,
+                      //     style: TextStyle(
+                      //       color: settings.getFontColor(), //자막 글자 색상 지정
+                      //       fontSize:
+                      //           settings.getFontSize(screenWidth) *
+                      //           scaleFactor, //자막 글자 크기 지정
+                      //       fontWeight: settings.getFontWeight(),
+                      //       fontStyle: settings.getFontStyle(),
+                      //       textBaseline: null,
+                      //     ),
+                      //   ),
+                      // ),
                       SizedBox(height: 15 * scaleFactor), //자막 간 간격 지정
                     ],
                   ),
               ],
             ),
           ),
-
           // 2) 연결 상태 표시바
           Positioned(
             top: 0,
@@ -241,7 +257,25 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
             ),
           ),
 
-          // 3) Close 아이콘
+          // 3) 발화 인식 중 표시
+          Positioned(
+            bottom: 16,
+            left: 16,
+            child: SizedBox(
+              child: Text(
+                _recognizing ? _recognizingText() : " ", //음성 인식 중 표시
+                style: TextStyle(
+                  color: Colors.white60, //자막 글자 색상 지정
+                  fontSize:
+                      AppSizes.smallFontSize * 1.5 * scaleFactor, //자막 글자 크기 지정
+                  fontWeight: FontWeight.normal,
+                  textBaseline: null,
+                ),
+              ),
+            ),
+          ),
+
+          // 4) Close 아이콘
           Positioned(
             bottom: 16,
             right: 16,
@@ -250,14 +284,14 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
                 debugPrint("[자막 ONLY 모드] Close 버튼 클릭");
 
                 // 1) Close 버튼 클릭 후, 녹음 일시 정지
-                if(_sttService != null) {
+                if (_sttService != null) {
                   await _sttService.stopRecording();
                   debugPrint("[자막 ONLY 모드] Close 버튼 클릭 후, 녹음 일시 정지");
                 }
 
                 // 2) 이전 화면으로 전환 (녹음 일시 정지가 완료되면)
                 // 화면 전환 + 상태 변화 전달
-                if(mounted) {
+                if (mounted) {
                   Navigator.pop(context, true);
                 }
               },
@@ -267,6 +301,38 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  //음성 인식 중... 글자 애니메이션
+  String _recognizingText() {
+    String dot = "." * (_dotCount + 1);
+    String result = "음성 인식 중$dot";
+    return result;
+  }
+
+  //음성 인식 중... 출력 상태 (Timer를 통해 _recognizing = false 상태가 1초 이상 지속되면 지워짐)
+  void _updateRecognizingState() {
+    // 기존 타이머 취소
+    _recognizingTimer?.cancel();
+
+    // 음성 인식 중... 글자 표시
+    if (!_recognizing) {
+      setState(() {
+        _recognizing = true;
+      });
+    }
+
+    // 일정 시간동안 recognizing 응답이 없다면 음성 인식 중 종료
+    _recognizingTimer = Timer(
+      const Duration(milliseconds: _recognizingTimerMilleSecond),
+      () {
+        if (mounted) {
+          setState(() {
+            _recognizing = false; // 음성 인식 중... 글자 지움
+          });
+        }
+      },
     );
   }
 
@@ -334,7 +400,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
       }
     }
 
-    // 🎯 폴백: 기본 매핑도 시도 (여기에 추가!)
+    // 기본 매핑 시도
     if (googleCode != null) {
       if (availableKeys.contains(googleCode)) {
         serverKey = googleCode;
@@ -342,7 +408,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
       }
     }
 
-    // 🎯 추가 폴백: 부분 매칭도 시도
+    // 부분 매칭 시도
     if (serverKey == null && googleCode != null) {
       for (String key in availableKeys) {
         // ko와 ko-KR 매칭
@@ -399,7 +465,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
         targetTranslations[serverKey]!.isNotEmpty) {
       debugPrint("'$serverKey' 번역 결과 찾음");
 
-      // HTML 디코딩 (return 하기 전에!)
+      // HTML 디코딩
       String rawText = targetTranslations[serverKey]!;
       var document = html_parser.parse(rawText);
       String processedText = document.documentElement?.text ?? rawText;
@@ -499,7 +565,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     }
   }
 
-  // [2] 콜백 함수 : 현재 출력 자막 변경 알림 콜백
+  // [2] 콜백 함수 : 현재 출력 자막 변경 알림 콜백 (isFinal : recognized, recognizing 문장 판별)
   void _setupCallbacks() {
     // 1) 번역 결과 콜백
     if (_sttService is WebSocketMultipleSTTService) {
@@ -509,6 +575,12 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
         isFinal,
         speackLanguage,
       ) {
+        //인식 중 상태 출력
+        if (!isFinal) {
+          //recognizing이라면 음성 인식 중 표시 on
+          _updateRecognizingState();
+        }
+
         setState(() {
           _currentSpeakingLanguage = speackLanguage;
           if (isFinal) {
@@ -531,6 +603,12 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     } else {
       //single 모드
       _sttService.onTranslationReceived = (translations, isFinal) {
+        //인식 중 상태 출력
+        if (!isFinal) {
+          //recognizing이라면 음성 인식 중 표시 on
+          _updateRecognizingState();
+        }
+
         setState(() {
           if (isFinal) {
             _confirmedTranslations = Map.from(_currentTranslations);
@@ -682,109 +760,4 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
       ),
     );
   }
-
-  // Future<void> _initiateAndStartSttSession() async {
-  //   // 이미 녹음 중이면 아무것도 X
-  //   if (_sttService.isRecording) return;
-  //
-  //   // 1) 서비스 연결 상태 확인
-  //   if (_sttService.isConnected) {
-  //     await _sttService.startRecording();
-  //     debugPrint("기존 연결로 녹음 재시작");
-  //   } else {
-  //
-  //     // Provider에서 언어 설정 가져오기
-  //     final subtitleSettings = context.read<SubtitleSettingsProvider>();
-  //     final inputLanguageCodes = subtitleSettings.getInputLanguageCodes();
-  //     final outputLanguageCodes = subtitleSettings.getOutputLanguageCodes();
-  //
-  //     debugPrint("🌐 언어 설정:");
-  //     debugPrint(
-  //       "  입력: ${subtitleSettings.selectedInputLanguages} -> $inputLanguageCodes",
-  //     );
-  //     debugPrint(
-  //       "  출력: ${subtitleSettings.selectedOutputLanguages} -> $outputLanguageCodes",
-  //     );
-  //
-  //     bool connected = await _sttService.connectToServer();
-  //
-  //     if(!connected) {
-  //       debugPrint("[subtitles_only_screen] 서버 연결 실패");
-  //       return; // 연결 실패 시 중단
-  //     }
-  //
-  //     // 세션 시작 (강의 모드는 입력 언어가 하나)
-  //     bool sessionStarted = await _sttService.startSession(
-  //       inputLanguage: inputLanguageCodes[0],
-  //       targetLanguages: outputLanguageCodes,
-  //     );
-  //
-  //     if (!sessionStarted) {
-  //       debugPrint("[SubtitlesScreen] 세션 시작 실패");
-  //       // startSession 내부에서 ready 콜백을 받으면 자동으로 startRecording이 호출되므로
-  //       // 여기서 별도로 startRecording을 호출할 필요가 없습니다.
-  //     }
-  //
-  //     // await _startSTTService(
-  //     //   inputLanguageCodes: inputLanguageCodes,
-  //     //   outputLanguageCodes: outputLanguageCodes,
-  //     // );
-  //   }
-  // }
-
-  // 디버그 정보 표시
-  // Widget _buildDebugInfo() {
-  //   final transcriptCount = _sttService.transcriptHistory.length;
-  //   final settings = context.watch<SubtitleSettingsProvider>();
-  //
-  //   return Positioned(
-  //     top: 50,
-  //     left: 16,
-  //     child: Container(
-  //       padding: const EdgeInsets.all(8),
-  //       decoration: BoxDecoration(
-  //         color: Colors.black54,
-  //         borderRadius: BorderRadius.circular(8),
-  //       ),
-  //       child: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: [
-  //           Text(
-  //             "🔗 연결: ${_sttService.isConnected ? '✅' : '❌'}",
-  //             style: const TextStyle(color: Colors.white, fontSize: 12),
-  //           ),
-  //           Text(
-  //             "🎤 세션: ${_sttService.isSessionReady ? '✅' : '❌'}",
-  //             style: const TextStyle(color: Colors.white, fontSize: 12),
-  //           ),
-  //           Text(
-  //             "📡 녹음: ${_sttService.isRecording ? '✅' : '❌'}",
-  //             style: const TextStyle(color: Colors.white, fontSize: 12),
-  //           ),
-  //           Text(
-  //             "🌐 번역: ${_currentTranslations.length}개",
-  //             style: const TextStyle(color: Colors.white, fontSize: 12),
-  //           ),
-  //           Text(
-  //             "📝 원문: $transcriptCount개",
-  //             style: const TextStyle(color: Colors.white, fontSize: 12),
-  //           ),
-  //           // 🎯 추가 디버그 정보
-  //           Text(
-  //             "🎯 Provider: ${settings.selectedOutputLanguages}",
-  //             style: const TextStyle(color: Colors.white, fontSize: 10),
-  //           ),
-  //           Text(
-  //             "🎯 코드: ${settings.getOutputLanguageCodes()}",
-  //             style: const TextStyle(color: Colors.white, fontSize: 10),
-  //           ),
-  //           Text(
-  //             "🎯 결과키: ${_currentTranslations.keys.toList()}",
-  //             style: const TextStyle(color: Colors.white, fontSize: 10),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
 }

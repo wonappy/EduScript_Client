@@ -63,7 +63,7 @@ class LecturePlayBarComponents {
               icon: Icons.stop,
               onTap: onStop,
               screenWidth: screenWidth,
-              backgroundColor: AppColors.greenColor,
+              backgroundColor: AppColors.grayColor,
               borderColor: null,
               iconColor: AppColors.whiteColor1,
             ),
