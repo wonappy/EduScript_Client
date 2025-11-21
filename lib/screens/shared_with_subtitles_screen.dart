@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/enum_core.dart';
+import '../core/styles/size_core.dart';
 import '../providers/mode_provider.dart';
 import '../services/websocket_multiple_speech_service.dart';
 import '../services/websocket_stt_service.dart';
@@ -33,6 +34,10 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
   dynamic _sttService;
   Map<String, String> _confirmedTranslations = {};
   Map<String, String> _currentTranslations = {};
+
+  static double referenceScreenWidth = 1167.0;
+
+  // 현재 발화 언어 (multi모드)
   String? _currentSpeakingLanguage;
 
   // Win32 오버레이
@@ -81,6 +86,13 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 화면 크기 정보 가져오기
+    final Size screenSize = MediaQuery.of(context).size;
+    final double screenWidth = screenSize.width;
+    final double screenHeight = screenSize.height;
+
+    final double scaleFactor = screenWidth / referenceScreenWidth;
+
     // UI는 최소한의 제어판 역할만 수행
     return Scaffold(
       backgroundColor: AppColors.blackColor,
@@ -112,11 +124,14 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
                   size: 48,
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   "화면 공유 자막이 활성화되었습니다.",
-                  style: TextStyle(color: Colors.white, fontSize: 18),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: AppSizes.smallFontSize * 1.8 * scaleFactor,
+                  ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
                 // [자막 중지 버튼]
                 ElevatedButton.icon(
                   icon: const Icon(Icons.stop_rounded),
@@ -124,10 +139,7 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   ),
                   onPressed: () async {
                     debugPrint("[화면 공유 모드] 자막 중지 버튼 클릭");

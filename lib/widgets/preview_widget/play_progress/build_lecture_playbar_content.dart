@@ -235,7 +235,7 @@ class _BuildLecturePlayBarContentState
       if (mounted) {
         dynamic result; // 상태 변수 (Close 버튼 클릭 여부)
 
-        // 화면 공유 모드 && 윈도우 환경일 때 
+        // 화면 공유 모드 && 윈도우 환경일 때
         // 1) 화면 공유 모드 (오버레이) 화면 전환
         if (subtitleSettings.screenSharedEnabled && Platform.isWindows) {
           result = await Navigator.push(
@@ -246,7 +246,7 @@ class _BuildLecturePlayBarContentState
           );
         }
         // 2) 자막 only 화면 전환
-        else {          
+        else {
           result = await Navigator.push(
             context,
             MaterialPageRoute(
@@ -265,8 +265,7 @@ class _BuildLecturePlayBarContentState
         if (result == true) {
           debugPrint("[UI UPDATE] Close 버튼 클릭 -> 녹음 일시 정지");
           TimerManager.pause(); // 타이머 일시 정지
-          setState(() {
-          });
+          setState(() {});
         }
       }
     }
@@ -297,45 +296,45 @@ class _BuildLecturePlayBarContentState
     debugPrint('[DEBUG] _handleCancel() - 취소 및 서비스 연결 해제 완료');
   }
 
-  // [3] 종료 -> 다이얼로그 창
+  // [3] 종료 -> 다이얼로그 창    // 일시 비활성화
   void _handleStop() async {
-    final service = currentService;
-
-    // 1) 자막 결과 및 통계 로그 출력
-    final transcriptHistory = service.transcriptHistory;
-    final translationHistory = service.translationHistory;
-    final fullTranscript = service.fullTranscriptText;
-
-    debugPrint("강의 요약:");
-    debugPrint("  - 총 원문 개수: ${transcriptHistory.length}");
-    debugPrint("  - 총 번역 개수: ${translationHistory.length}");
-    debugPrint("  - 전체 원문 길이: ${fullTranscript.length}자");
-
-    if (fullTranscript.isNotEmpty) {
-      final sample =
-          fullTranscript.length > 200
-              ? "${fullTranscript.substring(0, 200)}..."
-              : fullTranscript;
-      debugPrint("  - 원문 샘플: $sample");
-    }
-
-    // 2) 재연결 관련 변수 초기화
-    service.resetReconnectState();
-    service.clearAllData();
-    service.disconnect();
-
-    // 3) 타이머 삭제
-    TimerManager.reset();
-    debugPrint('[DEBUG] _handelStop() - 강의 종료');
-    setState(() {
-      hasStarted = false;
-    });
-
-    _navigateToSaveDialog(
-      transcriptHistory,
-      translationHistory,
-      fullTranscript,
-    );
+    // final service = currentService;
+    //
+    // // 1) 자막 결과 및 통계 로그 출력
+    // final transcriptHistory = service.transcriptHistory;
+    // final translationHistory = service.translationHistory;
+    // final fullTranscript = service.fullTranscriptText;
+    //
+    // debugPrint("강의 요약:");
+    // debugPrint("  - 총 원문 개수: ${transcriptHistory.length}");
+    // debugPrint("  - 총 번역 개수: ${translationHistory.length}");
+    // debugPrint("  - 전체 원문 길이: ${fullTranscript.length}자");
+    //
+    // if (fullTranscript.isNotEmpty) {
+    //   final sample =
+    //       fullTranscript.length > 200
+    //           ? "${fullTranscript.substring(0, 200)}..."
+    //           : fullTranscript;
+    //   debugPrint("  - 원문 샘플: $sample");
+    // }
+    //
+    // // 2) 재연결 관련 변수 초기화
+    // service.resetReconnectState();
+    // service.clearAllData();
+    // service.disconnect();
+    //
+    // // 3) 타이머 삭제
+    // TimerManager.reset();
+    // debugPrint('[DEBUG] _handelStop() - 강의 종료');
+    // setState(() {
+    //   hasStarted = false;
+    // });
+    //
+    // _navigateToSaveDialog(
+    //   transcriptHistory,
+    //   translationHistory,
+    //   fullTranscript,
+    // );
   }
 
   // [4] 다이얼로그 (저장 옵션 선택)
