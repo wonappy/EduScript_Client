@@ -24,16 +24,16 @@ class SharedWithSubtitlesScreen extends StatefulWidget {
 }
 
 class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
-  // --- 기존 연결 상태 변수 ---
+  // 서버 연결 상태 변수
   ServerConnectionState _serverConnectionState =
       ServerConnectionState.connected;
   String _statusMessage = "";
   int _reconnectAttempts = 0;
 
-  // --- STT 서비스 및 자막 데이터 변수 (SubtitlesOnlyScreen에서 가져옴) ---
+  // 자막 결과 저장 변수
   dynamic _sttService;
-  Map<String, String> _confirmedTranslations = {};
-  Map<String, String> _currentTranslations = {};
+  Map<String, String> _confirmedTranslations = {}; // 이전 완전 결과 저장
+  Map<String, String> _currentTranslations = {}; // 번역 결과 저장
 
   static double referenceScreenWidth = 1167.0;
 
@@ -197,12 +197,14 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
         isFinal,
         speackLanguage,
       ) {
-        debugPrint("✅ [SharedScreen] Multi STT 콜백! isFinal: $isFinal");
+        debugPrint("[SharedScreen] Multi STT 콜백! isFinal: $isFinal");
         _clearTimer?.cancel();
 
         _currentSpeakingLanguage = speackLanguage;
         if (isFinal) {
-          _confirmedTranslations = Map.from(_currentTranslations);
+          translations.forEach((lang, result) {
+            _confirmedTranslations[lang] = result.resultText;
+          });
           _currentTranslations.clear();
 
           // 자막 없을 경우 조금 대기 후 자막 초기화
@@ -211,10 +213,10 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
             WindowsOverlayManager.clearStaticData();
           });
         } else {
-          _currentTranslations.clear();
-          translations.forEach((lang, result) {
-            _currentTranslations[lang] = result.resultText;
-          });
+          // _currentTranslations.clear();
+          // translations.forEach((lang, result) {
+          //   _currentTranslations[lang] = result.resultText;
+          // });
         }
 
         // Win32 매니저에 데이터 전송
@@ -223,12 +225,14 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
     } else {
       // single 모드
       _sttService.onTranslationReceived = (translations, isFinal) {
-        debugPrint("✅ [SharedScreen] Single STT 콜백! isFinal: $isFinal");
+        debugPrint("[SharedScreen] Single STT 콜백! isFinal: $isFinal");
         _clearTimer?.cancel();
 
         // setState가 아니라, 상태 변수만 직접 업데이트
         if (isFinal) {
-          _confirmedTranslations = Map.from(_currentTranslations);
+          translations.forEach((lang, result) {
+            _confirmedTranslations[lang] = result.resultText;
+          });
           _currentTranslations.clear();
 
           // 자막 없을 경우 조금 대기 후 자막 초기화
@@ -238,10 +242,10 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
             _updateOverlay();
           });
         } else {
-          _currentTranslations.clear();
-          translations.forEach((lang, result) {
-            _currentTranslations[lang] = result.resultText;
-          });
+          // _currentTranslations.clear();
+          // translations.forEach((lang, result) {
+          //   _currentTranslations[lang] = result.resultText;
+          // });
         }
 
         // Win32 매니저에 데이터 전송

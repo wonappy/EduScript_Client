@@ -127,7 +127,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     final languages = settings.selectedOutputLanguages; // 선택된 출력 언어 목록 가져오기
 
     // [DEBUG] Provider 설정 확인
-    debugPrint("🔴 Provider 설정:");
+    debugPrint("Provider 설정:");
     debugPrint("  - 선택된 출력 언어: $languages");
     debugPrint("  - 출력 언어 코드: ${settings.getOutputLanguageCodes()}");
     debugPrint("  - 현재 번역 결과 키: ${_currentTranslations.keys.toList()}");
@@ -192,49 +192,6 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(height: 5 * scaleFactor),
-                      //현재 자막
-                      // Container(
-                      //   padding: EdgeInsets.symmetric(
-                      //     horizontal: 10 * scaleFactor,
-                      //     vertical: 10 * scaleFactor,
-                      //   ),
-                      //   width: screenWidth * 0.95,
-                      //   constraints: BoxConstraints(
-                      //     maxHeight: screenHeight * 0.5,
-                      //   ),
-                      //   //최대 자막 컨테이너 높이
-                      //   decoration: BoxDecoration(
-                      //     color: settings.getBackgroundColor().withValues(
-                      //       //자막 배경 색상 지정
-                      //       alpha:
-                      //           settings.getBackgroundOpacity(), //자막 배경 불투명도 지정
-                      //     ),
-                      //     borderRadius: BorderRadius.circular(5),
-                      //     border:
-                      //         // 발화 중인 언어 테두리 표시
-                      //         isSpeakingLanguage(languages[i])
-                      //             ? Border.all(color: Colors.blue, width: 1.5)
-                      //             : null,
-                      //   ),
-                      //   child: Text(
-                      //     _getSubtitleText(
-                      //       languages[i],
-                      //       settings,
-                      //       false,
-                      //     ), //자막 내용 지정
-                      //     textAlign: TextAlign.center,
-                      //     style: TextStyle(
-                      //       color: settings.getFontColor(), //자막 글자 색상 지정
-                      //       fontSize:
-                      //           settings.getFontSize(screenWidth) *
-                      //           scaleFactor, //자막 글자 크기 지정
-                      //       fontWeight: settings.getFontWeight(),
-                      //       fontStyle: settings.getFontStyle(),
-                      //       textBaseline: null,
-                      //     ),
-                      //   ),
-                      // ),
                       SizedBox(height: 15 * scaleFactor), //자막 간 간격 지정
                     ],
                   ),
@@ -539,14 +496,14 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
 
     // 연결 성공 시
     if (connectd) {
-      // debugPrint("[📌 DEBUG] 다이얼로그 호출 전");
+      // debugPrint("[ DEBUG] 다이얼로그 호출 전");
       // WidgetsBinding.instance.addPostFrameCallback((_) {
-      //   debugPrint("[📌 DEBUG] PostFrameCallback 실행됨");
+      //   debugPrint("[ DEBUG] PostFrameCallback 실행됨");
       //   if (mounted) {
-      //     debugPrint("[📌 DEBUG] mounted == true, Ready 다이얼로그 표시 시도 ...");
+      //     debugPrint("[ DEBUG] mounted == true, Ready 다이얼로그 표시 시도 ...");
       //     _showReadyDialog();
       //   } else {
-      //     debugPrint("[📌 DEBUG] mounted == false, Ready 다이얼로그 표시 불가");
+      //     debugPrint("[ DEBUG] mounted == false, Ready 다이얼로그 표시 불가");
       //   }
       // });
       if (_sttService is WebSocketSTTService) {
@@ -575,56 +532,39 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
         isFinal,
         speackLanguage,
       ) {
-        //인식 중 상태 출력
-        if (!isFinal) {
-          //recognizing이라면 음성 인식 중 표시 on
-          _updateRecognizingState();
-        }
-
         setState(() {
           _currentSpeakingLanguage = speackLanguage;
           if (isFinal) {
-            _confirmedTranslations = Map.from(_currentTranslations);
-            _currentTranslations.clear(); // 현재 문장 초기화
+            translations.forEach((lang, result) {
+              _confirmedTranslations[lang] = result.resultText;
+            });
 
             debugPrint("문장 확정!");
           } else {
-            // 번역 결과를 로컬 상태로 복사
-            _currentTranslations.clear(); //현재 자막 초기화
-            translations.forEach((lang, result) {
-              // 각 언어 자막 저장
-              _currentTranslations[lang] = result.resultText;
-            });
+            //인식 중 상태 출력
+            //recognizing이라면 음성 인식 중 표시 on
+            _updateRecognizingState();
           }
 
-          debugPrint("자막 화면 업데이트: ${_currentTranslations.length}개 언어");
+          debugPrint("자막 화면 업데이트");
         });
       };
     } else {
       //single 모드
       _sttService.onTranslationReceived = (translations, isFinal) {
-        //인식 중 상태 출력
-        if (!isFinal) {
-          //recognizing이라면 음성 인식 중 표시 on
-          _updateRecognizingState();
-        }
-
         setState(() {
           if (isFinal) {
-            _confirmedTranslations = Map.from(_currentTranslations);
-            _currentTranslations.clear(); // 현재 문장 초기화
-
+            translations.forEach((lang, result) {
+              _confirmedTranslations[lang] = result.resultText;
+            });
             debugPrint("문장 확정!");
           } else {
-            // 번역 결과를 로컬 상태로 복사
-            _currentTranslations.clear(); //현재 자막 초기화
-            translations.forEach((lang, result) {
-              // 각 언어 자막 저장
-              _currentTranslations[lang] = result.resultText;
-            });
+            //인식 중 상태 출력
+            //recognizing이라면 음성 인식 중 표시 on
+            _updateRecognizingState();
           }
 
-          debugPrint("자막 화면 업데이트: ${_currentTranslations.length}개 언어");
+          debugPrint("자막 화면 업데이트");
         });
       };
     }

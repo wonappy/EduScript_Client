@@ -204,9 +204,13 @@ class WindowsOverlayManager {
       if (alignment == MainAxisAlignment.start) {
         int currentY = rcClient.ref.top + spacingMedium; // Y 시작점
         for (final lang in _lastLanguages) {
-          //final textConfirmed = _findSubtitleText(lang, true, settings); // recognized
-          final textCurrent = _findSubtitleText(lang, false, settings);
-          final String processedText = _truncateText(textCurrent);
+          final textConfirmed = _findSubtitleText(
+            lang,
+            true,
+            settings,
+          ); // recognized
+          //final textCurrent = _findSubtitleText(lang, false, settings);
+          final String processedText = _truncateText(textConfirmed);
 
           if (processedText.isNotEmpty) {
             currentY = _drawTextWithBackground(
@@ -230,9 +234,13 @@ class WindowsOverlayManager {
         final rcCalc = calloc<RECT>();
 
         for (final lang in _lastLanguages) {
-          // final textConfirmed = _findSubtitleText(lang, true, settings); // recognized
-          final textCurrent = _findSubtitleText(lang, false, settings);
-          final String processedText = _truncateText(textCurrent);
+          final textConfirmed = _findSubtitleText(
+            lang,
+            true,
+            settings,
+          ); // recognized
+          //final textCurrent = _findSubtitleText(lang, false, settings);
+          final String processedText = _truncateText(textConfirmed);
 
           if (processedText.isNotEmpty) {
             SetRect(rcCalc, 0, 0, maxWidth, 0);
@@ -253,9 +261,13 @@ class WindowsOverlayManager {
 
         // 3. 위에서 아래로 그리기
         for (final lang in _lastLanguages) {
-          //final textConfirmed = _findSubtitleText(lang, true, settings); // recognized
-          final textCurrent = _findSubtitleText(lang, false, settings);
-          final String processedText = _truncateText(textCurrent);
+          final textConfirmed = _findSubtitleText(
+            lang,
+            true,
+            settings,
+          ); // recognized
+          //final textCurrent = _findSubtitleText(lang, false, settings);
+          final String processedText = _truncateText(textConfirmed);
 
           if (processedText.isNotEmpty) {
             currentY = _drawTextWithBackground(
