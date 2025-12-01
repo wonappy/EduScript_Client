@@ -12,10 +12,10 @@ class WindowsOverlayManager {
   int _hwnd = 0;
 
   /// 윈도우 클래스 이름
-  static const String _wndClassName = 'FLUTTER_OVERLAY_WINDOW';
+  String _currentWndClassName = '';
 
   // 투명 배경 용 마젠타 브러쉬
-  static final int _hBrushMagenta = CreateSolidBrush(RGB(255, 0, 255));
+  int _hBrushMagenta = 0;
 
   // FFI 콜백 포인터를 GC로부터 보호하기 위한 static 변수
   static Pointer<NativeFunction<WNDPROC>>? _wndProcPtr;
@@ -26,7 +26,6 @@ class WindowsOverlayManager {
   static Map<String, String> _lastCurrentTranslations = {};
   static Map<String, String> _lastConfirmedTranslations = {};
   static List<String> _lastLanguages = [];
-  // (currentSpeakingLanguage 등 필요한 것 모두 추가)
 
   // 번역 내용 초기화
   static void clearStaticData() {
@@ -40,31 +39,42 @@ class WindowsOverlayManager {
 
     final hInstance = GetModuleHandle(nullptr); // 현재 프로세스 핸들 가져오기
 
+    //윈도우 클래스 이름 생성 (현재 시간으로 랜덤한 이름 생성)
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    _currentWndClassName = 'FLUTTER_OVERLAY_$timestamp';
+
     // 1) 윈도우 클래스 등록
-    _wndProcPtr ??= Pointer.fromFunction<WNDPROC>(
-      _windowProc,
-      0, // exceptionalReturn
-    );
+    _wndProcPtr = Pointer.fromFunction<WNDPROC>(_windowProc, 0);
+
+    _hBrushMagenta = CreateSolidBrush(RGB(255, 0, 255));
+
+    final classNamePtr = _currentWndClassName.toNativeUtf16();
+    final windowNamePtr = 'Flutter Subtitle Overlay'.toNativeUtf16();
 
     final wc =
         calloc<WNDCLASS>()
           ..ref.style = CS_HREDRAW | CS_VREDRAW
           ..ref.lpfnWndProc = _wndProcPtr!
           ..ref.hInstance = hInstance
-          ..ref.lpszClassName = _wndClassName.toNativeUtf16()
+          ..ref.lpszClassName = _currentWndClassName.toNativeUtf16()
           ..ref.hCursor = LoadCursor(NULL, IDC_ARROW)
           ..ref.hbrBackground = _hBrushMagenta;
-    RegisterClass(wc);
 
-    // 2) 윈도우 생성 (CreateWindowEx)
+    final atom = RegisterClass(wc);
+    if (atom == 0) {
+      final error = GetLastError();
+      debugPrint("[Win32 Error] RegisterClass 실패! Code: $error");
+    }
+
+    // 2) 윈도우 생성
     _hwnd = CreateWindowEx(
       WS_EX_TOPMOST | // 항상 최상위 레이어
           WS_EX_LAYERED | // 투명도 사용
           WS_EX_TRANSPARENT | // 마우스 이벤트 통과(무시)
           WS_EX_COMPOSITED | // 더블 버퍼링 (화면 재생성 과정에서 깜빡힘 제거)
           WS_EX_TOOLWINDOW, //작업 표시줄 숨기기
-      _wndClassName.toNativeUtf16(),
-      'Flutter Subtitle Overlay'.toNativeUtf16(),
+      classNamePtr,
+      windowNamePtr,
       WS_POPUP,
       0,
       0, // (x, y)
@@ -77,7 +87,14 @@ class WindowsOverlayManager {
     );
 
     if (_hwnd == 0) {
-      debugPrint('- Win32: CreateWindowEx 실패');
+      final error = GetLastError();
+      debugPrint('[Win32 Error] CreateWindowEx 실패! Code: $error');
+
+      // 실패 시 정리
+      DeleteObject(_hBrushMagenta);
+      calloc.free(classNamePtr);
+      calloc.free(windowNamePtr);
+      calloc.free(wc);
       return;
     }
 
@@ -93,7 +110,12 @@ class WindowsOverlayManager {
     ShowWindow(_hwnd, SW_SHOW);
     UpdateWindow(_hwnd);
 
-    debugPrint('- Win32: 오버레이 윈도우 생성 성공 (HWND: $_hwnd)');
+    debugPrint('[Win32] 오버레이 윈도우 생성 성공 (HWND: $_hwnd)');
+
+    // 메모리 해제
+    calloc.free(classNamePtr);
+    calloc.free(windowNamePtr);
+    calloc.free(wc);
   }
 
   /// 2. [업데이트] OS에 자막 업데이트 요청
@@ -126,9 +148,28 @@ class WindowsOverlayManager {
     if (_hwnd != 0) {
       DestroyWindow(_hwnd);
       _hwnd = 0;
-      debugPrint('- Win32: 오버레이 윈도우 제거됨');
+      debugPrint('[Win32] 오버레이 윈도우 제거됨');
     }
-    //DeleteObject(_hBrushMagenta); -> 얘가 없어지면 투명창 생성이 안되니까... 프로그램이 종료될 때 사라지도록 하기
+
+    // 클래스 해제
+    if (_currentWndClassName.isNotEmpty) {
+      final hInstance = GetModuleHandle(nullptr);
+      final classNamePtr = _currentWndClassName.toNativeUtf16();
+      UnregisterClass(classNamePtr, hInstance);
+      calloc.free(classNamePtr);
+      _currentWndClassName = '';
+    }
+
+    // 브러시 제거
+    if (_hBrushMagenta != 0) {
+      DeleteObject(_hBrushMagenta);
+      _hBrushMagenta = 0;
+    }
+
+    // 콜백 포인터 초기화
+    _wndProcPtr = null;
+
+    clearStaticData();
   }
 
   /// 4. [이벤트 처리] Win32 윈도우 이벤트 콜백
@@ -148,173 +189,108 @@ class WindowsOverlayManager {
   static void _onPaint(int hwnd) {
     final ps = calloc<PAINTSTRUCT>();
     final hdc = BeginPaint(hwnd, ps);
-
     final rcClient = calloc<RECT>();
     GetClientRect(hwnd, rcClient);
 
-    // 1) 윈도우 전체를 마젠타(투명색)로 칠해서 깨끗이 지움
-    FillRect(hdc, rcClient, _hBrushMagenta);
+    // [수정] 여기서 브러시 잠깐 생성해서 칠하고 삭제
+    final hTempBrush = CreateSolidBrush(RGB(255, 0, 255));
+    FillRect(hdc, rcClient, hTempBrush);
+    DeleteObject(hTempBrush);
 
     final settings = _lastSettings;
     final screenSize = _lastScreenSize;
 
-    // 2) 데이터가 있을 때만 그리기
     if (settings != null && screenSize != null) {
-      // --- GDI 리소스 준비 ---
       final hFont = _createGdiFont(settings, screenSize);
+      final hBrushBackground = CreateSolidBrush(RGB(0, 0, 0));
+
       final hOldFont = SelectObject(hdc, hFont);
-      SetBkMode(hdc, TRANSPARENT);
-      SetTextColor(hdc, _flutterColorToWin32Color(Colors.white)); // 글씨 색상 (흰색)
+      try {
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, _flutterColorToWin32Color(Colors.white));
 
-      final hBrushBackground = CreateSolidBrush(
-        RGB(0, 0, 0), // recognizing 중 자막 배경 색상
-      );
+        final alignment = settings.getAlignment();
+        final horizontalAlignment = settings.getHorizontalAlignment();
 
-      //자막 정렬
-      final MainAxisAlignment alignment = settings.getAlignment();
-      final CrossAxisAlignment horizontalAlignment =
-          settings.getHorizontalAlignment();
+        int textAlignFlag;
+        switch (horizontalAlignment) {
+          case CrossAxisAlignment.center:
+            textAlignFlag = DT_CENTER;
+            break;
+          case CrossAxisAlignment.end:
+            textAlignFlag = DT_RIGHT;
+            break;
+          case CrossAxisAlignment.start:
+          default:
+            textAlignFlag = DT_LEFT;
+            break;
+        }
 
-      int textAlignFlag;
-      switch (horizontalAlignment) {
-        case CrossAxisAlignment.center:
-          textAlignFlag = DT_CENTER;
-          break;
-        case CrossAxisAlignment.end:
-          textAlignFlag = DT_RIGHT;
-          break;
-        case CrossAxisAlignment.start:
-        default:
-          textAlignFlag = DT_LEFT;
-          break;
+        final double scaleFactor = screenSize.width / 1167.0;
+        final int spacingMedium = (15 * scaleFactor).round();
+        final int padding = (10 * scaleFactor).round();
+        final int drawFormat = textAlignFlag | DT_WORDBREAK | DT_NOCLIP;
+        final int maxWidth = (rcClient.ref.right * 0.9).round();
+
+        void drawSubtitles(int startY, bool isUpwards) {
+          int currentY = startY;
+          final langs =
+              isUpwards ? _lastLanguages.reversed.toList() : _lastLanguages;
+
+          for (final lang in langs) {
+            final textConfirmed = _findSubtitleText(lang, true, settings);
+            final String processedText = _truncateText(textConfirmed);
+
+            if (processedText.isNotEmpty && processedText != "...") {
+              currentY = _drawTextWithBackground(
+                hdc,
+                processedText,
+                currentY,
+                drawFormat,
+                padding,
+                rcClient.ref,
+                hBrushBackground,
+                isUpwards,
+                maxWidth,
+                horizontalAlignment,
+              );
+              if (isUpwards)
+                currentY -= spacingMedium;
+              else
+                currentY += spacingMedium;
+            }
+          }
+        }
+
+        if (alignment == MainAxisAlignment.start) {
+          drawSubtitles(rcClient.ref.top + spacingMedium, false);
+        } else if (alignment == MainAxisAlignment.center) {
+          int totalHeight = 0;
+          final rcCalc = calloc<RECT>();
+          for (final lang in _lastLanguages) {
+            final textConfirmed = _findSubtitleText(lang, true, settings);
+            final String processedText = _truncateText(textConfirmed);
+            if (processedText.isNotEmpty && processedText != "...") {
+              SetRect(rcCalc, 0, 0, maxWidth, 0);
+              final textPtr = processedText.toNativeUtf16();
+              DrawText(hdc, textPtr, -1, rcCalc, DT_CALCRECT | drawFormat);
+              calloc.free(textPtr);
+              totalHeight += rcCalc.ref.bottom + (padding * 2) + spacingMedium;
+            }
+          }
+          calloc.free(rcCalc);
+          int startY = (rcClient.ref.bottom - totalHeight) ~/ 2 + spacingMedium;
+          drawSubtitles(startY, false);
+        } else {
+          drawSubtitles(rcClient.ref.bottom - spacingMedium, true);
+        }
+      } finally {
+        // GDI 리소스 정리 => 무조건 실행!! (GDI 리소수 누수 현상 방지)
+        SelectObject(hdc, hOldFont); //예전 폰트로 선택 변경
+
+        DeleteObject(hBrushBackground);
+        DeleteObject(hFont);
       }
-
-      // 레이아웃 값 정의
-      final double scaleFactor = screenSize.width / 1167.0;
-      // final int spacingSmall = (7 * scaleFactor).round();
-      final int spacingMedium = (15 * scaleFactor).round();
-      final int padding = (10 * scaleFactor).round(); // 상하좌우 패딩
-      final int drawFormat =
-          textAlignFlag | DT_WORDBREAK | DT_NOCLIP; // 자동 줄 바꿈
-
-      // 자막의 최대 가로 폭 (화면의 90%)
-      final int maxWidth = (rcClient.ref.right * 0.9).round();
-
-      // Alignment.topCenter
-      if (alignment == MainAxisAlignment.start) {
-        int currentY = rcClient.ref.top + spacingMedium; // Y 시작점
-        for (final lang in _lastLanguages) {
-          final textConfirmed = _findSubtitleText(
-            lang,
-            true,
-            settings,
-          ); // recognized
-          //final textCurrent = _findSubtitleText(lang, false, settings);
-          final String processedText = _truncateText(textConfirmed);
-
-          if (processedText.isNotEmpty) {
-            currentY = _drawTextWithBackground(
-              hdc,
-              processedText,
-              currentY,
-              drawFormat,
-              padding,
-              rcClient.ref,
-              hBrushBackground,
-              false,
-              maxWidth,
-              horizontalAlignment,
-            );
-            currentY += spacingMedium;
-          }
-        }
-      } else if (alignment == MainAxisAlignment.center) {
-        // 1. 모든 자막의 총 높이 계산
-        int totalHeight = 0;
-        final rcCalc = calloc<RECT>();
-
-        for (final lang in _lastLanguages) {
-          final textConfirmed = _findSubtitleText(
-            lang,
-            true,
-            settings,
-          ); // recognized
-          //final textCurrent = _findSubtitleText(lang, false, settings);
-          final String processedText = _truncateText(textConfirmed);
-
-          if (processedText.isNotEmpty) {
-            SetRect(rcCalc, 0, 0, maxWidth, 0);
-            DrawText(
-              hdc,
-              processedText.toNativeUtf16(),
-              -1,
-              rcCalc,
-              DT_CALCRECT | drawFormat,
-            );
-            totalHeight += rcCalc.ref.bottom + (padding * 2) + spacingMedium;
-          }
-        }
-        calloc.free(rcCalc);
-
-        // 2. 그리기 시작 Y 좌표 계산 (화면 중앙)
-        int currentY = (rcClient.ref.bottom - totalHeight) ~/ 2 + spacingMedium;
-
-        // 3. 위에서 아래로 그리기
-        for (final lang in _lastLanguages) {
-          final textConfirmed = _findSubtitleText(
-            lang,
-            true,
-            settings,
-          ); // recognized
-          //final textCurrent = _findSubtitleText(lang, false, settings);
-          final String processedText = _truncateText(textConfirmed);
-
-          if (processedText.isNotEmpty) {
-            currentY = _drawTextWithBackground(
-              hdc,
-              processedText,
-              currentY,
-              drawFormat,
-              padding,
-              rcClient.ref,
-              hBrushBackground,
-              false,
-              maxWidth,
-              horizontalAlignment,
-            );
-            currentY += spacingMedium;
-          }
-        }
-      } else {
-        int currentY = rcClient.ref.bottom - spacingMedium; // Y 시작점
-        for (final lang in _lastLanguages.reversed) {
-          //final textConfirmed = _findSubtitleText(lang, true, settings); // recognized
-          final textCurrent = _findSubtitleText(lang, false, settings);
-          final String processedText = _truncateText(textCurrent);
-
-          if (processedText.isNotEmpty) {
-            currentY = _drawTextWithBackground(
-              hdc,
-              processedText,
-              currentY,
-              drawFormat,
-              padding,
-              rcClient.ref,
-              hBrushBackground,
-              true,
-              maxWidth,
-              horizontalAlignment,
-            );
-            currentY -= spacingMedium;
-          }
-        }
-      }
-
-      // GDI 리소스 정리
-      DeleteObject(hBrushBackground);
-      //DeleteObject(hBrushOldBackground); // recognized
-      SelectObject(hdc, hOldFont);
-      DeleteObject(hFont);
     }
 
     // 5. 리소스 최종 정리
@@ -329,7 +305,10 @@ class WindowsOverlayManager {
     Size screenSize,
   ) {
     final lf = calloc<LOGFONT>();
-    final logicalScreenHeight = GetDeviceCaps(GetDC(NULL), LOGPIXELSY);
+
+    final hdc = GetDC(NULL);
+    final logicalScreenHeight = GetDeviceCaps(hdc, LOGPIXELSY);
+    ReleaseDC(NULL, hdc);
 
     // 1. 폰트 크기 (요청대로 크기만 설정)
     final fontSize = settings.getFontSize(screenSize.width);
@@ -427,11 +406,13 @@ class WindowsOverlayManager {
     int maxWidth,
     CrossAxisAlignment hAlign,
   ) {
+    final textPtr = text.toNativeUtf16();
+
     // 1. 텍스트 크기 계산
     final rcCalc = calloc<RECT>();
     rcCalc.ref.right = maxWidth;
 
-    DrawText(hdc, text.toNativeUtf16(), -1, rcCalc, DT_CALCRECT | drawFormat);
+    DrawText(hdc, textPtr, -1, rcCalc, DT_CALCRECT | drawFormat);
     final int textWidth = rcCalc.ref.right;
     final int textHeight = rcCalc.ref.bottom;
     calloc.free(rcCalc);
@@ -465,9 +446,10 @@ class WindowsOverlayManager {
     }
 
     FillRect(hdc, rcBg, hBrush);
-    DrawText(hdc, text.toNativeUtf16(), -1, rcBg, drawFormat | DT_TOP);
+    DrawText(hdc, textPtr, -1, rcBg, drawFormat | DT_TOP);
 
     calloc.free(rcBg);
+    calloc.free(textPtr);
     return nextY;
   }
 
