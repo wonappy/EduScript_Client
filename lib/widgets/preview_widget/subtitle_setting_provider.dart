@@ -176,6 +176,34 @@ class SubtitleSettingsProvider extends ChangeNotifier {
       translationCode: 'da',
       previewText: 'Hej! Dette er en test undertekst.',
     ),
+    '몽골어': LanguageMappingModel(
+      displayName: '몽골어',
+      language: 'Монгол',
+      speechCode: 'mn-MN',
+      translationCode: 'mn',
+      previewText: 'Сайн уу! Энэ бол текстийн хадмал гарчиг юм.',
+    ),
+    '네팔어': LanguageMappingModel(
+      displayName: '네팔어',
+      language: 'नेपाली',
+      speechCode: 'ne-NP',
+      translationCode: 'ne',
+      previewText: 'नमस्ते! यो एउटा परीक्षण उपशीर्षक हो।',
+    ),
+    '크메르어(캄보디아)': LanguageMappingModel(
+      displayName: '크메르어(캄보디아)',
+      language: 'ខ្មែរ (កម្ពុជា)',
+      speechCode: 'km-KH',
+      translationCode: 'km',
+      previewText: 'សួស្តី! នេះជាចំណងជើងរងសាកល្បង។',
+    ),
+    '우즈베크어(우즈베키스탄)': LanguageMappingModel(
+      displayName: '우즈베크어(우즈베키스탄)',
+      language: 'O‘zbek (O‘zbekiston)',
+      speechCode: 'uz-UZ',
+      translationCode: 'uz',
+      previewText: 'Salom! Bu matn taglavhasi.',
+    ),
   };
 
   // getter
@@ -306,6 +334,14 @@ class SubtitleSettingsProvider extends ChangeNotifier {
         return 'こんにちは！テスト字幕です。';
       case '중국어':
         return '你好！这是测试字幕。';
+      case '몽골어':
+        return 'Сайн уу! Энэ бол текстийн хадмал гарчиг юм.';
+      case '네팔어':
+        return 'नमस्ते! यो एउटा परीक्षण उपशीर्षक हो।';
+      case '크메르어(캄보디아)':
+        return 'សួស្តី! នេះជាចំណងជើងរងសាកល្បង។';
+      case '우즈베크어(우즈베키스탄)':
+        return 'Salom! Bu matn taglavhasi.';
       default:
         return '안녕하세요! 텍스트 자막입니다.';
     }
