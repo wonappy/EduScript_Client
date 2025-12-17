@@ -40,8 +40,26 @@ class _BuildSubtitleSettingContentState
   // String selectedBackgroundColor = '흰색';
   // String selectedBackgroundOpacity = '50%';
 
-  List<String> inputLanguagesList = ['한국어', '영어', '일본어', '중국어'];
-  List<String> outputLanguagesList = ['한국어', '영어', '일본어', '중국어'];
+  List<String> inputLanguagesList = [
+    '한국어',
+    '영어',
+    '일본어',
+    '중국어',
+    '몽골어',
+    '네팔어',
+    '크메르어(캄보디아)',
+    '우즈베크어(우즈베키스탄)',
+  ];
+  List<String> outputLanguagesList = [
+    '한국어',
+    '영어',
+    '일본어',
+    '중국어',
+    '몽골어',
+    '네팔어',
+    '크메르어(캄보디아)',
+    '우즈베크어(우즈베키스탄)',
+  ];
   Color backContentContainerColor = Color(0xFFC1C1C1);
   Color dropdownWidgetColor = Color(0xFFF6F6F6);
   // 색상 상수 추가

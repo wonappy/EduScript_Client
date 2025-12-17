@@ -239,7 +239,8 @@ class WindowsOverlayManager {
 
           for (final lang in langs) {
             final textConfirmed = _findSubtitleText(lang, true, settings);
-            final String processedText = _truncateText(textConfirmed);
+            final String processedText =
+                textConfirmed; //_truncateText(textConfirmed);
 
             if (processedText.isNotEmpty && processedText != "...") {
               currentY = _drawTextWithBackground(
@@ -269,7 +270,8 @@ class WindowsOverlayManager {
           final rcCalc = calloc<RECT>();
           for (final lang in _lastLanguages) {
             final textConfirmed = _findSubtitleText(lang, true, settings);
-            final String processedText = _truncateText(textConfirmed);
+            final String processedText =
+                textConfirmed; //_truncateText(textConfirmed);
             if (processedText.isNotEmpty && processedText != "...") {
               SetRect(rcCalc, 0, 0, maxWidth, 0);
               final textPtr = processedText.toNativeUtf16();

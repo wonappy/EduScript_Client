@@ -63,12 +63,11 @@ class LecturePlayBarComponents {
               icon: Icons.stop,
               onTap: onStop,
               screenWidth: screenWidth,
-              backgroundColor: AppColors.greenColor,
+              backgroundColor: AppColors.grayColor,
               borderColor: null,
               iconColor: AppColors.whiteColor1,
             ),
           ],
-
           SizedBox(width: screenWidth * 0.04),
 
           // 시간 표시
