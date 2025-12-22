@@ -7,6 +7,7 @@ import 'package:client/providers/mode_provider.dart';
 import 'package:client/core/styles/size_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/global_core.dart';
 import '../subtitle_setting_provider.dart';
 import 'color_setting_drop_down_widget.dart';
 import 'multi_language_dropdown.dart';
@@ -30,8 +31,8 @@ class BuildOverlaySubtitleSettingContent extends StatefulWidget {
 
 class _BuildSubtitleSettingContentState
     extends State<BuildOverlaySubtitleSettingContent> {
-  List<String> inputLanguagesList = ['한국어', '영어', '일본어', '중국어'];
-  List<String> outputLanguagesList = ['한국어', '영어', '일본어', '중국어'];
+  List<String> inputLanguagesList = GlobalCore.languageOptions;
+  List<String> outputLanguagesList = GlobalCore.languageOptions;
   Color backContentContainerColor = Color(0xFFC1C1C1);
   Color dropdownWidgetColor = Color(0xFFF6F6F6);
 
