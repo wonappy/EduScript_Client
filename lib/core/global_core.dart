@@ -15,11 +15,13 @@ class GlobalCore {
     '네팔어',
     '크메르어(캄보디아)',
     '우즈베크어(우즈베키스탄)',
+    '러시아어',
+    '베트남어',
   ];
 
   // 기본 IP (localhost)
-  static String serverBaseUrl = "ws://192.168.0.149:8000"; // 서버 엔드포인트
-  static String httpBaseUrl = "http://192.168.0.149:8000"; // 서버 엔드포인트
+  static String serverBaseUrl = "ws://127.0.0.1:8000"; // 서버 엔드포인트
+  static String httpBaseUrl = "http://127.0.0.1:8000"; // 서버 엔드포인트
 
   // config 파일 찾기
   static String configPath = "";
