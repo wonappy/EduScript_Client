@@ -42,7 +42,7 @@ class WebSocketSTTService {
   final Map<String, String> _currentTranslations = {}; // 현재 번역 결과
   final List<String> _transcriptHistory = []; // 원문 자막 저장소 -> llm 요약 활용
   final List<Map<String, String>> _translationHistory =
-  []; // 번역 히스토리 (약 3개 정도만 저장)
+      []; // 번역 히스토리 (약 3개 정도만 저장)
 
   // [서버 연결 재시도 처리 관련]
   Timer? _reconnectTimer; // 재시도 타이머
@@ -79,28 +79,28 @@ class WebSocketSTTService {
 
   // 전체 원문 텍스트 (하나의 문자열로) -> LLM 활용
   String get fullTranscriptText {
-  if (_transcriptHistory.isNotEmpty) {
-    return _transcriptHistory.join(' ');
-  } else if (_transcriptBackup != null) {
-    debugPrint("[DEBUG] 백업된 원문 사용");
-    return _transcriptBackup!;
-  } else {
-    return '';
+    if (_transcriptHistory.isNotEmpty) {
+      return _transcriptHistory.join(' ');
+    } else if (_transcriptBackup != null) {
+      debugPrint("[DEBUG] 백업된 원문 사용");
+      return _transcriptBackup!;
+    } else {
+      return '';
+    }
   }
-}
 
   // [1] WebSocket 연결 (상태 응답 - StatusMessage)
   Future<bool> connectToServer({bool isRetry = false}) async {
     debugPrint("[DEBUG 1] connectToServer 메서드 실행 (웹소켓 연결)");
-    debugPrint("[WebSocket URL로 연결] ${GlobalCore.serverBaseUrl.trim()}$_serverEndpoint");
+    debugPrint(
+      "[WebSocket URL로 연결] ${GlobalCore.serverBaseUrl.trim()}$_serverEndpoint",
+    );
 
     // 기존 웹소켓 정리
     if (_webSocketChannel != null) {
       try {
-        //debugPrint("[🐟 DEBUG 1] 이전 웹소켓 정리 시도 - $_countWebSocketChannel차");
         // 1) 기존 웹소켓 채널에 "연결 종료" 신호
         _webSocketChannel!.sink.close().timeout(const Duration(seconds: 2));
-        //debugPrint("[🐟 DEBUG 1] 이전 웹소켓 채널을 정리했습니다.");
       } catch (e) {
         // 2) 이미 닫힌 채널 또 닫지 않도록
         debugPrint("[DEBUG 1] 이전 웹소켓 정리 중 오류 발생 (무시 가능) - $e");
@@ -117,29 +117,27 @@ class WebSocketSTTService {
         _reconnectAttempts = 0; // 연결 시도 횟수 초기화 (최초 연결 시에만 리셋)
       } else {
         // 재시도 시
-        _updateStatus(
-          "서버 연결 재시도 ${_reconnectAttempts}/${_maxReconnectAttempts}",
-        );
+        _updateStatus("서버 연결 재시도 $_reconnectAttempts/$_maxReconnectAttempts");
       }
 
       // 2) 서버에 WebSocket 연결 시도
-      final uri = Uri.parse('${GlobalCore.serverBaseUrl.trim()}$_serverEndpoint'); // 서버 엔드포인트
+      final uri = Uri.parse(
+        '${GlobalCore.serverBaseUrl.trim()}$_serverEndpoint',
+      ); // 서버 엔드포인트
       _webSocketChannel = WebSocketChannel.connect(uri);
       debugPrint("[Final URI] $uri"); // WebSocket 연결
       _countWebSocketChannel++;
-      //debugPrint("[🐟 DEBUG 1] 새로운 웹소켓 할당 - $_countWebSocketChannel번째");
-      // -> 재연결 시 새로운 웹소켓 채널을 할당 받으면, 기존에 생성되었던 웹소켓 채널은 자동 삭제됨
 
       // 3) 서버 연결 완료 확인 - Completer
       final Completer<bool> connectionCompleter = Completer<bool>();
 
       // 4) 서버 메시지 수신 리스너
       _webSocketChannel!.stream.listen(
-            (message) {
+        (message) {
           // 4-1) 첫 번째 메시지 수신 시
           if (!connectionCompleter.isCompleted) {
             connectionCompleter.complete(true); // 연결 성공
-            debugPrint("[🐟 DEBUG 1] WebSocket ready 완료");
+            debugPrint("[DEBUG 1] WebSocket ready 완료");
           }
           // 4-2) 그 외 메시지 처리
           _handleServerMessage(message);
@@ -219,7 +217,7 @@ class WebSocketSTTService {
       return false;
     }
 
-    if(_isRecording){
+    if (_isRecording) {
       debugPrint("이미 녹음 중인 상태에서 세션 재시작 요청은 무시됨.");
       return true;
     }
@@ -287,7 +285,7 @@ class WebSocketSTTService {
       // 3) 오디오 데이터를 서버로 실시간 전송
       _audioStreamSubscription = stream.listen(
         // 오디오가 들어올 때 콜백
-            (audioData) {
+        (audioData) {
           // 바이너리 음성 데이터
           if (_isConnected && _webSocketChannel != null) {
             _webSocketChannel!.sink.add(audioData); // 음성 데이터를 실시간으로 전송
@@ -313,17 +311,17 @@ class WebSocketSTTService {
     debugPrint("[DEBUG 4-1] stopRecording() 메서드 (녹음 중지)"); // 디버깅
     if (!_isRecording) return;
 
-    debugPrint("🔍 녹음 중지 전 데이터: ${_transcriptHistory.length}개");
-    debugPrint("🔍 전체 텍스트: $fullTranscriptText");
+    debugPrint("녹음 중지 전 데이터: ${_transcriptHistory.length}개");
+    debugPrint("전체 텍스트: $fullTranscriptText");
 
     try {
       await _audioStreamSubscription?.cancel();
-      await _audioRecorder.stop();  // 오디오 녹음 중지
+      await _audioRecorder.stop(); // 오디오 녹음 중지
       await WakelockPlus.disable(); // 절전 모드 진입 방지 비활성화
       _audioStreamSubscription = null;
       _isRecording = false;
 
-      debugPrint("🔍 녹음 중지 후 데이터: ${_transcriptHistory.length}개");
+      debugPrint("녹음 중지 후 데이터: ${_transcriptHistory.length}개");
       _updateStatus(">> [4] 음성 녹음 중지");
     } catch (e) {
       _handleError("- 녹음 중지 실패", e.toString());
@@ -378,7 +376,7 @@ class WebSocketSTTService {
   void _handleConnectionClosed() {
     if (_isReconnecting) {
       // "재연결" 상태면 새로운 재연결 X
-      debugPrint("[🐟 DEBUG 6] 이미 재연결 절차가 진행 중이므로 중복 스케줄링 방지함");
+      debugPrint("[DEBUG 6] 이미 재연결 절차가 진행 중이므로 중복 스케줄링 방지함");
       return; // 호출 위치 [1]로 돌아감
     }
 
@@ -403,32 +401,25 @@ class WebSocketSTTService {
     _isReconnecting = true; // 재연결 상태 ON
 
     final delay =
-    _reconnectDelays[_reconnectAttempts.clamp(
-      0,
-      _reconnectDelays.length - 1,
-    )]; // clamp(최소,최댓값)
-    _updateStatus("[DEBUG 6] ${delay}초 후 재연결 시도"); // 2, 6, 10초
+        _reconnectDelays[_reconnectAttempts.clamp(
+          0,
+          _reconnectDelays.length - 1,
+        )]; // clamp(최소,최댓값)
+    _updateStatus("[DEBUG 6] $delay초 후 재연결 시도"); // 2, 6, 10초
 
     // 2초 뒤에 [3]으로 이동
-    _reconnectTimer = Timer(
-      Duration(seconds: delay),
-      _attemptReconnect,
-    ); // (호출) 3) 재연결 시도
+    _reconnectTimer = Timer(Duration(seconds: delay), _attemptReconnect);
   }
 
   // [6-3] 재연결 시도
   Future<void> _attemptReconnect() async {
     try {
-      debugPrint("[🐟 DEBUG] 재연결 시작 시간 - ${DateTime.now()}");
-      debugPrint("[🐟 DEBUG] _attemptReconnect 실행 - 현재 : $_reconnectAttempts");
+      debugPrint("[DEBUG] 재연결 시작 시간 - ${DateTime.now()}");
+      debugPrint("[DEBUG] _attemptReconnect 실행 - 현재 : $_reconnectAttempts");
       _reconnectAttempts++; // 재연결 시도 횟수 증가
-      debugPrint(
-        "[🐟 DEBUG] _attemptReconnect 실행 - 증가 후 : $_reconnectAttempts",
-      );
+      debugPrint("[DEBUG] _attemptReconnect 실행 - 증가 후 : $_reconnectAttempts");
 
-      _updateStatus(
-        "서버 연결 재시도 (${_reconnectAttempts}/${_maxReconnectAttempts})",
-      );
+      _updateStatus("서버 연결 재시도 ($_reconnectAttempts/$_maxReconnectAttempts)");
       // (호출) [1] WebSocket 서버 연결 - 재연결 시도
       final success = await connectToServer(isRetry: true);
 
@@ -476,9 +467,9 @@ class WebSocketSTTService {
 
   // [6-5] 재연결 관련 변수 초기화
   void resetReconnectState() {
-    _reconnectAttempts = 0;   // 재연결 시도 횟수 0으로 초기화
-    _isReconnecting = false;  // 연결 중 상태 OFF
-    _stopReconnectTimer();    // 타이머 중지
+    _reconnectAttempts = 0; // 재연결 시도 횟수 0으로 초기화
+    _isReconnecting = false; // 연결 중 상태 OFF
+    _stopReconnectTimer(); // 타이머 중지
     debugPrint("[🐟 DEBUG] 재연결 상태 초기화");
   }
 
@@ -486,12 +477,12 @@ class WebSocketSTTService {
   Future<void> disconnect() async {
     debugPrint("[DEBUG 7] disconnect 메서드 실행 (연결 종료)");
     try {
-      debugPrint('[DEBUG] 백업 직전 원문: ${fullTranscriptText}');
+      debugPrint('[DEBUG] 백업 직전 원문: $fullTranscriptText');
       _transcriptBackup = _transcriptHistory.join(' ');
 
       // 1) 재연결 중지
       _shouldAutoReconnect = false; // 수동 종료 시 자동 재연결 비활성화
-      _stopReconnectTimer();        // 재연결 타이머 중지
+      _stopReconnectTimer(); // 재연결 타이머 중지
       // 2) 녹음 중지
       await stopRecording();
       // 3) 절전 모드 진입 방지 비활성화
@@ -560,14 +551,8 @@ class WebSocketSTTService {
     switch (statusMsg.status) {
       case 'ready':
         _isSessionReady = true;
-        _updateStatus("✅ ${statusMsg.message ?? '세션 준비 완료'}");
+        _updateStatus("${statusMsg.message ?? '세션 준비 완료'}");
 
-        // ready 수신 후, 지연
-        // Future.delayed(Duration(milliseconds: 500), () {
-        //   if (_isSessionReady && !_isRecording) {
-        //     startRecording();
-        //   }
-        // });
         startRecording(); // 녹음 시작
         break;
       case 'error':
@@ -617,8 +602,6 @@ class WebSocketSTTService {
 
         // 입력 언어의 텍스트를 원문으로 저장
         originalText ??= result.resultText;
-
-
       });
 
       // 2) 원문 자막 저장소에 추가

@@ -104,14 +104,14 @@ class SubtitleSettingsProvider extends ChangeNotifier {
       language: 'Русский',
       speechCode: 'ru-RU',
       translationCode: 'ru',
-      previewText: 'Привет! Это тестовые субтитры.',
+      previewText: 'Здравствуйте! Это тестовые субтитры.',
     ),
     '포르투갈어': LanguageMappingModel(
       displayName: '포르투갈어',
       language: 'Português',
       speechCode: 'pt-BR',
       translationCode: 'pt',
-      previewText: 'Olá! Esta é uma legenda de teste.',
+      previewText: 'Olá! Escta é uma legenda de teste.',
     ),
     '아랍어': LanguageMappingModel(
       displayName: '아랍어',
@@ -203,6 +203,13 @@ class SubtitleSettingsProvider extends ChangeNotifier {
       speechCode: 'uz-UZ',
       translationCode: 'uz',
       previewText: 'Salom! Bu matn taglavhasi.',
+    ),
+    '베트남어': LanguageMappingModel(
+      displayName: '베트남어',
+      language: 'Tiếng Việt',
+      speechCode: 'vi-VN',
+      translationCode: 'vi',
+      previewText: 'Xin chào! Đây là phụ đề thử nghiệm.',
     ),
   };
 
@@ -342,6 +349,10 @@ class SubtitleSettingsProvider extends ChangeNotifier {
         return 'សួស្តី! នេះជាចំណងជើងរងសាកល្បង។';
       case '우즈베크어(우즈베키스탄)':
         return 'Salom! Bu matn taglavhasi.';
+      case '러시아어':
+        return 'Здравствуйте! Это тестовые субтитры.';
+      case '베트남어':
+        return 'Xin chào! Đây là phụ đề thử nghiệm.';
       default:
         return '안녕하세요! 텍스트 자막입니다.';
     }
