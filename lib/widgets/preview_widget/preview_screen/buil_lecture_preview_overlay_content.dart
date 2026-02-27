@@ -4,7 +4,7 @@ library;
 import 'package:client/core/styles/color_core.dart';
 import 'package:flutter/material.dart';
 
-import '../subtitle_setting_provider.dart';
+import '../../../providers/subtitle_style_provider.dart';
 import 'package:provider/provider.dart';
 
 class BuildLecturePreviewOverlayContent extends StatelessWidget {
@@ -12,7 +12,7 @@ class BuildLecturePreviewOverlayContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SubtitleSettingsProvider>();
+    final settings = context.watch<SubtitleStyleProvider>();
     final languages = settings.selectedOutputLanguages;
 
     const double referenceScreenWidth = 800.0;

@@ -8,7 +8,7 @@ import 'package:client/core/styles/size_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/global_core.dart';
-import '../subtitle_setting_provider.dart';
+import '../../../providers/subtitle_style_provider.dart';
 import 'color_setting_drop_down_widget.dart';
 import 'multi_language_dropdown.dart';
 import 'onoff_switch_state_widget.dart';
@@ -39,7 +39,7 @@ class _BuildSubtitleSettingContentState
   @override
   Widget build(BuildContext context) {
     // provider
-    final settings = context.watch<SubtitleSettingsProvider>();
+    final settings = context.watch<SubtitleStyleProvider>();
     return Container(
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(15)),
 
@@ -72,7 +72,7 @@ class _BuildSubtitleSettingContentState
   // [섹션 별 빌더]
   //1) 화면 공유 섹션
   Widget _buildScreenShareSection() {
-    final settings = context.read<SubtitleSettingsProvider>();
+    final settings = context.read<SubtitleStyleProvider>();
 
     return Column(
       children: [
@@ -111,7 +111,7 @@ class _BuildSubtitleSettingContentState
 
   // 2) 입력 언어 설정 섹션
   Widget _buildInputLanguageSection() {
-    final settings = context.read<SubtitleSettingsProvider>();
+    final settings = context.read<SubtitleStyleProvider>();
 
     return Column(
       children: [
@@ -154,7 +154,7 @@ class _BuildSubtitleSettingContentState
 
   // 3) 출력 언어 설정 섹션
   Widget _buildOutputLanguageSection() {
-    final settings = context.read<SubtitleSettingsProvider>();
+    final settings = context.read<SubtitleStyleProvider>();
 
     return Column(
       children: [
@@ -214,7 +214,7 @@ class _BuildSubtitleSettingContentState
   // [개별 드롭다운] - 모두 Provider 연결
   // 1) 위치 드롭다운
   Widget _buildPositionDropdown() {
-    final settings = context.read<SubtitleSettingsProvider>();
+    final settings = context.read<SubtitleStyleProvider>();
 
     return SettingDropdown(
       title: "세로 정렬",
@@ -230,7 +230,7 @@ class _BuildSubtitleSettingContentState
 
   // 1) 위치 드롭다운
   Widget _buildAlignmentDropdown() {
-    final settings = context.read<SubtitleSettingsProvider>();
+    final settings = context.read<SubtitleStyleProvider>();
 
     return SettingDropdown(
       title: "가로 정렬",
@@ -246,7 +246,7 @@ class _BuildSubtitleSettingContentState
 
   // 2) 폰트 크기 드롭다운
   Widget _buildSizeDropdown() {
-    final settings = context.read<SubtitleSettingsProvider>();
+    final settings = context.read<SubtitleStyleProvider>();
 
     return SettingDropdown(
       title: "크기",

@@ -13,7 +13,7 @@ import '../core/styles/size_core.dart';
 import '../providers/mode_provider.dart';
 import '../services/websocket_multiple_speech_service.dart';
 import '../services/websocket_stt_service.dart';
-import '../widgets/preview_widget/subtitle_setting_provider.dart';
+import '../providers/subtitle_style_provider.dart';
 import '../widgets/common/connection_status_bar_widget.dart';
 
 class SubtitlesOnlyScreen extends StatefulWidget {
@@ -63,7 +63,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
   @override
   void initState() {
     super.initState();
-    debugPrint("[🔴 INIT] initState 메서드 실행");
+    debugPrint("[INIT] initState 메서드 실행");
 
     // 1) 모드에 따른 서비스 할당
     // 현재 선택된 모드
@@ -72,7 +72,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     // 강의 모드
     if (mode == Mode.lecture) {
       _sttService = Provider.of<WebSocketSTTService>(context, listen: false);
-      debugPrint("[🔴 INIT] 강의 모드 서비스 할당됨");
+      debugPrint("[INIT] 강의 모드 서비스 할당됨");
     }
     // 회의 모드
     else {
@@ -80,17 +80,17 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
         context,
         listen: false,
       );
-      debugPrint("[🔴 INIT] 회의 모드 서비스 할당됨");
+      debugPrint("[INIT] 회의 모드 서비스 할당됨");
     }
 
     // 2) 콜백 설정
     _setupCallbacks();
 
     // 3) 화면이 그려진 직후, 딱 한 번만 서비스 시작 요청
-    debugPrint("[🔴 INIT] PostFrameCallback 등록");
+    debugPrint("[INIT] PostFrameCallback 등록");
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      debugPrint("[🔴 INIT] PostFrameCallback 실행됨");
-      debugPrint("[🔴 INIT] _initAndStartService 호출 시작");
+      debugPrint("[INIT] PostFrameCallback 실행됨");
+      debugPrint("[INIT] _initAndStartService 호출 시작");
       _initAndStartService();
     });
 
@@ -123,7 +123,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SubtitleSettingsProvider>(); // 자막 출력
+    final settings = context.watch<SubtitleStyleProvider>(); // 자막 출력
     final languages = settings.selectedOutputLanguages; // 선택된 출력 언어 목록 가져오기
 
     // [DEBUG] Provider 설정 확인
@@ -301,7 +301,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     if (_sttService is WebSocketMultipleSTTService &&
         _currentTranslations.isNotEmpty) {
       //lang 키 가져오기
-      final settings = Provider.of<SubtitleSettingsProvider>(
+      final settings = Provider.of<SubtitleStyleProvider>(
         context,
         listen: false,
       );
@@ -320,7 +320,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
   // 🎯 자동 언어 매핑 함수
   String? _findServerKeyForLanguage(
     String displayLanguage,
-    SubtitleSettingsProvider settings,
+    SubtitleStyleProvider settings,
     bool isConfirmedLine,
   ) {
     debugPrint("자막 언어 매핑 중...");
@@ -361,7 +361,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     if (googleCode != null) {
       if (availableKeys.contains(googleCode)) {
         serverKey = googleCode;
-        debugPrint("🔄 폴백 매핑 성공: '$displayLanguage' → '$googleCode'");
+        debugPrint("[DEBUG] 폴백 매핑 성공: '$displayLanguage' → '$googleCode'");
       }
     }
 
@@ -371,13 +371,13 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
         // ko와 ko-KR 매칭
         if (key.startsWith(googleCode) || googleCode.startsWith(key)) {
           serverKey = key;
-          debugPrint("🔄 부분 매핑 성공: '$displayLanguage' ($googleCode) → '$key'");
+          debugPrint("[DEBUG] 부분 매핑 성공: '$displayLanguage' ($googleCode) → '$key'");
           break;
         }
         // ko-KR과 ko 매칭
         if (key.contains('-') && key.split('-')[0] == googleCode) {
           serverKey = key;
-          debugPrint("🔄 접두사 매핑 성공: '$displayLanguage' ($googleCode) → '$key'");
+          debugPrint("[DEBUG] 접두사 매핑 성공: '$displayLanguage' ($googleCode) → '$key'");
           break;
         }
       }
@@ -388,7 +388,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
       for (String key in availableKeys) {
         if (key.contains(googleCode) || googleCode.contains(key)) {
           serverKey = key;
-          debugPrint("🔄 최종 부분 매핑: '$displayLanguage' ($googleCode) ↔ '$key'");
+          debugPrint("[DEBUG] 최종 부분 매핑: '$displayLanguage' ($googleCode) ↔ '$key'");
           break;
         }
       }
@@ -400,7 +400,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
   // 언어별 자막 반환 (자동 매핑 사용)
   String _getSubtitleText(
     String language,
-    SubtitleSettingsProvider settings,
+    SubtitleStyleProvider settings,
     bool isConfirmedLine,
   ) {
     final targetTranslations =
@@ -452,14 +452,13 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
   // [서비스 시작 함수]
   // [1] 서비스 시작
   Future<void> _initAndStartService() async {
-    debugPrint("[🔴 INIT-service] _initAndStartService 메서드 실행");
+    debugPrint("[INIT-service] _initAndStartService 메서드 실행");
 
-    // 이미 연결된 상태라면 아무것도 X ->
-    // if (_sttService.isConnected) return;
+    // 이미 연결된 상태라면
     if (_sttService.isConnected) {
-      debugPrint("[🔴 INIT-service] 이미 연결됨 - 다이얼로그만 표시");
+      debugPrint("[INIT-service] 이미 연결됨 - 다이얼로그만 표시");
 
-      // 🔥 이미 연결된 상태에서도 다이얼로그 표시
+      // 이미 연결된 상태에서도 다이얼로그 표시
       if (_sttService.isSessionReady) {
         // 이미 Ready 상태면 바로 완료 다이얼로그
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -475,11 +474,11 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
           }
         });
       }
-      return; // 🔥 새 연결은 시도하지 않음
+      return; // 새 연결은 시도하지 않음
     }
 
     // 1) 언어 설정 가져오기
-    final settings = Provider.of<SubtitleSettingsProvider>(
+    final settings = Provider.of<SubtitleStyleProvider>(
       context,
       listen: false,
     ); // 사용자가 설정한 언어 정보
@@ -487,25 +486,15 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     final outputLanguageCodes = settings.getOutputLanguageCodes(); // 출력 언어 설정
 
     debugPrint(
-      "[🔴 INIT-service] 입력 언어 - $inputLanguageCodes / 출력 언어 $outputLanguageCodes",
+      "[INIT-service] 입력 언어 - $inputLanguageCodes / 출력 언어 $outputLanguageCodes",
     );
 
     // 2) 웹소켓 연결
     bool connectd = await _sttService.connectToServer();
-    debugPrint("[🔴 INIT-service] 웹소켓 연결 성공 여부 - $connectd");
+    debugPrint("[INIT-service] 웹소켓 연결 성공 여부 - $connectd");
 
     // 연결 성공 시
     if (connectd) {
-      // debugPrint("[ DEBUG] 다이얼로그 호출 전");
-      // WidgetsBinding.instance.addPostFrameCallback((_) {
-      //   debugPrint("[ DEBUG] PostFrameCallback 실행됨");
-      //   if (mounted) {
-      //     debugPrint("[ DEBUG] mounted == true, Ready 다이얼로그 표시 시도 ...");
-      //     _showReadyDialog();
-      //   } else {
-      //     debugPrint("[ DEBUG] mounted == false, Ready 다이얼로그 표시 불가");
-      //   }
-      // });
       if (_sttService is WebSocketSTTService) {
         // 싱글 모드
         await _sttService.startSession(
@@ -559,8 +548,6 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
             });
             debugPrint("문장 확정!");
           } else {
-            //인식 중 상태 출력
-            //recognizing이라면 음성 인식 중 표시 on
             _updateRecognizingState();
           }
 
@@ -570,7 +557,6 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     }
 
     // 초기 상태 로드
-    //_currentTranslations = Map.from(_sttService.currentTranslations);
     _confirmedTranslations = {};
     _currentTranslations = {};
 
@@ -589,7 +575,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
       builder:
           (context) => ReadyReceivedDialog(
             onReadyConfirmed: () {
-              debugPrint("[🔴 DEBUG] 서버로부터 ready 수신 - 녹음 시작 가능");
+              debugPrint("[DEBUG] 서버로부터 ready 수신 - 녹음 시작 가능");
             },
           ),
     ).then((_) {
@@ -600,7 +586,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
   // [재연결 시도 관련 코드]
   // [1] 재연결 콜백 메서드
   void _reconnectionCallbacks() {
-    debugPrint("[🔴 Re-콜백] _reconnectionCallbacks 메서드 실행");
+    debugPrint("[Re-콜백] _reconnectionCallbacks 메서드 실행");
 
     // 콜백 중복 방지
     _sttService?.onStatusUpdate = null;
@@ -608,11 +594,11 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
 
     // [1-1] 서버 연결 상태
     _sttService?.onStatusUpdate = (String status) {
-      debugPrint("[🔴 Re-콜백] UI 상태 업데이트 $status");
+      debugPrint("[Re-콜백] UI 상태 업데이트 $status");
       if (!mounted) return;
       // >> UI 동작 (화면 업데이트)
       setState(() {
-        debugPrint("[🔴 Re-콜백] setState 호출");
+        debugPrint("[Re-콜백] setState 호출");
         // 1) 재연결 시도
         if (status.contains("재시도")) {
           _serverConnectionState =
@@ -642,7 +628,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
       });
     };
 
-    debugPrint("[🔴 Re-콜백] 콜백 등록 완료");
+    debugPrint("[Re-콜백] 콜백 등록 완료");
 
     // [1-2] 서버 연결 실패
     _sttService?.onError = (String message, String? errorCode) {
@@ -666,7 +652,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
   }
 
   Future<void> restartSTTConnection() async {
-    debugPrint("[🔴 DEBUG] _restartSTTConnection 메서드 실행");
+    debugPrint("[DEBUG] _restartSTTConnection 메서드 실행");
 
     // 1) 기존 연결 완전히 종료
     await _sttService.disconnect();

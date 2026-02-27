@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:html/parser.dart' as html_parser; //html 디코딩
 
-import '../widgets/preview_widget/subtitle_setting_provider.dart';
+import '../providers/subtitle_style_provider.dart';
 
 class WindowsOverlayManager {
   /// 윈도우 핸들 (HWND) : 윈도우 식별 ID
@@ -21,7 +21,7 @@ class WindowsOverlayManager {
   static Pointer<NativeFunction<WNDPROC>>? _wndProcPtr;
 
   // static 변수 선언(자막 데이터와 설정값)
-  static SubtitleSettingsProvider? _lastSettings;
+  static SubtitleStyleProvider? _lastSettings;
   static Size? _lastScreenSize;
   static Map<String, String> _lastCurrentTranslations = {};
   static Map<String, String> _lastConfirmedTranslations = {};
@@ -123,7 +123,7 @@ class WindowsOverlayManager {
     required List<String> languages,
     required Map<String, String> currentTranslations,
     required Map<String, String> confirmedTranslations,
-    required SubtitleSettingsProvider settings,
+    required SubtitleStyleProvider settings,
     required Size screenSize,
     String? currentSpeakingLanguage,
   }) {
@@ -303,7 +303,7 @@ class WindowsOverlayManager {
 
   /// 6. Flutter 설정을 Win32 GDI 폰트로 변환
   static int _createGdiFont(
-    SubtitleSettingsProvider settings,
+    SubtitleStyleProvider settings,
     Size screenSize,
   ) {
     final lf = calloc<LOGFONT>();
@@ -343,7 +343,7 @@ class WindowsOverlayManager {
   static String _findSubtitleText(
     String displayLanguage,
     bool isConfirmedLine,
-    SubtitleSettingsProvider settings,
+    SubtitleStyleProvider settings,
   ) {
     final targetTranslations =
         isConfirmedLine ? _lastConfirmedTranslations : _lastCurrentTranslations;
