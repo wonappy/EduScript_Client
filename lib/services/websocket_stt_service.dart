@@ -4,9 +4,6 @@ library;
 
 import 'package:flutter/cupertino.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:record/record.dart'; // 마이크 오디오 녹음
-import 'package:permission_handler/permission_handler.dart'; // 마이크 권한 관리
-import 'package:wakelock_plus/wakelock_plus.dart'; // 절전 모드 진입 방지
 
 import 'dart:convert'; // JSON 데이터 변환 (인코딩, 디코딩)
 import 'dart:typed_data'; // 바이너리 오디오 데이터 처리
@@ -15,6 +12,7 @@ import '../core/global_core.dart';
 import '../models/config_message_model.dart';
 import '../models/status_message_model.dart';
 import '../models/speech_translation_response_model.dart';
+import 'audio/audio_record_service.dart';
 
 class WebSocketSTTService {
   // [WebSocket 통신]
@@ -29,9 +27,9 @@ class WebSocketSTTService {
   int _countWebSocketChannel = 0;
   String? _transcriptBackup;
 
-  // [오디오 녹음 관련]
-  final AudioRecorder _audioRecorder = AudioRecorder(); // 오디오 캡쳐 객체
-  bool _isRecording = false; // 현재 녹음 상태
+  // [오디오 녹음 상태 관련]
+  final AudioRecordService _audioService =
+      AudioRecordService(); // 오디오 서비스 객체 변수 저장
   StreamSubscription<Uint8List>? _audioStreamSubscription; // 오디오 스트림 구독 관리
 
   // [현재 언어 설정]
@@ -66,7 +64,7 @@ class WebSocketSTTService {
   // [Getter] 현재 상태 확인
   bool get isConnected => _isConnected;
   bool get isSessionReady => _isSessionReady;
-  bool get isRecording => _isRecording;
+  bool get isRecording => _audioService.isRecording;
   String? get currentInputLanguage => _currentInputLanguage;
   List<String>? get currentTargetLanguages => _currentTargetLanguages;
 
@@ -209,27 +207,21 @@ class WebSocketSTTService {
     required String inputLanguage, // (매개변수1) 입력 언어 국가 설정
     required List<String> targetLanguages, // (매개변수2) 출력 언어 국가 설정
   }) async {
-    debugPrint("[DEBUG 2] startSession 메서드 실행 (세션 시작)");
+    _updateStatus("startSession 메서드 실행 (세션 시작)");
     // 0) 서버 연결 상태 확인
     if (!_isConnected || _webSocketChannel == null) {
       // 연결 상태 false || 웹소캣 객체 == null
-      _handleError("[ERROR 2] 세션 시작 실패", "서버가 연결되지 않았습니다");
+      _handleError("세션 시작 실패", "서버가 연결되지 않았습니다");
       return false;
     }
 
-    if (_isRecording) {
-      debugPrint("이미 녹음 중인 상태에서 세션 재시작 요청은 무시됨.");
+    if (isRecording) {
+      _handleError("재시작 실패", "이미 녹음 중인 상태에서 세션 재시작 요청은 무시됩니다.");
       return true;
     }
 
     try {
-      // 1) 마이크 권한 확인
-      if (!await _checkMicrophonePermission()) {
-        _handleError("[ERROR 2] 세션 시작 실패", "마이크 권한이 필요합니다");
-        return false;
-      }
-
-      // 2) 설정 메시지 생성
+      // 설정 메시지 생성
       final configMessage = ConfigMessage(
         inputLanguage: inputLanguage, // 입력 언어 국가
         targetLanguages: targetLanguages, // 출력 언어 국가
@@ -245,61 +237,48 @@ class WebSocketSTTService {
       // 자막 데이터 초기화
       _clearTranslationData(); // (호출) +) 번역 데이터 초기화
 
-      _updateStatus("[DEBUG 2] 세션 설정 전송 완료, 서버 응답 대기 중...");
+      _updateStatus("세션 설정 전송 완료, 서버 응답 대기 중...");
       _shouldAutoReconnect = true; // 세션 시작 시 자동 재연결 활성화
       return true;
     } catch (e) {
-      _handleError("[ERROR 2] 세션 시작 실패", e.toString());
+      _handleError("세션 시작 실패", e.toString());
       return false;
     }
   }
 
   // [3] 음성 녹음 시작
   Future<bool> startRecording() async {
-    debugPrint("[DEBUG 3] startRecording() 메서드 실행"); // 디버깅
+    debugPrint("[DEBUG] startRecording() 메서드 실행"); // 디버깅
     // 세션 상태 체크
     if (!_isSessionReady) {
       _handleError("녹음 시작 실패", "세션이 준비되지 않았습니다");
       return false;
     }
 
-    // 중복 녹음 방지 (마이크 리소스 하나만 사용)
-    if (_isRecording) {
-      _updateStatus("이미 녹음 중입니다");
-      return true;
-    }
-
     try {
-      // 1) 오디오 스트림 설정
-      final stream = await _audioRecorder.startStream(
-        const RecordConfig(
-          encoder: AudioEncoder.pcm16bits, // PCM 16bit 포맷
-          sampleRate: 16000, // 16kHz 샘플레이트
-          numChannels: 1, // 모노 채널
-        ),
-      );
+      // 오디오 스트림 요청
+      final stream = await _audioService.startRecording();
 
-      // 2) 절전 모드 진입 방지 활성화
-      await WakelockPlus.enable();
+      if (stream != null) {
+        // 오디오 데이터를 서버로 실시간 전송
+        _audioStreamSubscription = stream.listen(
+          // 오디오가 들어올 때 콜백
+          (audioData) {
+            // 바이너리 음성 데이터
+            if (_isConnected && _webSocketChannel != null) {
+              _webSocketChannel!.sink.add(audioData); // 음성 데이터를 실시간으로 전송
+            }
+          },
+          onError: (error) {
+            _handleError("오디오 스트림 오류", error.toString());
+          },
+        );
 
-      // 3) 오디오 데이터를 서버로 실시간 전송
-      _audioStreamSubscription = stream.listen(
-        // 오디오가 들어올 때 콜백
-        (audioData) {
-          // 바이너리 음성 데이터
-          if (_isConnected && _webSocketChannel != null) {
-            _webSocketChannel!.sink.add(audioData); // 음성 데이터를 실시간으로 전송
-          }
-        },
-        onError: (error) {
-          _handleError("오디오 스트림 오류", error.toString());
-        },
-      );
-
-      // 4) 상태 업데이트
-      _isRecording = true;
-      _updateStatus("🎤 음성 녹음 시작");
-      return true;
+        // 상태 업데이트
+        _updateStatus("음성 녹음 시작");
+        return true;
+      }
+      return false;
     } catch (e) {
       _handleError("녹음 시작 실패", e.toString());
       return false;
@@ -308,32 +287,30 @@ class WebSocketSTTService {
 
   // [4-1] 음성 녹음 중지
   Future<void> stopRecording() async {
-    debugPrint("[DEBUG 4-1] stopRecording() 메서드 (녹음 중지)"); // 디버깅
-    if (!_isRecording) return;
+    debugPrint("[DEBUG] stopRecording() 메서드 (녹음 중지)"); // 디버깅
+    if (!isRecording) return;
 
     debugPrint("녹음 중지 전 데이터: ${_transcriptHistory.length}개");
     debugPrint("전체 텍스트: $fullTranscriptText");
 
     try {
       await _audioStreamSubscription?.cancel();
-      await _audioRecorder.stop(); // 오디오 녹음 중지
-      await WakelockPlus.disable(); // 절전 모드 진입 방지 비활성화
       _audioStreamSubscription = null;
-      _isRecording = false;
+      _audioService.stopRecording(); // 음성 스트림 중지
 
-      debugPrint("녹음 중지 후 데이터: ${_transcriptHistory.length}개");
-      _updateStatus(">> [4] 음성 녹음 중지");
+      debugPrint("[DEBUG] 녹음 중지 후 데이터: ${_transcriptHistory.length}개");
+      _updateStatus("음성 녹음 중지");
     } catch (e) {
-      _handleError("- 녹음 중지 실패", e.toString());
+      _handleError("녹음 중지 실패", e.toString());
     }
   }
 
   // [4-2] 녹음 중지 후 재개
   Future<void> resumeRecording() async {
-    debugPrint("[DEBUG 4-2] resumeRecording() 메서드 실행 (녹음 중지 후 재개)"); // 디버깅
-    if (_isRecording || !_isConnected) return;
+    debugPrint("resumeRecording() 메서드 실행 (녹음 중지 후 재개)"); // 디버깅
+    if (isRecording || !_isConnected) return;
 
-    debugPrint("- 재시작 : 기존 데이터 연결됨");
+    _updateStatus("재시작 : 기존 데이터 연결됨");
     await startRecording(); // (호출) [3] 음성 녹음 시작
   }
 
@@ -376,15 +353,15 @@ class WebSocketSTTService {
   void _handleConnectionClosed() {
     if (_isReconnecting) {
       // "재연결" 상태면 새로운 재연결 X
-      debugPrint("[DEBUG 6] 이미 재연결 절차가 진행 중이므로 중복 스케줄링 방지함");
+      debugPrint("[DEBUG] 이미 재연결 절차가 진행 중이므로 중복 스케줄링 방지함");
       return; // 호출 위치 [1]로 돌아감
     }
 
-    debugPrint("[DEBUG 6] _handleConnectionClosed 메서드 실행 (재연결)");
+    debugPrint("[DEBUG] _handleConnectionClosed 메서드 실행 (재연결)");
 
     _isConnected = false; // 세션 연결 종료
     _isSessionReady = false; // 세션 준비 상태 종료
-    _wasRecordingBeforeDisconnect = _isRecording; // 끊어지기 전 상태 저장 (녹음 중이었는지)
+    _wasRecordingBeforeDisconnect = isRecording; // 끊어지기 전 상태 저장 (녹음 중이었는지)
 
     if (_shouldAutoReconnect && _reconnectAttempts < _maxReconnectAttempts) {
       // 자동 재연결, 재시도 횟수 < 3
@@ -392,7 +369,7 @@ class WebSocketSTTService {
     } else {
       // 횟수 초과로 재연결 중단
       _shouldAutoReconnect = false; // 중복 재연결 방지
-      _updateStatus("[DEBUG 6] 서버 연결 종료됨");
+      _updateStatus("서버 연결 종료됨");
     }
   }
 
@@ -405,7 +382,7 @@ class WebSocketSTTService {
           0,
           _reconnectDelays.length - 1,
         )]; // clamp(최소,최댓값)
-    _updateStatus("[DEBUG 6] $delay초 후 재연결 시도"); // 2, 6, 10초
+    _updateStatus("$delay초 후 재연결 시도"); // 2, 6, 10초
 
     // 2초 뒤에 [3]으로 이동
     _reconnectTimer = Timer(Duration(seconds: delay), _attemptReconnect);
@@ -454,7 +431,7 @@ class WebSocketSTTService {
         }
       }
     } catch (e) {
-      debugPrint("[DEBUG] _attemptReconnect 예외 발생 - $e");
+      _handleError("_attemptReconnect 예외 발생", e.toString());
       _isReconnecting = false;
     }
   }
@@ -470,33 +447,31 @@ class WebSocketSTTService {
     _reconnectAttempts = 0; // 재연결 시도 횟수 0으로 초기화
     _isReconnecting = false; // 연결 중 상태 OFF
     _stopReconnectTimer(); // 타이머 중지
-    debugPrint("[🐟 DEBUG] 재연결 상태 초기화");
+    _updateStatus("재연결 상태 초기화");
   }
 
   // [7] 연결 종료
   Future<void> disconnect() async {
-    debugPrint("[DEBUG 7] disconnect 메서드 실행 (연결 종료)");
+    debugPrint("[DEBUG] disconnect 메서드 실행 (연결 종료)");
     try {
       debugPrint('[DEBUG] 백업 직전 원문: $fullTranscriptText');
       _transcriptBackup = _transcriptHistory.join(' ');
 
-      // 1) 재연결 중지
+      // 재연결 중지
       _shouldAutoReconnect = false; // 수동 종료 시 자동 재연결 비활성화
       _stopReconnectTimer(); // 재연결 타이머 중지
-      // 2) 녹음 중지
+      // 녹음 중지
       await stopRecording();
-      // 3) 절전 모드 진입 방지 비활성화
-      await WakelockPlus.disable();
-      // 4) WebSocket 연결 종료
+      // WebSocket 연결 종료
       await _webSocketChannel?.sink.close();
       _webSocketChannel = null;
 
       _isConnected = false; // 세션 연결 종료
       _isSessionReady = false; // 세션 준비 상태 종료
 
-      _updateStatus("[DEBUG 7] 연결 종료 완료");
+      _updateStatus("연결 종료 완료");
     } catch (e) {
-      _handleError("[ERROR 7] 연결 종료 중 오류", e.toString());
+      _handleError("연결 종료 중 오류", e.toString());
     }
   }
 
@@ -506,7 +481,7 @@ class WebSocketSTTService {
     _currentTranslations.clear();
     _transcriptHistory.clear();
     _translationHistory.clear();
-    debugPrint("[DEBUG] 번역 데이터 초기화");
+    _updateStatus("번역 데이터 초기화");
   }
 
   // +) 번역 데이터 수동 초기화 (외부 호출 용)
@@ -514,7 +489,7 @@ class WebSocketSTTService {
     _clearTranslationData(); // (호출) +) 번역 데이터 초기화
   }
 
-  // 1) 서버 메시지 처리
+  // 서버 메시지 처리
   void _handleServerMessage(dynamic message) {
     try {
       Map<String, dynamic> data;
@@ -546,12 +521,12 @@ class WebSocketSTTService {
     }
   }
 
-  // 2) 상태 메시지 처리 (StatusMessage)
+  // 상태 메시지 처리 (StatusMessage)
   void _handleStatusMessage(StatusMessage statusMsg) {
     switch (statusMsg.status) {
       case 'ready':
         _isSessionReady = true;
-        _updateStatus("${statusMsg.message ?? '세션 준비 완료'}");
+        _updateStatus(statusMsg.message ?? '세션 준비 완료');
 
         startRecording(); // 녹음 시작
         break;
@@ -560,30 +535,19 @@ class WebSocketSTTService {
         _handleError(statusMsg.message ?? '서버 오류', statusMsg.errorCode);
         break;
       case 'warning':
-        _updateStatus("⚠️ ${statusMsg.message ?? '경고'}");
+        _updateStatus(statusMsg.message ?? '경고');
         break;
       case 'disconnected':
         _isConnected = false;
         _isSessionReady = false;
-        _updateStatus("🔌 ${statusMsg.message ?? '연결 종료'}");
+        _updateStatus(statusMsg.message ?? '연결 종료');
         break;
       default:
-        _updateStatus("📢 ${statusMsg.message ?? statusMsg.status}");
+        _updateStatus(statusMsg.message ?? statusMsg.status);
     }
   }
 
-  // 3) 마이크 권한 확인
-  Future<bool> _checkMicrophonePermission() async {
-    final status = await Permission.microphone.status;
-
-    if (status.isDenied) {
-      final result = await Permission.microphone.request();
-      return result.isGranted;
-    }
-    return status.isGranted;
-  }
-
-  // 4) 번역 결과 처리 (SpeechTranslationResponse) (콜백)
+  // 번역 결과 처리 (SpeechTranslationResponse) (콜백)
   void _handleTranslationResult(SpeechTranslationResponse response) {
     if (response.translations.isNotEmpty) {
       // 1) 현재 번역 결과 업데이트
@@ -627,15 +591,15 @@ class WebSocketSTTService {
     }
   }
 
-  // 5) 상태 업데이트 헬퍼 (콜백)
+  // 상태 업데이트 헬퍼 (콜백)
   void _updateStatus(String status) {
-    debugPrint("Status: $status");
+    debugPrint("[STATUS] $status");
     onStatusUpdate?.call(status); // 콜백
   }
 
-  // 6) 에러 처리 헬퍼 (콜백)
+  // 에러 처리 헬퍼 (콜백)
   void _handleError(String message, String? errorCode) {
-    debugPrint("Error: $message ${errorCode != null ? '($errorCode)' : ''}");
+    debugPrint("[ERROR] $message ${errorCode != null ? '($errorCode)' : ''}");
     onError?.call(message, errorCode); // 콜백
   }
 
