@@ -2,7 +2,8 @@ import 'package:client/core/styles/color_core.dart';
 import 'package:flutter/material.dart';
 import '../../../core/global_core.dart';
 
-/// 다중 언어 선택 다이얼로그
+/// # 다중 언어 선택 다이얼로그
+/// -
 
 class MultiLanguageSelectDialog extends StatefulWidget {
   final List<String> availableLanguages;

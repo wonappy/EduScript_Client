@@ -247,7 +247,7 @@ class SaveDialogComponents {
                                     ),
                                   ),
                                   icon: const Icon(
-                                    Icons.keyboard_arrow_down, // 🔥 아래 화살표 아이콘
+                                    Icons.keyboard_arrow_down, // 아래 화살표 아이콘
                                     color: Color(0xFF6B7280),
                                   ),
                                   isExpanded: true,

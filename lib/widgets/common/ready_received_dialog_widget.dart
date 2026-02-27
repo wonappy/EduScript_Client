@@ -62,14 +62,14 @@ class _ReadyReceivedDialogState extends State<ReadyReceivedDialog> {
               _isReadyReceived
                   ? // ready 수신 O
               const Icon(
-                Icons.task_alt, // 🔴 체크 표시 아이콘
+                Icons.task_alt,
                 color: AppColors.greenColor,
                 size: 48,
               )
                   : // ready 수신 X
               const CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                strokeWidth: 3, // 🔴 스피너 굵기
+                strokeWidth: 3,
               ),
               const SizedBox(height: 16),
 

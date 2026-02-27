@@ -66,13 +66,6 @@ class BuildPreviewBlock extends StatelessWidget {
                 AppSizes.baseRadius,
               ), // 반응형 모서리
               border: Border.all(color: Colors.transparent),
-              // boxShadow: [
-              //   BoxShadow(
-              //     color: Colors.black.withValues(alpha: 0.1),
-              //     blurRadius: 4,
-              //     offset: const Offset(2, 2),
-              //   ),
-              // ],
             ),
             child: GetBlockContent(
               title: title!,

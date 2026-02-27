@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
-import 'package:provider/provider.dart';
 import '../core/enum_core.dart';
 import 'mode_provider.dart';
 
+/// # 입출력 언어 설정 및 언어 매핑 관련 프로바이더
 class SubtitlesProvider extends ChangeNotifier {
-  // [변수] 선택된 언어 저장
   List<String> _selectedInputLanguages = [];
   List<String> _selectedOutputLanguages = [];
-  // [Getter] 선택된 언어 불러오기
+  
+  // [Getter] 선택된 언어 List 불러오기
   List<String> get selectedInputLanguages => _selectedInputLanguages;
   List<String> get selectedOutputLanguages => _selectedOutputLanguages;
 
@@ -15,11 +15,11 @@ class SubtitlesProvider extends ChangeNotifier {
   final ModeProvider _modeProvider;
   SubtitlesProvider(this._modeProvider);
 
-  // 1) 선택된 음성 언어
+  // 입력 언어 업데이트
   void updateInputLanguages(List<String> languages) {
     _selectedInputLanguages = languages;
 
-    // 현재 모드가 "토론 모드"일 떄
+    // 현재 모드 == "토론 모드"
     if (_modeProvider.currentMode == Mode.conference) {
       _selectedOutputLanguages = List.from(languages); // 출력 언어도 동기화
     }
@@ -27,11 +27,11 @@ class SubtitlesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // 2) 선택된 출력 언어
+  // 출력 언어 업데이트
   void updateOutputLanguages(List<String> languages) {
     _selectedOutputLanguages = languages;
 
-    // 현재 모드가 "토론 모드"일 때
+    // 현재 모드 == "토론 모드"
     if (_modeProvider.currentMode == Mode.conference) {
       _selectedInputLanguages = List.from(languages); // 입력 언어도 동기화
     }

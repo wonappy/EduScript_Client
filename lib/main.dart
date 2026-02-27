@@ -1,8 +1,8 @@
-import 'package:client/providers/mode_provider.dart';
 import 'package:client/screens/start_screen.dart';
 import 'package:client/services/websocket_multiple_speech_service.dart';
 import 'package:client/services/websocket_stt_service.dart';
-import 'package:client/widgets/preview_widget/subtitle_setting_provider.dart';
+import 'package:client/providers/mode_provider.dart';
+import 'package:client/providers/subtitle_style_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
@@ -21,10 +21,9 @@ void main() async {
   await windowManager.ensureInitialized();
   //[2] 창 옵션 지정
   WindowOptions windowOptions = WindowOptions(
-    size: const Size(1180, 620), //초기 창 크기
+    size: const Size(1180, 620),  //초기 창 크기
     minimumSize: Size(1180, 620), //최소 크기
-    //maximumSize: Size(1300, 750), //최대 크기
-    center: true, // 화면 중간에서 start
+    center: true,                 // 화면 중간에서 start
     skipTaskbar: false,
     titleBarStyle: TitleBarStyle.normal,
     title: "EduScript",
@@ -34,15 +33,12 @@ void main() async {
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
-    //windowManager.setMaximizable(false);
   });
-
-
 
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => SubtitleSettingsProvider()),
+        ChangeNotifierProvider(create: (context) => SubtitleStyleProvider()),
         ChangeNotifierProvider(create: (context) => ModeProvider()),
         Provider<WebSocketSTTService>(create: (_) => WebSocketSTTService()),
         Provider<WebSocketMultipleSTTService>(
