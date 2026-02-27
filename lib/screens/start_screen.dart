@@ -126,9 +126,9 @@ class _StartScreenState extends State<StartScreen> {
           Text(
             'EduScript',
             style: TextStyle(
-              fontSize: 110, // 🔵 제목 폰트 크기
+              fontSize: 110,
               fontWeight: FontWeight.bold,
-              color: AppColors.blueColor1, // 🔴 제목 폰트 색상
+              color: AppColors.blueColor1,
               letterSpacing: 2.0,
             ),
           ),
@@ -137,9 +137,8 @@ class _StartScreenState extends State<StartScreen> {
             'AI 기반 실시간 스크립트 생성',
             style: TextStyle(
               fontWeight: FontWeight.w500,
-              fontSize: 25, // 🔵 소제목 폰트 크기
-              // isWideScreen ? screenWidth * 0.02 : screenWidth * 0.04,
-              color: AppColors.greyFontColor, // 🔴 소제목 폰트 색상
+              fontSize: 25,
+              color: AppColors.greyFontColor,
               letterSpacing: 0.5,
             ),
           ),
@@ -157,10 +156,9 @@ class _StartScreenState extends State<StartScreen> {
           Text(
             'EduScript',
             style: TextStyle(
-              fontSize: 110, // 🔵 제목 폰트 크기
-              //isWideScreen ? screenWidth * 0.08 : screenWidth * 0.12,
+              fontSize: 110,
               fontWeight: FontWeight.bold,
-              color: AppColors.blueColor1, // 🔴 제목 폰트 색상
+              color: AppColors.blueColor1,
               letterSpacing: 2.0,
             ),
           ),
@@ -169,9 +167,8 @@ class _StartScreenState extends State<StartScreen> {
             '모드를 선택하세요',
             style: TextStyle(
               fontWeight: FontWeight.w500,
-              fontSize: 25, // 🔵 소제목 폰트 크기
-              // isWideScreen ? screenWidth * 0.02 : screenWidth * 0.04,
-              color: AppColors.greyFontColor, // 🔴 소제목 폰트 색상
+              fontSize: 25,
+              color: AppColors.greyFontColor,
               letterSpacing: 0.5,
             ),
           ),
@@ -192,13 +189,13 @@ class _StartScreenState extends State<StartScreen> {
       children: [
         Container(
           width: 200,
-          height: 50, // 🔵 시작하기 버튼 크기  //screenHeight * 0.07,
+          height: 50,
           margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
           child: ElevatedButton(
             onPressed: _showModeSelectionUI,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.blueColor2, // 🔴 버튼 배경색
-              foregroundColor: Colors.red, // 🔴 버튼 폰트색 ????????
+              backgroundColor: AppColors.blueColor2,
+              foregroundColor: Colors.red,
               elevation: 8,
               shadowColor: Colors.black26,
               shape: RoundedRectangleBorder(
@@ -208,9 +205,8 @@ class _StartScreenState extends State<StartScreen> {
             child: Text(
               '시작하기',
               style: TextStyle(
-                color: AppColors.whiteColor1, // 🔴 버튼 폰트색
-                fontSize: 30, // 🔵 폰트 크기
-                //isWideScreen ? screenWidth * 0.025 : screenWidth * 0.045,
+                color: AppColors.whiteColor1,
+                fontSize: 30,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 1.0,
               ),
@@ -233,13 +229,13 @@ class _StartScreenState extends State<StartScreen> {
         // 1) 강의 모드 버튼
         Container(
           width: 220,
-          height: 50, // 🔵 강의 모드 버튼 크기 // screenHeight * 0.08,
+          height: 50,
           margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
           child: ElevatedButton.icon(
             onPressed: () => _selectMode(Mode.lecture),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.blueColor2, // 🔴 버튼 배경색
-              foregroundColor: AppColors.whiteColor1, // 🔴 버튼 폰트색
+              backgroundColor: AppColors.blueColor2,
+              foregroundColor: AppColors.whiteColor1,
               elevation: 6,
               shadowColor: Colors.black26,
               shape: RoundedRectangleBorder(
@@ -254,10 +250,7 @@ class _StartScreenState extends State<StartScreen> {
                 Text(
                   '강의 모드',
                   style: TextStyle(
-                    fontSize: 30, // 🔵 폰트 크기
-                    // isWideScreen
-                    //     ? screenWidth * 0.025
-                    //     : screenWidth * 0.045,
+                    fontSize: 30,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.5,
                   ),
@@ -272,13 +265,13 @@ class _StartScreenState extends State<StartScreen> {
         // 2) 토론 모드 버튼
         Container(
           width: 220,
-          height: 50, // 🔵 토론 모드 버튼 크기
+          height: 50,
           margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
           child: ElevatedButton.icon(
             onPressed: () => _selectMode(Mode.conference),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.blueColor2, // 🔴 버튼 배경색
-              foregroundColor: AppColors.whiteColor1, // 🔴 버튼 폰트색
+              backgroundColor: AppColors.blueColor2,
+              foregroundColor: AppColors.whiteColor1,
               elevation: 6,
               shadowColor: Colors.black26,
               shape: RoundedRectangleBorder(
@@ -287,8 +280,7 @@ class _StartScreenState extends State<StartScreen> {
             ),
             icon: Icon(
               Icons.groups,
-              size:
-                  38, //isWideScreen ? screenWidth * 0.03 : screenWidth * 0.06,
+              size: 38,
             ),
             label: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -298,9 +290,6 @@ class _StartScreenState extends State<StartScreen> {
                   '토론 모드',
                   style: TextStyle(
                     fontSize: 30,
-                    // isWideScreen
-                    //     ? screenWidth * 0.025
-                    //     : screenWidth * 0.045,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.5,
                   ),

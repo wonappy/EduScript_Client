@@ -88,7 +88,7 @@ class ConnectionStatusBar extends StatelessWidget {
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w300,
-              fontSize: 14, // 🔴 화면 비율에 맞도록 수정
+              fontSize: 14, // 화면 비율에 맞도록 수정
               ),
             ),
           ),

@@ -1,14 +1,10 @@
-// 📁 providers/subtitle_settings_provider.dart
 import 'package:client/core/styles/size_core.dart';
 import 'package:flutter/material.dart';
+import '../models/language_mapping_model.dart';
 
-import '../../core/global_core.dart';
-import '../../core/enum_core.dart';
-import '../../providers/mode_provider.dart';
-import '../../models/language_mapping_model.dart';
-
-class SubtitleSettingsProvider extends ChangeNotifier {
-  // init
+/// # 자막 스타일 설정 프로바이더
+class SubtitleStyleProvider extends ChangeNotifier {
+  // 초기 상태
   bool _screenSharedEnabled = false;
   List<String> _selectedInputLanguages = ['한국어'];
   List<String> _selectedOutputLanguages = ['한국어'];
@@ -20,28 +16,7 @@ class SubtitleSettingsProvider extends ChangeNotifier {
   String _selectedBackgroundColor = '흰색';
   String _selectedBackgroundOpacity = '0%';
 
-  // [토론 모드일 때 언어 선택 동기화]
-  // 1) 선택된 음성 언어
-  // void updateInputLanguages(List<String> languages, {Mode? currentMode}) {
-  //   _selectedInputLanguages = languages;
-  //   // 현재 모드가 "토론 모드"일 떄
-  //   if (currentMode == Mode.conference) {
-  //     _selectedOutputLanguages = List.from(languages); // 출력 언어도 동기화
-  //   }
-  //   notifyListeners();
-  // }
-  //
-  // // 2) 선택된 출력 언어
-  // void updateOutputLanguages(List<String> languages, {Mode? currentMode}) {
-  //   _selectedOutputLanguages = languages;
-  //   // 현재 모드가 "토론 모드"일 때
-  //   if (currentMode == Mode.conference) {
-  //     _selectedInputLanguages = List.from(languages); // 입력 언어도 동기화
-  //   }
-  //   notifyListeners();
-  // }
-
-  // 🌐 언어 매핑 테이블
+  // 언어 매핑 테이블
   static final Map<String, LanguageMappingModel> _languageMappings = {
     '한국어': LanguageMappingModel(
       displayName: '한국어',
@@ -213,7 +188,7 @@ class SubtitleSettingsProvider extends ChangeNotifier {
     ),
   };
 
-  // getter
+  // [Getter]
   bool get screenSharedEnabled => _screenSharedEnabled;
   List<String> get selectedInputLanguages => _selectedInputLanguages;
   List<String> get selectedOutputLanguages => _selectedOutputLanguages;
@@ -227,13 +202,6 @@ class SubtitleSettingsProvider extends ChangeNotifier {
 
   //지원 언어 목록
   static List<String> get supportedLanguages => _languageMappings.keys.toList();
-
-  // 표시명 -> 언어 코드
-  // String getInputLanguageCode() {
-  //   if (_selectedInputLanguages.isEmpty) return 'ko-KR'; //디폴트 한국어
-  //   final mapping = _languageMappings[_selectedInputLanguages.first];
-  //   return mapping?.speechCode ?? 'ko-KR';
-  // }
 
   String getOutputLanguage(String lang) {
     return _languageMappings[lang]?.language ?? ' ';
@@ -270,12 +238,12 @@ class SubtitleSettingsProvider extends ChangeNotifier {
     return googleCode;
   }
 
-  // [자막 설정 업데이트 알림]
+  // [자막 스타일 업데이트]
   // 1) 화면 공유(오버레이) 모드 변경
   void updateScreenSharedEnabled(bool enabled) {
     _screenSharedEnabled = enabled;
-    notifyListeners(); // UI에게 업데이트 사항 알림
-    debugPrint("화면 공유(오버레이) 모드 : $screenSharedEnabled");
+    notifyListeners();
+    debugPrint("[DEBUG] 화면 공유(오버레이) 모드 : $screenSharedEnabled");
   }
 
   // 2) 입력 언어 설정 변경

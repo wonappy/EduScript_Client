@@ -2,16 +2,14 @@ import 'package:client/core/styles/color_core.dart';
 import 'package:client/core/styles/size_core.dart';
 import 'package:flutter/material.dart';
 
-/// 환경 설정 드롭다운 메뉴 (1) - 위치, 스타일, 크기
-
+/// 자막 설정 드롭다운 메뉴 (1) - 자막 정렬, 스타일, 크기
 class SettingDropdown extends StatefulWidget {
-  final String title; // 제목
-  final String initialValue; // 초기값
-  final List<String> options; // 옵션 List
+  final String title;           // 제목
+  final String initialValue;    // 초기값
+  final List<String> options;   // 옵션 List
   final Function(String) onChanged; // 상태가 바뀌었을 때
-  final double screenWidth; // 너비
-  final double screenHeight; // 높이
-  //final Widget Function(String)? customDisplay;
+  final double screenWidth;     // 너비
+  final double screenHeight;    // 높이
   final Color? backgroundColor; // 배경색
 
   const SettingDropdown({
@@ -22,7 +20,6 @@ class SettingDropdown extends StatefulWidget {
     required this.onChanged,
     required this.screenWidth,
     required this.screenHeight,
-    //this.customDisplay,
     this.backgroundColor,
   });
 
@@ -31,8 +28,8 @@ class SettingDropdown extends StatefulWidget {
 }
 
 class _SettingDropdownState extends State<SettingDropdown> {
-  MaterialColor dropdownMaterialColor = Colors.blueGrey; // 드롭다운 항목 배경색
-  late String selectedValue; // 선택된 값
+  MaterialColor dropdownMaterialColor = Colors.blueGrey; // 드롭다운 배경색
+  late String selectedValue;                             // 선택된 값
   final FocusNode _buttonFocusNode = FocusNode(
     debugLabel: 'Setting Dropdown Button',
   );
@@ -108,7 +105,7 @@ class _SettingDropdownState extends State<SettingDropdown> {
                         return Colors.transparent;
                       }),
                     ),
-                    onPressed: () => _selectOption(option), // 🔴 선택 시 실행할 함수
+                    onPressed: () => _selectOption(option), // 선택 시 실행할 함수
                     child: Container(
                       padding: EdgeInsets.all(10),
                       child: SizedBox(
@@ -137,13 +134,11 @@ class _SettingDropdownState extends State<SettingDropdown> {
               return InkWell(
                 focusNode: _buttonFocusNode,
                 onTap: () {
-                  // 🔴 드롭다운 버튼 클릭 시 이벤트
+                  // 드롭다운 버튼 클릭 시 이벤트
                   if (controller.isOpen) {
-                    // 열려있으면 닫기
-                    controller.close();
+                    controller.close(); // 열려있으면 닫기
                   } else {
-                    // 닫혀있으면 열기
-                    controller.open();
+                    controller.open();  // 닫혀있으면 열기
                   }
                 },
                 borderRadius: BorderRadius.circular(5),
