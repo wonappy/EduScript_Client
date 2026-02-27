@@ -1,5 +1,3 @@
-//오버레이 자막 창
-
 import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:client/core/styles/color_core.dart';
@@ -12,9 +10,10 @@ import '../core/styles/size_core.dart';
 import '../providers/mode_provider.dart';
 import '../services/websocket_multiple_speech_service.dart';
 import '../services/websocket_stt_service.dart';
-import '../widgets/preview_widget/subtitle_setting_provider.dart';
+import '../providers/subtitle_style_provider.dart';
 import '../widgets/common/connection_status_bar_widget.dart';
 
+/// # 화면 공유 ON 자막 화면 (오버레이)
 class SharedWithSubtitlesScreen extends StatefulWidget {
   const SharedWithSubtitlesScreen({super.key});
 
@@ -262,7 +261,7 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
     if (_overlayManager == null) return; // Windows가 아니거나 초기화 전이면 중단
 
     // Win32 매니저에 필요한 모든 최신 데이터를 전달
-    final settings = context.read<SubtitleSettingsProvider>();
+    final settings = context.read<SubtitleStyleProvider>();
     final screenSize = MediaQuery.of(context).size;
 
     _overlayManager!.update(

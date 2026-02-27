@@ -1,8 +1,7 @@
-/// 화면 공유 on/off 시 사용하는 위젯
 library;
-
 import 'package:flutter/material.dart';
 
+/// # 화면 공유 ON/OFF 시 사용하는 위젯
 class OnOffSwitch extends StatefulWidget {
   final bool initialValue; // 초기 상태
   final Function(bool)? onChanged; // 상태 변경 시 콜백
@@ -14,7 +13,7 @@ class OnOffSwitch extends StatefulWidget {
 }
 
 class _OnOffSwitchState extends State<OnOffSwitch> {
-  late bool isOn; // 현재 상태
+  late bool isOn; // 현재 ON/OFF 상태
 
   @override
   void initState() {

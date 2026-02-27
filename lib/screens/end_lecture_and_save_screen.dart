@@ -59,7 +59,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
     // 모드 설정 (한 번만)
     if (_currentMode == null) {
       _currentMode = Provider.of<ModeProvider>(context, listen: false).currentMode;
-      debugPrint("🔥 현재 모드: ${_currentMode.toString()}");
+      debugPrint("[DEBUG] 현재 모드 - ${_currentMode.toString()}");
 
     switch(_currentMode){
       case Mode.lecture:
@@ -80,7 +80,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
   Future<void> _processTranscriptAutomatically() async {
     final transcriptText = widget.fullTranscript;
 
-    debugPrint('🔍 STT 텍스트 확인:');
+    debugPrint('[DEBUG] STT 텍스트 확인:');
     debugPrint('  - 모드: ${_currentMode.toString()}');
     debugPrint('  - 텍스트 길이: ${transcriptText.length}');
     debugPrint('  - 텍스트 내용: "$transcriptText"');
@@ -99,7 +99,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
 
     try {
       final apiMode = _currentMode!.apiValue;
-      debugPrint("🔥 API 모드: $apiMode");
+      debugPrint("[DEBUG] API 모드: $apiMode");
 
       // 요약과 핵심 포인트 모두 활성화하여 정제
       final result = await _llmService.refineText(
@@ -112,10 +112,10 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
         enableNote: isSummaryFile, // 요약 파일이면 노트도 활성화
       );
 
-      debugPrint("🔥 응답 결과: $result");
+      debugPrint("[DEBUG] 응답 결과: $result");
       if (result != null) {
-        debugPrint("🔥 script_results 존재: ${result.containsKey('script_results')}");
-        debugPrint("🔥 total_files: ${result['total_files']}");
+        debugPrint("[DEBUG] script_results 존재: ${result.containsKey('script_results')}");
+        debugPrint("[DEBUG] total_files: ${result['total_files']}");
       }
 
       if (result != null) {
@@ -164,9 +164,9 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SaveDialogComponents.buildMainSection(
-                  isContentFileSelected: isContentFile, //첫번째 체크박스
-                  isSummaryFileSelected: isSummaryFile, //두번째 체크박스
-                  isMajorFileSelected: isMajorFile, //세번째 체크박스 (이 체크박스의 경우 회의모드에선 필요하지 않음)
+                  isContentFileSelected: isContentFile,   //첫번째 체크박스
+                  isSummaryFileSelected: isSummaryFile,   //두번째 체크박스
+                  isMajorFileSelected: isMajorFile,       //세번째 체크박스 (이 체크박스의 경우 회의모드에선 필요하지 않음)
                   showMajorFileCheckbox: _currentMode == Mode.lecture, // 강의 모드에서만 표시
                   contentLabel: _currentMode == Mode.lecture ? '정제된 발화 내용 파일' : '정제된 토론 발화 내용',
                   summaryLabel: _currentMode == Mode.lecture ? '강의 내용 요약 파일' : '토론 정리본',
@@ -315,7 +315,7 @@ Future<void> handleLectureFileSave() async {
   }
 }
 
-// 회의모드에서 파일 저장 처리
+// 토론 모드에서 파일 저장 처리
 Future<void> handleConferenceFileSave() async {
   if (!_validateBeforeSave()) return;
 
@@ -329,7 +329,7 @@ Future<void> handleConferenceFileSave() async {
       fileFormat: fileFormat.replaceAll('.', ''),
       enableNote: isSummaryFile, // note
       // 회의 모드는 현재 스크립트/노트 중심이라
-      // enableScript 등은 서버 설계에 맞춰 필요시 추가 가능
+      // enableScript 등은 서버 설계에 맞춰 필요 시 추가 가능
     );
 
     if (result == null) return _failSave('파일 생성에 실패했습니다');
@@ -341,7 +341,7 @@ Future<void> handleConferenceFileSave() async {
 
     List<String> savedFiles = [];
 
-    // 회의 스크립트
+    // 토론 스크립트
     if (isContentFile) {
       await _saveResultGroup(
         singleKey: 'script_result',
@@ -526,6 +526,4 @@ Future<void> _saveList(String key, String label, List<String> resultList) async 
       ),
     );
   }
-
-
 }

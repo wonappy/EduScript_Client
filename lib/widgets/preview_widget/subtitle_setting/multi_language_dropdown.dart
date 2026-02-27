@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import '../../../core/styles/size_core.dart';
 import 'multi_language_select_dialog.dart';
 
-/// 언어 다중 선택 드롭다운 메뉴
+/// 언어 다중 선택 드롭다운
 // 드롭다운 위젯
 class MultiLanguageDropdown extends StatelessWidget {
   final String title;
@@ -45,7 +45,7 @@ class MultiLanguageDropdown extends StatelessWidget {
     final mode = Provider.of<ModeProvider>(context, listen: false).currentMode;
     final bool isLectureMode = mode == Mode.lecture; // 강의 모드 true, 토론 모드 false
 
-    debugPrint("[🌻 DEBUG] 언어 선택 다이얼로그 열기 전 ... [$mode모드 / $selectedLanguages]");
+    debugPrint("[DEBUG] 언어 선택 다이얼로그 열기 전 ... [$mode모드 / $selectedLanguages]");
     final result = await showDialog<List<String>>(
       context: context,
       builder:
@@ -57,19 +57,18 @@ class MultiLanguageDropdown extends StatelessWidget {
           ),
     );
 
-    debugPrint("[🌻 DEBUG] 언어 선택 후 ... [$result]");
+    debugPrint("[DEBUG] 언어 선택 후 ... [$result]");
 
     if (result != null) {
-      debugPrint("[🌻 DEBUG] onChanged 전 ... [$result]");
+      debugPrint("[DEBUG] onChanged 전 ... [$result]");
       onChanged(result);
-      debugPrint("[🌻 DEBUG] onChanged 후 ... [$result]");
+      debugPrint("[DEBUG] onChanged 후 ... [$result]");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      //padding: EdgeInsets.symmetric(horizontal: 15, vertical: 0),
       decoration: BoxDecoration(
         color: AppColors.whiteColor1,
         borderRadius: BorderRadius.circular(30),

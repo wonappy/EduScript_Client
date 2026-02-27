@@ -15,7 +15,7 @@ import '../../../screens/shared_with_subtitles_screen.dart'; // 오버레이 화
 
 import '../../../core/enum_core.dart';
 import '../../../providers/mode_provider.dart';
-import '../subtitle_setting_provider.dart';
+import '../../../providers/subtitle_style_provider.dart';
 import 'time_manager.dart';
 import '../../preview_widget/play_progress/lecture_playbar_content.dart';
 import '../../../screens/end_lecture_and_save_screen.dart';
@@ -172,7 +172,7 @@ class _BuildLecturePlayBarContentState
     // 1) 재생 버튼 눌렀을 때
     if (!TimerManager.isPlaying) {
       // 자막 모드 확인 (화면 공유 or 자막 ONLY)
-      final subtitleSettings = context.read<SubtitleSettingsProvider>();
+      final subtitleSettings = context.read<SubtitleStyleProvider>();
       // -> "화면 공유" 모드가 켜져 있는데
       if (subtitleSettings.screenSharedEnabled) {
         // -> 사용자 PC의 OS 확인 (윈도우가 아닐 때)
@@ -213,7 +213,7 @@ class _BuildLecturePlayBarContentState
         debugPrint("기존 연결로 녹음 재시작");
       } else {
         // Provider에서 언어 설정 가져오기
-        final subtitleSettings = context.read<SubtitleSettingsProvider>();
+        final subtitleSettings = context.read<SubtitleStyleProvider>();
         final inputLanguageCodes = subtitleSettings.getInputLanguageCodes();
         final outputLanguageCodes = subtitleSettings.getOutputLanguageCodes();
 
