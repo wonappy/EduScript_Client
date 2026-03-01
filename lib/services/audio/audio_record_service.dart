@@ -79,14 +79,14 @@ class AudioRecordService {
     try {
       // 오디오 녹음 중지
       await _audioRecorder.stop();
-
+      debugPrint("[DEBUG] 마이크 하드웨어 중지 완료");
+    } catch (e) {
+      debugPrint("[ERROR] 녹음 중지 실패 : $e");
+    } finally {
       // 상태 업데이트
       await WakelockPlus.disable(); // 절전 모드 진입 방지 비활성화
       _isRecording = false;
-
-      debugPrint(">> 마이크 음성 스트림 중지 완료");
-    } catch (e) {
-      debugPrint("[ERROR] 녹음 중지 실패 : $e");
+      debugPrint("[DEBUG] 오디오 상태 변수 초기화 완료");
     }
   }
 }
