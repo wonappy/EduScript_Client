@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:client/core/styles/color_core.dart';
 import 'package:client/providers/mode_provider.dart';
 import 'package:client/services/websocket_multiple_speech_service.dart';
-import 'package:client/services/websocket_stt_service.dart';
+import 'package:client/services/websocket_single_speech_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../core/enum_core.dart';
@@ -16,8 +16,7 @@ class ReadyReceivedDialog extends StatefulWidget {
   const ReadyReceivedDialog({super.key, required this.onReadyConfirmed});
 
   @override
-  State<ReadyReceivedDialog> createState() =>
-      _ReadyReceivedDialogState();
+  State<ReadyReceivedDialog> createState() => _ReadyReceivedDialogState();
 }
 
 class _ReadyReceivedDialogState extends State<ReadyReceivedDialog> {
@@ -48,10 +47,7 @@ class _ReadyReceivedDialogState extends State<ReadyReceivedDialog> {
             color: Colors.black.withOpacity(0.8),
             borderRadius: BorderRadius.circular(10),
           ),
-          constraints: const BoxConstraints(
-            maxWidth: 300,
-            minHeight: 100,
-          ),
+          constraints: const BoxConstraints(maxWidth: 300, minHeight: 100),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -59,16 +55,16 @@ class _ReadyReceivedDialogState extends State<ReadyReceivedDialog> {
               // 1) 상태 아이콘
               _isReadyReceived
                   ? // ready 수신 O
-                    const Icon(
-                      Icons.task_alt,
-                      color: AppColors.greenColor,
-                      size: 48,
-                    )
+                  const Icon(
+                    Icons.task_alt,
+                    color: AppColors.greenColor,
+                    size: 48,
+                  )
                   : // ready 수신 X
-                    const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      strokeWidth: 3,
-                    ),
+                  const CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    strokeWidth: 3,
+                  ),
               const SizedBox(height: 16),
 
               // 2) 상태 멘트
@@ -105,10 +101,13 @@ class _ReadyReceivedDialogState extends State<ReadyReceivedDialog> {
     final mode = Provider.of<ModeProvider>(context, listen: false).currentMode;
     if (mode == Mode.lecture) {
       // 강의 모드
-      _sttService = Provider.of<WebSocketSTTService>(context, listen: false);
+      _sttService = Provider.of<WebSocketSingleSpeechService>(
+        context,
+        listen: false,
+      );
     } else if (mode == Mode.conference) {
       // 토론 모드
-      _sttService = Provider.of<WebSocketMultipleSTTService>(
+      _sttService = Provider.of<WebSocketMultipleSpeechService>(
         context,
         listen: false,
       );

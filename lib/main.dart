@@ -1,7 +1,7 @@
 import 'package:client/providers/language_setting_provider.dart';
 import 'package:client/screens/start_screen.dart';
 import 'package:client/services/websocket_multiple_speech_service.dart';
-import 'package:client/services/websocket_stt_service.dart';
+import 'package:client/services/websocket_single_speech_service.dart';
 import 'package:client/providers/mode_provider.dart';
 import 'package:client/providers/subtitle_style_provider.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +11,6 @@ import 'package:window_manager/window_manager.dart';
 import 'core/global_core.dart';
 
 void main() async {
-
   //<최소 창 크기 제한>
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -22,9 +21,9 @@ void main() async {
   await windowManager.ensureInitialized();
   //[2] 창 옵션 지정
   WindowOptions windowOptions = WindowOptions(
-    size: const Size(1180, 620),  //초기 창 크기
+    size: const Size(1180, 620), //초기 창 크기
     minimumSize: Size(1180, 620), //최소 크기
-    center: true,                 // 화면 중앙에서 start
+    center: true, // 화면 중앙에서 start
     skipTaskbar: false,
     titleBarStyle: TitleBarStyle.normal,
     title: "EduScript",
@@ -42,9 +41,11 @@ void main() async {
         ChangeNotifierProvider(create: (context) => ModeProvider()),
         ChangeNotifierProvider(create: (context) => LanguageSettingProvider()),
         ChangeNotifierProvider(create: (context) => SubtitleStyleProvider()),
-        Provider<WebSocketSTTService>(create: (_) => WebSocketSTTService()),
-        Provider<WebSocketMultipleSTTService>(
-          create: (_) => WebSocketMultipleSTTService(),
+        Provider<WebSocketSingleSpeechService>(
+          create: (_) => WebSocketSingleSpeechService(),
+        ),
+        Provider<WebSocketMultipleSpeechService>(
+          create: (_) => WebSocketMultipleSpeechService(),
         ),
       ],
       child: MyApp(),

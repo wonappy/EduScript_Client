@@ -1,4 +1,4 @@
-// [services/websocket_stt_service.dart]
+// [services/websocket_single_speech_service.dart]
 /// 서버 STT + 번역 (Single Mode) 엔드포인트 연결
 library;
 
@@ -13,24 +13,28 @@ import '../models/status_message_model.dart';
 import '../models/speech_translation_response_model.dart';
 import 'audio/audio_record_service.dart';
 
-class WebSocketSTTService {
+class WebSocketSingleSpeechService {
   // [서비스 객체 변수]
   final WebsocketClient _client = WebsocketClient(); // 웹소켓 클라이언트 객체 변수 저장
   final AudioRecordService _audioService =
       AudioRecordService(); // 오디오 서비스 객체 변수 저장
+
+  // [통신 엔드포인트 변수]
+  final String _serverEndpoint =
+      "/api/routes/speech-translation/connect/single-mode";
 
   // [오디오 스트림 연결] (오디오 -> 웹소켓)
   StreamSubscription<Uint8List>? _audioStreamSubscription; // 오디오 스트림 구독 관리
 
   // [상태 변수]
   bool _isSessionReady = false; // 음성 인식 세션 준비 여부
-  String? _transcriptBackup; // 자막 백업용
 
   // [현재 언어 설정] 재연결 시 복구 용도
   String? _currentInputLanguage; // 현재 입력 언어 (국가)
   List<String>? _currentTargetLanguages; // 현재 출력 언어 (국가)
 
   // [번역 결과 저장소]
+  String? _transcriptBackup; // 자막 백업용
   final Map<String, String> _currentTranslations = {}; // 현재 번역 결과
   final List<String> _transcriptHistory = []; // 원문 자막 저장소 -> llm 요약 활용
   final List<Map<String, String>> _translationHistory =
@@ -43,9 +47,10 @@ class WebSocketSTTService {
   Function(String, String?)? onError; // 에러 콜백
 
   // [싱글톤 패턴]
-  static final WebSocketSTTService _instance = WebSocketSTTService._internal();
-  factory WebSocketSTTService() => _instance;
-  WebSocketSTTService._internal() {
+  static final WebSocketSingleSpeechService _instance =
+      WebSocketSingleSpeechService._internal();
+  factory WebSocketSingleSpeechService() => _instance;
+  WebSocketSingleSpeechService._internal() {
     _initializeClientListeners();
   }
 
@@ -79,16 +84,16 @@ class WebSocketSTTService {
   Future<bool> connectToServer({bool isRetry = false}) async {
     debugPrint("[DEBUG] connectToServer 메서드 실행 (웹소켓 연결)");
 
-    if (!isRetry) _updateStatus("서버 연결 시도 . . .");
-    return await _client.connect(isRetry: isRetry);
+    if (!isRetry) _updateStatus("서버 연결 시도 (Lecture Mode). . .");
+    return await _client.connect(endpoint: _serverEndpoint, isRetry: isRetry);
   }
 
   // [2] 음성 인식 세션 시작 (언어 설정 - ConfigMessage)
   // 어플리케이션 세션 시작
   // 언어 설정 전송 -> "ready" 응답 대기
   Future<bool> startSession({
-    required String inputLanguage, // (매개변수1) 입력 언어 국가 설정
-    required List<String> targetLanguages, // (매개변수2) 출력 언어 국가 설정
+    required String inputLanguage, // 입력 언어 국가 설정
+    required List<String> targetLanguages, // 출력 언어 국가 설정
   }) async {
     debugPrint("[DEBUG] startSession 메서드 실행 (세션 시작)");
 
@@ -103,6 +108,7 @@ class WebSocketSTTService {
         inputLanguage: inputLanguage, // 입력 언어 국가
         targetLanguages: targetLanguages, // 출력 언어 국가
       );
+      debugPrint("[DEBUG] 언어 설정 정보 - ${configMessage.toJson()}");
 
       // JSON 매핑 -> 전송
       _client.send(jsonEncode(configMessage.toJson()));
@@ -155,7 +161,7 @@ class WebSocketSTTService {
 
   // [4] 음성 녹음 중지
   Future<void> stopRecording() async {
-    debugPrint("[DEBUG] stopRecording() 메서드 (녹음 중지)"); // 디버깅
+    debugPrint("[DEBUG] stopRecording() 메서드 (녹음 중지)");
 
     // 음성 스트림 종료
     await _audioStreamSubscription?.cancel(); // 음성 스트림 취소
@@ -357,13 +363,13 @@ class WebSocketSTTService {
     }
   }
 
-  // 상태 업데이트 헬퍼 (콜백)
+  // 상태 업데이트 (콜백)
   void _updateStatus(String status) {
     debugPrint("[STATUS] $status");
     onStatusUpdate?.call(status); // 콜백
   }
 
-  // 에러 처리 헬퍼 (콜백)
+  // 에러 출력 (콜백)
   void _handleError(String message, String? errorCode) {
     debugPrint("[ERROR] $message ${errorCode != null ? '($errorCode)' : ''}");
     onError?.call(message, errorCode); // 콜백
