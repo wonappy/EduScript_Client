@@ -2,6 +2,7 @@
 library;
 
 import 'package:client/core/styles/color_core.dart';
+import 'package:client/providers/language_setting_provider.dart';
 import 'package:flutter/material.dart';
 
 import '../../../providers/subtitle_style_provider.dart';
@@ -12,8 +13,9 @@ class BuildLecturePreviewOverlayContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SubtitleStyleProvider>();
+    final settings = context.watch<LanguageSettingProvider>();
     final languages = settings.selectedOutputLanguages;
+    final styles = context.watch<SubtitleStyleProvider>();
 
     const double referenceScreenWidth = 800.0;
 
@@ -41,8 +43,8 @@ class BuildLecturePreviewOverlayContent extends StatelessWidget {
           ),
           //자막 설정
           child: Column(
-            mainAxisAlignment: settings.getAlignment(),
-            crossAxisAlignment: settings.getHorizontalAlignment(),
+            mainAxisAlignment: styles.getAlignment(),
+            crossAxisAlignment: styles.getHorizontalAlignment(),
             children: [
               for (int i = 0; i < languages.length; i++)
                 Padding(
@@ -67,9 +69,9 @@ class BuildLecturePreviewOverlayContent extends StatelessWidget {
                       style: TextStyle(
                         color: Colors.white,
                         fontSize:
-                            settings.getFontSize(screenWidth) *
+                        styles.getFontSize(screenWidth) *
                             scaleFactor, //자막 글자 크기 지정
-                        fontStyle: settings.getFontStyle(),
+                        fontStyle: styles.getFontStyle(),
                         height: 1.2,
                         textBaseline: null,
                       ),

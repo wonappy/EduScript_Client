@@ -1,10 +1,7 @@
 import 'package:client/core/styles/color_core.dart';
 import 'package:flutter/material.dart';
-import '../../../core/global_core.dart';
 
-/// # 다중 언어 선택 다이얼로그
-/// -
-
+/// ### 다중 언어 선택 다이얼로그 (체크박스)
 class MultiLanguageSelectDialog extends StatefulWidget {
   final List<String> availableLanguages;
   final List<String> selectedLanguages;
@@ -84,7 +81,7 @@ class _MultiLanguageSelectDialogState extends State<MultiLanguageSelectDialog> {
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
-                ), // 🔴 제목 색상
+                ),
               ),
             ),
             SizedBox(height: 16),
@@ -93,11 +90,11 @@ class _MultiLanguageSelectDialogState extends State<MultiLanguageSelectDialog> {
             TextField(
               decoration: InputDecoration(
                 hintText: '언어 검색...',
-                hintStyle: TextStyle(color: Colors.grey), // 🔴 hint 텍스트 색상
+                hintStyle: TextStyle(color: Colors.grey),
                 prefixIcon: Icon(
                   Icons.search,
                   color: Colors.black,
-                ), // 🔴 아이콘 색상
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -107,7 +104,7 @@ class _MultiLanguageSelectDialogState extends State<MultiLanguageSelectDialog> {
                   borderSide: BorderSide(
                     color: Colors.blue,
                     width: 2,
-                  ), // 🔴 포커스 테두리
+                  ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   // 기본 테두리
@@ -115,7 +112,7 @@ class _MultiLanguageSelectDialogState extends State<MultiLanguageSelectDialog> {
                   borderSide: BorderSide(
                     color: Colors.grey,
                     width: 2,
-                  ), // 🔴 기본 테두리
+                  ),
                 ),
               ),
               onChanged: (value) => setState(() => _searchQuery = value),

@@ -1,19 +1,17 @@
-/// 화면 공유(오버레이) 모드일 때, 자막 설정 창 구성 (Provider 연동)
-library;
-
-import 'package:client/core/enum_core.dart';
 import 'package:client/core/styles/color_core.dart';
-import 'package:client/providers/mode_provider.dart';
+import 'package:client/core/styles/style_option_core.dart';
+import 'package:client/providers/language_setting_provider.dart';
 import 'package:client/core/styles/size_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/global_core.dart';
+import '../../../providers/mode_provider.dart';
 import '../../../providers/subtitle_style_provider.dart';
-import 'color_setting_drop_down_widget.dart';
 import 'multi_language_dropdown.dart';
 import 'onoff_switch_state_widget.dart';
 import 'setting_drop_down_widget.dart';
 
+/// ### 화면 공유(오버레이) 모드일 때, 자막 설정 창 구성 (Provider 연동)
 class BuildOverlaySubtitleSettingContent extends StatefulWidget {
   final double screenWidth;
   final double screenHeight;
@@ -38,8 +36,6 @@ class _BuildSubtitleSettingContentState
 
   @override
   Widget build(BuildContext context) {
-    // provider
-    final settings = context.watch<SubtitleStyleProvider>();
     return Container(
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(15)),
 
@@ -111,7 +107,8 @@ class _BuildSubtitleSettingContentState
 
   // 2) 입력 언어 설정 섹션
   Widget _buildInputLanguageSection() {
-    final settings = context.read<SubtitleStyleProvider>();
+    final mode = context.watch<ModeProvider>();
+    final settings = context.watch<LanguageSettingProvider>();
 
     return Column(
       children: [
@@ -128,15 +125,7 @@ class _BuildSubtitleSettingContentState
                       selectedLanguages: settings.selectedInputLanguages,
                       availableLanguages: inputLanguagesList,
                       onChanged: (List<String> newLanguages) {
-                        settings.updateInputLanguages(newLanguages); // 음성 언어 선택
-                        final currentMode =
-                            context.read<ModeProvider>().currentMode;
-                        if (currentMode == Mode.conference) {
-                          // 토론 모드일 때
-                          settings.updateOutputLanguages(
-                            newLanguages,
-                          ); // 음성 언어 = 자막 언어
-                        }
+                        settings.updateInputLanguages(newLanguages, mode.currentMode); // 인식 언어 업데이트
                       },
                       screenWidth: widget.screenWidth,
                       screenHeight: widget.screenHeight,
@@ -154,7 +143,8 @@ class _BuildSubtitleSettingContentState
 
   // 3) 출력 언어 설정 섹션
   Widget _buildOutputLanguageSection() {
-    final settings = context.read<SubtitleStyleProvider>();
+    final mode = context.watch<ModeProvider>();
+    final settings = context.watch<LanguageSettingProvider>();
 
     return Column(
       children: [
@@ -169,19 +159,11 @@ class _BuildSubtitleSettingContentState
                   selectedLanguages: settings.selectedOutputLanguages,
                   availableLanguages: outputLanguagesList,
                   onChanged: (List<String> newLanguages) {
-                    settings.updateOutputLanguages(newLanguages); // 자막 언어 설정
-                    final currentMode =
-                        context.read<ModeProvider>().currentMode;
-                    if (currentMode == Mode.conference) {
-                      // 토론 모드 시
-                      settings.updateInputLanguages(
-                        newLanguages,
-                      ); // 자막 언어 = 음성 언어
-                    }
+                    settings.updateOutputLanguages(newLanguages, mode.currentMode); // 출력 언어 업데이트
                   },
                   screenWidth: widget.screenWidth,
                   screenHeight: widget.screenHeight,
-                  isInputLanguage: false, // 음성 언어 선택 여부 (false -> 자막 언어 선택 중)
+                  isInputLanguage: false, // 인식 언어 선택 여부 (false -> 자막 언어 선택 중)
                 ),
               ),
               SizedBox(height: 20),
@@ -219,7 +201,7 @@ class _BuildSubtitleSettingContentState
     return SettingDropdown(
       title: "세로 정렬",
       initialValue: settings.selectedPosition,
-      options: ["상단", "중앙", "하단"],
+      options: StyleOptionCore.positionOptions,
       onChanged: (String newPosition) {
         settings.updatePosition(newPosition);
       },
@@ -235,7 +217,7 @@ class _BuildSubtitleSettingContentState
     return SettingDropdown(
       title: "가로 정렬",
       initialValue: settings.selectedHorizontalPosition,
-      options: ["좌측", "중앙", "우측"],
+      options: StyleOptionCore.horizontalPositionOptions,
       onChanged: (String newPosition) {
         settings.updateHorizontalPosition(newPosition);
       },
@@ -251,7 +233,7 @@ class _BuildSubtitleSettingContentState
     return SettingDropdown(
       title: "크기",
       initialValue: settings.selectedFontSize,
-      options: ["매우 작게", "작게", "중간", "크게", "매우 크게"],
+      options: StyleOptionCore.fontSizeOptions,
       onChanged: (String newSize) {
         settings.updateFontSize(newSize);
       },
@@ -297,12 +279,6 @@ class _BuildSubtitleSettingContentState
   Widget _buildSubSectionTitle(String title) {
     return Row(
       children: [
-        // Icon(
-        //   _getSubSectionIcon(title),
-        //   color: primaryColor,
-        //   size: 16,
-        // ),
-        //SizedBox(width: 6),
         Text(
           title,
           style: TextStyle(

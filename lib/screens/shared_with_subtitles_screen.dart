@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:client/core/styles/color_core.dart';
+import 'package:client/providers/language_setting_provider.dart';
 import 'package:client/services/windows_overlay_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -211,11 +212,6 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
             debugPrint("[Timer] 5초 경과. 자막을 초기화합니다.");
             WindowsOverlayManager.clearStaticData();
           });
-        } else {
-          // _currentTranslations.clear();
-          // translations.forEach((lang, result) {
-          //   _currentTranslations[lang] = result.resultText;
-          // });
         }
 
         // Win32 매니저에 데이터 전송
@@ -240,11 +236,6 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
             WindowsOverlayManager.clearStaticData();
             _updateOverlay();
           });
-        } else {
-          // _currentTranslations.clear();
-          // translations.forEach((lang, result) {
-          //   _currentTranslations[lang] = result.resultText;
-          // });
         }
 
         // Win32 매니저에 데이터 전송
@@ -261,7 +252,8 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
     if (_overlayManager == null) return; // Windows가 아니거나 초기화 전이면 중단
 
     // Win32 매니저에 필요한 모든 최신 데이터를 전달
-    final settings = context.read<SubtitleStyleProvider>();
+    final settings = context.read<LanguageSettingProvider>();
+    final styles = context.read<SubtitleStyleProvider>();
     final screenSize = MediaQuery.of(context).size;
 
     _overlayManager!.update(
@@ -269,6 +261,7 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
       currentTranslations: _currentTranslations,
       confirmedTranslations: _confirmedTranslations,
       settings: settings,
+      styles: styles,
       screenSize: screenSize,
       currentSpeakingLanguage: _currentSpeakingLanguage,
     );

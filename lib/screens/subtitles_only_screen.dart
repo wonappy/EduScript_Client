@@ -1,13 +1,10 @@
-//자막 (프롬프트 느낌 ver)
 import 'dart:async';
-
 import 'package:client/core/styles/color_core.dart';
+import 'package:client/providers/language_setting_provider.dart';
 import 'package:client/widgets/common/ready_received_dialog_widget.dart';
-//import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:html/parser.dart' as html_parser;
-
 import '../core/enum_core.dart';
 import '../core/styles/size_core.dart';
 import '../providers/mode_provider.dart';
@@ -16,6 +13,7 @@ import '../services/websocket_stt_service.dart';
 import '../providers/subtitle_style_provider.dart';
 import '../widgets/common/connection_status_bar_widget.dart';
 
+/// ### 자막 (프롬프트 느낌 ver)
 class SubtitlesOnlyScreen extends StatefulWidget {
   final Color backgroundColor; // 배경 색상
   final String subWordFont; // 자막 글꼴
@@ -122,9 +120,10 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final settings = context.watch<SubtitleStyleProvider>(); // 자막 출력
-    final languages = settings.selectedOutputLanguages; // 선택된 출력 언어 목록 가져오기
+  Widget build(BuildContext context) {    
+    final settings = context.watch<LanguageSettingProvider>(); // 언어 List 프로바이더
+    final languages = settings.selectedOutputLanguages;        // 선택된 출력 언어 List 가져오기
+    final styles = context.watch<SubtitleStyleProvider>();     // 자막 스타일 프로바이더
 
     // [DEBUG] Provider 설정 확인
     debugPrint("Provider 설정:");
@@ -148,7 +147,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
             height: screenHeight,
             color: AppColors.blackColor, //배경 색상 지정
             child: Column(
-              mainAxisAlignment: settings.getAlignment(),
+              mainAxisAlignment: styles.getAlignment(),
               children: [
                 for (int i = 0; i < languages.length; i++)
                   Column(
@@ -161,15 +160,11 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
                           vertical: 10 * scaleFactor,
                         ),
                         width: screenWidth * 0.95,
-                        //최대 자막 컨테이너 높이
-                        // constraints: BoxConstraints(
-                        //   maxHeight: screenHeight * 0.2,
-                        // ),
                         decoration: BoxDecoration(
-                          color: settings.getBackgroundColor().withValues(
+                          color: styles.getBackgroundColor().withValues(
                             //자막 배경 색상 지정
                             alpha:
-                                settings.getBackgroundOpacity() *
+                            styles.getBackgroundOpacity() *
                                 0.6, //현재 자막의 60% 정도 투명도
                           ),
                           borderRadius: BorderRadius.circular(5),
@@ -182,12 +177,12 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
                           ), //자막 내용 지정
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: settings.getFontColor(), //자막 글자 색상 지정
+                            color: styles.getFontColor(), //자막 글자 색상 지정
                             fontSize:
-                                settings.getFontSize(screenWidth) *
+                            styles.getFontSize(screenWidth) *
                                 scaleFactor, //자막 글자 크기 지정
-                            fontWeight: settings.getFontWeight(),
-                            fontStyle: settings.getFontStyle(),
+                            fontWeight: styles.getFontWeight(),
+                            fontStyle: styles.getFontStyle(),
                             textBaseline: null,
                           ),
                         ),
@@ -301,7 +296,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     if (_sttService is WebSocketMultipleSTTService &&
         _currentTranslations.isNotEmpty) {
       //lang 키 가져오기
-      final settings = Provider.of<SubtitleStyleProvider>(
+      final settings = Provider.of<LanguageSettingProvider>(
         context,
         listen: false,
       );
@@ -317,10 +312,10 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     return result;
   }
 
-  // 🎯 자동 언어 매핑 함수
+  // 자동 언어 매핑 함수
   String? _findServerKeyForLanguage(
     String displayLanguage,
-    SubtitleStyleProvider settings,
+    LanguageSettingProvider settings,
     bool isConfirmedLine,
   ) {
     debugPrint("자막 언어 매핑 중...");
@@ -400,7 +395,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
   // 언어별 자막 반환 (자동 매핑 사용)
   String _getSubtitleText(
     String language,
-    SubtitleStyleProvider settings,
+    LanguageSettingProvider settings,
     bool isConfirmedLine,
   ) {
     final targetTranslations =
@@ -478,7 +473,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     }
 
     // 1) 언어 설정 가져오기
-    final settings = Provider.of<SubtitleStyleProvider>(
+    final settings = Provider.of<LanguageSettingProvider>(
       context,
       listen: false,
     ); // 사용자가 설정한 언어 정보

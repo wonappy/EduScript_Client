@@ -2,196 +2,21 @@ import 'package:client/core/styles/size_core.dart';
 import 'package:flutter/material.dart';
 import '../models/language_mapping_model.dart';
 
-/// # 자막 스타일 설정 프로바이더
+/// ### 자막 스타일 설정 프로바이더
+/// - 화면 공유 상태, 자막 위치, 정렬, 스타일, 크기, 색상, 배경색상, 배경불투명도
 class SubtitleStyleProvider extends ChangeNotifier {
   // 초기 상태
-  bool _screenSharedEnabled = false;
-  List<String> _selectedInputLanguages = ['한국어'];
-  List<String> _selectedOutputLanguages = ['한국어'];
-  String _selectedPosition = '중앙';
-  String _selectedHorizontalPosition = '좌측';
-  String _selectedFontStyle = '기본';
-  String _selectedFontSize = '중간';
-  String _selectedFontColor = '흰색';
-  String _selectedBackgroundColor = '흰색';
-  String _selectedBackgroundOpacity = '0%';
-
-  // 언어 매핑 테이블
-  static final Map<String, LanguageMappingModel> _languageMappings = {
-    '한국어': LanguageMappingModel(
-      displayName: '한국어',
-      language: '한국어',
-      speechCode: 'ko-KR',
-      translationCode: 'ko',
-      previewText: '안녕하세요! 테스트 자막입니다.',
-    ),
-    '영어': LanguageMappingModel(
-      displayName: '영어',
-      language: 'English',
-      speechCode: 'en-US',
-      translationCode: 'en',
-      previewText: 'Hello! This is a test subtitle.',
-    ),
-    '일본어': LanguageMappingModel(
-      displayName: '일본어',
-      language: '日本語',
-      speechCode: 'ja-JP',
-      translationCode: 'ja',
-      previewText: 'こんにちは！テスト字幕です。',
-    ),
-    '중국어': LanguageMappingModel(
-      displayName: '중국어',
-      language: '中文',
-      speechCode: 'zh-CN',
-      translationCode: 'zh-CN',
-      previewText: '你好！这是测试字幕。',
-    ),
-    '독일어': LanguageMappingModel(
-      displayName: '독일어',
-      language: 'Deutsch',
-      speechCode: 'de-DE',
-      translationCode: 'de',
-      previewText: 'Hallo! Dies ist ein Test-Untertitel.',
-    ),
-    '프랑스어': LanguageMappingModel(
-      displayName: '프랑스어',
-      language: 'Français',
-      speechCode: 'fr-FR',
-      translationCode: 'fr',
-      previewText: 'Bonjour! Ceci est un sous-titre de test.',
-    ),
-    '스페인어': LanguageMappingModel(
-      displayName: '스페인어',
-      language: 'Español',
-      speechCode: 'es-ES',
-      translationCode: 'es',
-      previewText: '¡Hola! Este es un subtítulo de prueba.',
-    ),
-    '이탈리아어': LanguageMappingModel(
-      displayName: '이탈리아어',
-      language: 'Italiano',
-      speechCode: 'it-IT',
-      translationCode: 'it',
-      previewText: 'Ciao! Questo è un sottotitolo di prova.',
-    ),
-    '러시아어': LanguageMappingModel(
-      displayName: '러시아어',
-      language: 'Русский',
-      speechCode: 'ru-RU',
-      translationCode: 'ru',
-      previewText: 'Здравствуйте! Это тестовые субтитры.',
-    ),
-    '포르투갈어': LanguageMappingModel(
-      displayName: '포르투갈어',
-      language: 'Português',
-      speechCode: 'pt-BR',
-      translationCode: 'pt',
-      previewText: 'Olá! Escta é uma legenda de teste.',
-    ),
-    '아랍어': LanguageMappingModel(
-      displayName: '아랍어',
-      language: 'العربية',
-      speechCode: 'ar-SA',
-      translationCode: 'ar',
-      previewText: 'مرحبا! هذه ترجمة تجريبية.',
-    ),
-    '힌디어': LanguageMappingModel(
-      displayName: '힌디어',
-      language: 'हिन्दी',
-      speechCode: 'hi-IN',
-      translationCode: 'hi',
-      previewText: 'नमस्ते! यह एक परीक्षण उपशीर्षक है।',
-    ),
-    '태국어': LanguageMappingModel(
-      displayName: '태국어',
-      language: 'ภาษาไทย',
-      speechCode: 'th-TH',
-      translationCode: 'th',
-      previewText: 'สวัสดี! นี่คือคำบรรยายทดสอบ',
-    ),
-    '인도네시아어': LanguageMappingModel(
-      displayName: '인도네시아어',
-      language: 'Bahasa Indonesia',
-      speechCode: 'id-ID',
-      translationCode: 'id',
-      previewText: 'Halo! Ini adalah subtitle uji coba.',
-    ),
-    '네덜란드어': LanguageMappingModel(
-      displayName: '네덜란드어',
-      language: 'Nederlands',
-      speechCode: 'nl-NL',
-      translationCode: 'nl',
-      previewText: 'Hallo! Dit is een test ondertitel.',
-    ),
-    '폴란드어': LanguageMappingModel(
-      displayName: '폴란드어',
-      language: 'Polski',
-      speechCode: 'pl-PL',
-      translationCode: 'pl',
-      previewText: 'Cześć! To jest testowy napis.',
-    ),
-    '스웨덴어': LanguageMappingModel(
-      displayName: '스웨덴어',
-      language: 'Svenska',
-      speechCode: 'sv-SE',
-      translationCode: 'sv',
-      previewText: 'Hej! Detta är en testundertext.',
-    ),
-    '핀란드어': LanguageMappingModel(
-      displayName: '핀란드어',
-      language: 'Suomi',
-      speechCode: 'fi-FI',
-      translationCode: 'fi',
-      previewText: 'Hei! Tämä on testi tekstitys.',
-    ),
-    '덴마크어': LanguageMappingModel(
-      displayName: '덴마크어',
-      language: 'Dansk',
-      speechCode: 'da-DK',
-      translationCode: 'da',
-      previewText: 'Hej! Dette er en test undertekst.',
-    ),
-    '몽골어': LanguageMappingModel(
-      displayName: '몽골어',
-      language: 'Монгол',
-      speechCode: 'mn-MN',
-      translationCode: 'mn',
-      previewText: 'Сайн уу! Энэ бол текстийн хадмал гарчиг юм.',
-    ),
-    '네팔어': LanguageMappingModel(
-      displayName: '네팔어',
-      language: 'नेपाली',
-      speechCode: 'ne-NP',
-      translationCode: 'ne',
-      previewText: 'नमस्ते! यो एउटा परीक्षण उपशीर्षक हो।',
-    ),
-    '크메르어(캄보디아)': LanguageMappingModel(
-      displayName: '크메르어(캄보디아)',
-      language: 'ខ្មែរ (កម្ពុជា)',
-      speechCode: 'km-KH',
-      translationCode: 'km',
-      previewText: 'សួស្តី! នេះជាចំណងជើងរងសាកល្បង។',
-    ),
-    '우즈베크어(우즈베키스탄)': LanguageMappingModel(
-      displayName: '우즈베크어(우즈베키스탄)',
-      language: 'O‘zbek (O‘zbekiston)',
-      speechCode: 'uz-UZ',
-      translationCode: 'uz',
-      previewText: 'Salom! Bu matn taglavhasi.',
-    ),
-    '베트남어': LanguageMappingModel(
-      displayName: '베트남어',
-      language: 'Tiếng Việt',
-      speechCode: 'vi-VN',
-      translationCode: 'vi',
-      previewText: 'Xin chào! Đây là phụ đề thử nghiệm.',
-    ),
-  };
+  bool _screenSharedEnabled = false;           // 화면 공유 상태
+  String _selectedPosition = '중앙';            // 자막 위치
+  String _selectedHorizontalPosition = '좌측';  // 자막 정렬
+  String _selectedFontStyle = '기본';           // 자막 스타일 (굵기, 이탤릭)
+  String _selectedFontSize = '중간';            // 자막 크기
+  String _selectedFontColor = '흰색';           // 자막 색상
+  String _selectedBackgroundColor = '흰색';     // 자막 배경 색상
+  String _selectedBackgroundOpacity = '0%';    // 자막 배경 불투명도
 
   // [Getter]
   bool get screenSharedEnabled => _screenSharedEnabled;
-  List<String> get selectedInputLanguages => _selectedInputLanguages;
-  List<String> get selectedOutputLanguages => _selectedOutputLanguages;
   String get selectedPosition => _selectedPosition;
   String get selectedHorizontalPosition => _selectedHorizontalPosition;
   String get selectedFontStyle => _selectedFontStyle;
@@ -200,45 +25,7 @@ class SubtitleStyleProvider extends ChangeNotifier {
   String get selectedBackgroundColor => _selectedBackgroundColor;
   String get selectedBackgroundOpacity => _selectedBackgroundOpacity;
 
-  //지원 언어 목록
-  static List<String> get supportedLanguages => _languageMappings.keys.toList();
-
-  String getOutputLanguage(String lang) {
-    return _languageMappings[lang]?.language ?? ' ';
-  }
-
-  List<String> getInputLanguageCodes() {
-    return _selectedInputLanguages
-        .map((lang) => _languageMappings[lang]?.speechCode ?? 'ko-KR')
-        .toList();
-  }
-
-  List<String> getOutputLanguageCodes() {
-    return _selectedOutputLanguages
-        .map((lang) => _languageMappings[lang]?.translationCode ?? 'ko')
-        .toList();
-  }
-
-  // 언어 코드 -> 표시명
-  String getDisplayNameFromAzureCode(String azureCode) {
-    for (final entry in _languageMappings.entries) {
-      if (entry.value.speechCode == azureCode) {
-        return entry.key;
-      }
-    }
-    return azureCode;
-  }
-
-  String getDisplayNameFromGoogleCode(String googleCode) {
-    for (final entry in _languageMappings.entries) {
-      if (entry.value.translationCode == googleCode) {
-        return entry.key;
-      }
-    }
-    return googleCode;
-  }
-
-  // [자막 스타일 업데이트]
+  // [Update]
   // 1) 화면 공유(오버레이) 모드 변경
   void updateScreenSharedEnabled(bool enabled) {
     _screenSharedEnabled = enabled;
@@ -246,86 +33,49 @@ class SubtitleStyleProvider extends ChangeNotifier {
     debugPrint("[DEBUG] 화면 공유(오버레이) 모드 : $screenSharedEnabled");
   }
 
-  // 2) 입력 언어 설정 변경
-  void updateInputLanguages(List<String> languages) {
-    _selectedInputLanguages = languages;
-    notifyListeners();
-  }
-
-  // 3) 출력 언어 설정 변경
-  void updateOutputLanguages(List<String> languages) {
-    _selectedOutputLanguages = languages;
-    notifyListeners();
-  }
-
-  // 4) 자막 위치 설정 변경
+  // 2) 자막 위치 설정 변경
   void updatePosition(String position) {
     _selectedPosition = position;
     notifyListeners();
   }
 
-  // 4-1) 자막 가로 위치 설정 변경
+  // 2-1) 자막 가로 위치 설정 변경
   void updateHorizontalPosition(String position) {
     _selectedHorizontalPosition = position;
     notifyListeners();
   }
 
-  // 5) 폰트 스타일 설정 변경
+  // 3) 폰트 스타일 설정 변경
   void updateFontStyle(String style) {
     _selectedFontStyle = style;
     notifyListeners();
   }
 
-  // 6) 폰트 크기 설정 변경
+  // 4) 폰트 크기 설정 변경
   void updateFontSize(String size) {
     _selectedFontSize = size;
     notifyListeners();
   }
 
-  // 7) 폰트 색상 설정 변경
+  // 5) 폰트 색상 설정 변경
   void updateFontColor(String color) {
     _selectedFontColor = color;
     notifyListeners();
   }
 
-  // 8) 자막 배경색 설정 변경
+  // 6) 자막 배경색 설정 변경
   void updateBackgroundColor(String color) {
     _selectedBackgroundColor = color;
     notifyListeners();
   }
 
-  // 9) 자막 배경색 투명도 설정 변경
+  // 7) 자막 배경색 투명도 설정 변경
   void updateBackgroundOpacity(String opacity) {
     _selectedBackgroundOpacity = opacity;
     notifyListeners();
   }
 
-  // get 함수
-  String getPreviewText(String language) {
-    switch (language) {
-      case '영어':
-        return 'Hello! This is a test subtitle.';
-      case '일본어':
-        return 'こんにちは！テスト字幕です。';
-      case '중국어':
-        return '你好！这是测试字幕。';
-      case '몽골어':
-        return 'Сайн уу! Энэ бол текстийн хадмал гарчиг юм.';
-      case '네팔어':
-        return 'नमस्ते! यो एउटा परीक्षण उपशीर्षक हो।';
-      case '크메르어(캄보디아)':
-        return 'សួស្តី! នេះជាចំណងជើងរងសាកល្បង។';
-      case '우즈베크어(우즈베키스탄)':
-        return 'Salom! Bu matn taglavhasi.';
-      case '러시아어':
-        return 'Здравствуйте! Это тестовые субтитры.';
-      case '베트남어':
-        return 'Xin chào! Đây là phụ đề thử nghiệm.';
-      default:
-        return '안녕하세요! 텍스트 자막입니다.';
-    }
-  }
-
+  // [드롭다운 값]
   MainAxisAlignment getAlignment() {
     switch (_selectedPosition) {
       case '상단':

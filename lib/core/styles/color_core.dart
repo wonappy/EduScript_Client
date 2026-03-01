@@ -1,7 +1,6 @@
-// app_colors.dart
-// 색상 팔레트
 import 'dart:ui';
 
+/// ### 색상 팔레트
 class AppColors {
   // 배경색
   static const Color whiteColor1 = Color(0xFFFFFFFF); // 흰색
