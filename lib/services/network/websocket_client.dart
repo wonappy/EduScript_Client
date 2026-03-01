@@ -11,8 +11,7 @@ import '../../core/global_core.dart';
 class WebsocketClient {
   // [통신 변수]
   WebSocketChannel? _channel; // 실시간 통신 채널
-  final String _serverEndpoint =
-      "/api/routes/speech-translation/connect/single-mode";
+  String? _serverEndpoint;
 
   // [연결 상태 변수]
   bool _isConnected = false; // 서버 연결 상태
@@ -40,7 +39,9 @@ class WebsocketClient {
   WebsocketClient._internal();
 
   // 서버 연결 시도
-  Future<bool> connect({bool isRetry = false}) async {
+  Future<bool> connect({required String endpoint, bool isRetry = false}) async {
+    _serverEndpoint = endpoint; // 엔드포인트 저장
+
     // 기존 연결 정리
     if (_channel != null) {
       try {
@@ -173,17 +174,26 @@ class WebsocketClient {
     _reconnectAttempts++; // 재연결 시도 횟수 증가
     debugPrint("[DEBUG]서버 연결 재시도 ($_reconnectAttempts/$_maxReconnectAttempts)");
 
-    // 재연결 시도
-    final success = await connect(isRetry: true);
-    _isReconnecting = false;
+    if (_serverEndpoint != null) {
+      // 재연결 시도
+      final success = await connect(endpoint: _serverEndpoint!, isRetry: true);
+      _isReconnecting = false;
 
-    if (success) {
-      //성공할 시
-      _stopReconnectTimer(); // 타이머 중지
-      _reconnectAttempts = 0; // 재시도 카운트 리셋 = 0
-      onReconnected?.call(); // 재연결 콜백 호출
+      if (success) {
+        //성공할 시
+        _stopReconnectTimer(); // 타이머 중지
+        _reconnectAttempts = 0; // 재시도 카운트 리셋 = 0
+        onReconnected?.call(); // 재연결 콜백 호출
+      } else {
+        _scheduleReconnect(); // 재연결 예약
+      }
     } else {
-      _scheduleReconnect(); // 재연결 예약
+      debugPrint("[ERROR] 재연결 실패: 서버 주소(_serverEndpoint)가 없습니다.");
+
+      _stopReconnectTimer(); // 타이머 중지
+      _isReconnecting = false;
+
+      onError?.call("재연결 실패: 서버 주소 설정 오류");
     }
   }
 

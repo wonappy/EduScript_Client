@@ -2,7 +2,7 @@
 library;
 
 import 'package:client/widgets/preview_widget/play_progress/build_lecture_playbar_content.dart';
-import 'package:client/widgets/preview_widget/preview_screen/buil_lecture_preview_overlay_content.dart';
+import 'package:client/widgets/preview_widget/preview_screen/build_lecture_preview_overlay_content.dart';
 import 'package:client/widgets/preview_widget/preview_screen/build_lecture_preview_content.dart';
 import 'package:client/widgets/preview_widget/subtitle_setting/build_overlay_subtitle_setting_content.dart';
 import 'package:client/widgets/preview_widget/subtitle_setting/build_subtitle_setting_content.dart';
@@ -24,7 +24,6 @@ class GetBlockContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     // (Provider) 자막 설정 상태 받아오기
     // read가 아닌 watch로 불러와야 Provider의 상태 변화를 바로 감지함
     final subtitleSettings = context.watch<SubtitleStyleProvider>();
@@ -57,8 +56,8 @@ class GetBlockContent extends StatelessWidget {
         // - 자막 ONLY 모드 (화면 공유 모드 OFF)
         else {
           return BuildSubtitleSettingContent(
-              screenWidth: screenWidth,
-              screenHeight: screenHeight
+            screenWidth: screenWidth,
+            screenHeight: screenHeight,
           );
         }
     }

@@ -10,7 +10,7 @@ import '../core/enum_core.dart';
 import '../core/styles/size_core.dart';
 import '../providers/mode_provider.dart';
 import '../services/websocket_multiple_speech_service.dart';
-import '../services/websocket_stt_service.dart';
+import '../services/websocket_single_speech_service.dart';
 import '../providers/subtitle_style_provider.dart';
 import '../widgets/common/connection_status_bar_widget.dart';
 
@@ -72,9 +72,12 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
       debugPrint("[DEBUG] 현재 모드 $mode");
 
       if (mode == Mode.lecture) {
-        _sttService = Provider.of<WebSocketSTTService>(context, listen: false);
+        _sttService = Provider.of<WebSocketSingleSpeechService>(
+          context,
+          listen: false,
+        );
       } else {
-        _sttService = Provider.of<WebSocketMultipleSTTService>(
+        _sttService = Provider.of<WebSocketMultipleSpeechService>(
           context,
           listen: false,
         );
@@ -190,7 +193,7 @@ class _SharedWithSubtitlesScreenState extends State<SharedWithSubtitlesScreen> {
     _sttService?.onError = null;
 
     // 번역(자막) 결과 콜백
-    if (_sttService is WebSocketMultipleSTTService) {
+    if (_sttService is WebSocketMultipleSpeechService) {
       // multi 모드
       _sttService.onTranslationReceived = (
         translations,

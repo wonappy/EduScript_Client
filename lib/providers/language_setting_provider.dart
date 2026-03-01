@@ -4,7 +4,6 @@ import '../core/enum_core.dart';
 import 'mode_provider.dart';
 import '../models/language_mapping_model.dart';
 
-
 /// ### 입출력 언어 설정 및 언어 매핑 관련 프로바이더
 class LanguageSettingProvider extends ChangeNotifier {
   // 현재 모드 확인
@@ -248,7 +247,7 @@ class LanguageSettingProvider extends ChangeNotifier {
     _selectedOutputLanguages = List.from(languages);
 
     if (mode == Mode.conference) {
-      _selectedInputLanguages = List.from(languages);;
+      _selectedInputLanguages = List.from(languages);
     }
 
     notifyListeners();

@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:client/core/global_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:client/services/postprocessor_service.dart';
-import 'package:client/services/websocket_stt_service.dart';
+import 'package:client/services/websocket_single_speech_service.dart';
 import 'package:client/services/websocket_multiple_speech_service.dart';
 import 'package:client/screens/end_lecture_and_save_screen.dart';
 import 'package:http/http.dart' as http;
@@ -19,7 +19,7 @@ abstract class BasePostProcessorService {
     bool enableKeypoints,
     bool enableScript,
     bool enableNote,
-    });
+  });
 
   // 언어 목록을 반환하는 메소드 (ko, en)
   List<String> resolvedLanguages();
@@ -45,7 +45,7 @@ class LecturePostProcessorService implements BasePostProcessorService {
       "enable_refine": true,
       "enable_summarize": enableSummarize,
       "enable_keypoints": enableKeypoints,
-      "processing_mode": "lecture"
+      "processing_mode": "lecture",
     };
 
     return await _postToServer(body, "lecture");
@@ -54,7 +54,7 @@ class LecturePostProcessorService implements BasePostProcessorService {
   // 자녀 클래스에서 구현된 언어 목록을 반환
   @override
   List<String> resolvedLanguages() {
-    return WebSocketSTTService().currentTargetLanguages ?? ['ko'];
+    return WebSocketSingleSpeechService().currentTargetLanguages ?? ['ko'];
   }
 }
 
@@ -77,7 +77,7 @@ class ConferencePostProcessorService implements BasePostProcessorService {
       "language_list": resolvedLanguages(),
       "enable_script": enableScript,
       "enable_note": enableNote,
-      "processing_mode": "conference"
+      "processing_mode": "conference",
     };
 
     return await _postToServer(body, "conference");
@@ -86,18 +86,22 @@ class ConferencePostProcessorService implements BasePostProcessorService {
   // 자녀 클래스에서 구현된 언어 목록을 반환
   @override
   List<String> resolvedLanguages() {
-    return WebSocketMultipleSTTService().currentTargetLanguages ?? ['ko'];
+    return WebSocketMultipleSpeechService().currentTargetLanguages ?? ['ko'];
   }
 }
 
-  // 서버에 정제 POST 요청을 보내는 메소드
-  Future<Map<String, dynamic>?> _postToServer(Map<String, dynamic> body, String processingMode,) async {
+// 서버에 정제 POST 요청을 보내는 메소드
+Future<Map<String, dynamic>?> _postToServer(
+  Map<String, dynamic> body,
+  String processingMode,
+) async {
   try {
     final mode = body['processing_mode'] ?? processingMode;
     // 회의면 위, 강의면 아래
-    final endpoint = mode == 'conference'
-        ? "/api/routes/language/refinement/conference"
-        : "/api/routes/language/refinement";
+    final endpoint =
+        mode == 'conference'
+            ? "/api/routes/language/refinement/conference"
+            : "/api/routes/language/refinement";
 
     final response = await http.post(
       Uri.parse("${GlobalCore.httpBaseUrl.trim()}$endpoint"),
@@ -108,11 +112,11 @@ class ConferencePostProcessorService implements BasePostProcessorService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      debugPrint("❌ 서버 오류: ${response.body}");
+      debugPrint("서버 오류: ${response.body}");
       return null;
     }
   } catch (e) {
-    debugPrint("❌ 네트워크 오류: $e");
+    debugPrint("네트워크 오류: $e");
     return null;
   }
 }

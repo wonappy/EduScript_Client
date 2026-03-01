@@ -20,7 +20,7 @@ import '../../../providers/subtitle_style_provider.dart';
 import 'time_manager.dart';
 import '../../preview_widget/play_progress/lecture_playbar_content.dart';
 import '../../../screens/end_lecture_and_save_screen.dart';
-import '../../../services/websocket_stt_service.dart';
+import '../../../services/websocket_single_speech_service.dart';
 
 class BuildLecturePlayBarContent extends StatefulWidget {
   final double screenWidth;
@@ -46,8 +46,8 @@ class _BuildLecturePlayBarContentState
   DateTime? _lastUpdate;
 
   //서비스 설정
-  WebSocketSTTService? _sttService;
-  WebSocketMultipleSTTService? _multipleSTTService;
+  WebSocketSingleSpeechService? _sttService;
+  WebSocketMultipleSpeechService? _multipleSTTService;
 
   Mode? _currentMode; // 현재 모드 저장
   bool hasStarted = false;
@@ -55,9 +55,9 @@ class _BuildLecturePlayBarContentState
   // 현재 모드에 따른 서비스 반환 (기본 lecture)
   dynamic get currentService {
     if (_currentMode == Mode.conference) {
-      return _multipleSTTService ??= WebSocketMultipleSTTService();
+      return _multipleSTTService ??= WebSocketMultipleSpeechService();
     } else {
-      return _sttService ??= WebSocketSTTService();
+      return _sttService ??= WebSocketSingleSpeechService();
     }
   }
 
@@ -168,7 +168,7 @@ class _BuildLecturePlayBarContentState
         final inputLanguageCodes = settings.getInputLanguageCodes();
         final outputLanguageCodes = settings.getOutputLanguageCodes();
 
-        debugPrint("🌐 언어 설정:");
+        debugPrint("언어 설정:");
         debugPrint(
           "  입력: ${settings.selectedInputLanguages} -> $inputLanguageCodes",
         );
@@ -234,7 +234,6 @@ class _BuildLecturePlayBarContentState
     final service = currentService; // 현재 활성화된 STT/MultipleSTT 서비스 인스턴스를 가져옵니다.
 
     // 1) 서버 연결 종료 및 데이터 초기화
-    service.resetReconnectState(); // 재연결 상태 초기화
     service.clearAllData(); // 누적된 모든 데이터 (텍스트 기록 등) 초기화
     service.disconnect(); // WebSocket 연결 끊기
 
@@ -247,45 +246,44 @@ class _BuildLecturePlayBarContentState
     debugPrint('[DEBUG] _handleCancel() - 취소 및 서비스 연결 해제 완료');
   }
 
-  // [3] 종료 -> 다이얼로그 창    // 일시 비활성화
+  // [3] 종료 -> 다이얼로그 창
   void _handleStop() async {
-    // final service = currentService;
-    //
-    // // 1) 자막 결과 및 통계 로그 출력
-    // final transcriptHistory = service.transcriptHistory;
-    // final translationHistory = service.translationHistory;
-    // final fullTranscript = service.fullTranscriptText;
-    //
-    // debugPrint("강의 요약:");
-    // debugPrint("  - 총 원문 개수: ${transcriptHistory.length}");
-    // debugPrint("  - 총 번역 개수: ${translationHistory.length}");
-    // debugPrint("  - 전체 원문 길이: ${fullTranscript.length}자");
-    //
-    // if (fullTranscript.isNotEmpty) {
-    //   final sample =
-    //       fullTranscript.length > 200
-    //           ? "${fullTranscript.substring(0, 200)}..."
-    //           : fullTranscript;
-    //   debugPrint("  - 원문 샘플: $sample");
-    // }
-    //
-    // // 2) 재연결 관련 변수 초기화
-    // service.resetReconnectState();
-    // service.clearAllData();
-    // service.disconnect();
-    //
-    // // 3) 타이머 삭제
-    // TimerManager.reset();
-    // debugPrint('[DEBUG] _handelStop() - 강의 종료');
-    // setState(() {
-    //   hasStarted = false;
-    // });
-    //
-    // _navigateToSaveDialog(
-    //   transcriptHistory,
-    //   translationHistory,
-    //   fullTranscript,
-    // );
+    final service = currentService;
+
+    // 1) 자막 결과 및 통계 로그 출력
+    final transcriptHistory = service.transcriptHistory;
+    final translationHistory = service.translationHistory;
+    final fullTranscript = service.fullTranscriptText;
+
+    debugPrint("강의 요약:");
+    debugPrint("  - 총 원문 개수: ${transcriptHistory.length}");
+    debugPrint("  - 총 번역 개수: ${translationHistory.length}");
+    debugPrint("  - 전체 원문 길이: ${fullTranscript.length}자");
+
+    if (fullTranscript.isNotEmpty) {
+      final sample =
+          fullTranscript.length > 200
+              ? "${fullTranscript.substring(0, 200)}..."
+              : fullTranscript;
+      debugPrint("  - 원문 샘플: $sample");
+    }
+
+    // 2) 재연결 관련 변수 초기화
+    service.clearAllData();
+    service.disconnect();
+
+    // 3) 타이머 삭제
+    TimerManager.reset();
+    debugPrint('[DEBUG] _handelStop() - 강의 종료');
+    setState(() {
+      hasStarted = false;
+    });
+
+    _navigateToSaveDialog(
+      transcriptHistory,
+      translationHistory,
+      fullTranscript,
+    );
   }
 
   // [4] 다이얼로그 (저장 옵션 선택)
@@ -314,29 +312,29 @@ class _BuildLecturePlayBarContentState
   }) async {
     final service = currentService;
 
-    debugPrint("[🧸 DEBUG] _startSTT 메서드 실행");
+    debugPrint("[DEBUG] _startSTT 메서드 실행");
     bool connected = await service.connectToServer();
-    debugPrint("[🧸 DEBUG] [1] connectToServer 결과 - $connected");
+    debugPrint("[DEBUG] [1] connectToServer 결과 - $connected");
 
     if (!connected) {
-      debugPrint("[🧸 DEBUG] 서버 연결 실패 ㅠ.ㅠ");
+      debugPrint("[DEBUG] 서버 연결 실패 ㅠ.ㅠ");
       return;
     }
 
     // 2) 세션 시작 (서비스 타입에 따라 분기)
-    debugPrint("[🧸 DEBUG] [2] startSesion 호출 준비");
+    debugPrint("[DEBUG] [2] startSesion 호출 준비");
     bool sessionStarted = false;
 
     // 세션 - 싱글 모드
-    if (service is WebSocketSTTService) {
-      debugPrint("[🧸 DEBUG] 싱글 모드 세션 시작");
+    if (service is WebSocketSingleSpeechService) {
+      debugPrint("[DEBUG] 싱글 모드 세션 시작");
       sessionStarted = await service.startSession(
         inputLanguage: inputLanguageCodes[0],
         targetLanguages: outputLanguageCodes,
       );
     } // 세션 - 멀티 모드
-    else if (service is WebSocketMultipleSTTService) {
-      debugPrint("[🧸 DEBUG] 멀티 모드 세션 시작");
+    else if (service is WebSocketMultipleSpeechService) {
+      debugPrint("[DEBUG] 멀티 모드 세션 시작");
       sessionStarted = await service.startSession(
         inputLanguages: inputLanguageCodes,
         targetLanguages: outputLanguageCodes,
@@ -344,14 +342,14 @@ class _BuildLecturePlayBarContentState
     }
 
     // 세션 결과
-    debugPrint("[🧸 DEBUG] [2] startSession 결과 - $sessionStarted");
+    debugPrint("[DEBUG] [2] startSession 결과 - $sessionStarted");
     if (!sessionStarted) {
-      debugPrint("[🧸 DEBUG] 세션 시작 실패");
+      debugPrint("[DEBUG] 세션 시작 실패");
     }
 
     debugPrint(
-      "[🧸 DEBUG] 입력 언어 - $inputLanguageCodes, 출력 언어 - $outputLanguageCodes",
+      "[DEBUG] 입력 언어 - $inputLanguageCodes, 출력 언어 - $outputLanguageCodes",
     );
-    debugPrint("[🧸 DEBUG] STT 서비스 시작 완료 (모드 - ${_currentMode.toString()})");
+    debugPrint("[DEBUG] STT 서비스 시작 완료 (모드 - ${_currentMode.toString()})");
   }
 }

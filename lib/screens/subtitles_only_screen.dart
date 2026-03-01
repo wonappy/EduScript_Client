@@ -9,7 +9,7 @@ import '../core/enum_core.dart';
 import '../core/styles/size_core.dart';
 import '../providers/mode_provider.dart';
 import '../services/websocket_multiple_speech_service.dart';
-import '../services/websocket_stt_service.dart';
+import '../services/websocket_single_speech_service.dart';
 import '../providers/subtitle_style_provider.dart';
 import '../widgets/common/connection_status_bar_widget.dart';
 
@@ -69,12 +69,15 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
 
     // 강의 모드
     if (mode == Mode.lecture) {
-      _sttService = Provider.of<WebSocketSTTService>(context, listen: false);
+      _sttService = Provider.of<WebSocketSingleSpeechService>(
+        context,
+        listen: false,
+      );
       debugPrint("[INIT] 강의 모드 서비스 할당됨");
     }
     // 회의 모드
     else {
-      _sttService = Provider.of<WebSocketMultipleSTTService>(
+      _sttService = Provider.of<WebSocketMultipleSpeechService>(
         context,
         listen: false,
       );
@@ -120,10 +123,10 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {    
+  Widget build(BuildContext context) {
     final settings = context.watch<LanguageSettingProvider>(); // 언어 List 프로바이더
-    final languages = settings.selectedOutputLanguages;        // 선택된 출력 언어 List 가져오기
-    final styles = context.watch<SubtitleStyleProvider>();     // 자막 스타일 프로바이더
+    final languages = settings.selectedOutputLanguages; // 선택된 출력 언어 List 가져오기
+    final styles = context.watch<SubtitleStyleProvider>(); // 자막 스타일 프로바이더
 
     // [DEBUG] Provider 설정 확인
     debugPrint("Provider 설정:");
@@ -164,7 +167,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
                           color: styles.getBackgroundColor().withValues(
                             //자막 배경 색상 지정
                             alpha:
-                            styles.getBackgroundOpacity() *
+                                styles.getBackgroundOpacity() *
                                 0.6, //현재 자막의 60% 정도 투명도
                           ),
                           borderRadius: BorderRadius.circular(5),
@@ -179,7 +182,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
                           style: TextStyle(
                             color: styles.getFontColor(), //자막 글자 색상 지정
                             fontSize:
-                            styles.getFontSize(screenWidth) *
+                                styles.getFontSize(screenWidth) *
                                 scaleFactor, //자막 글자 크기 지정
                             fontWeight: styles.getFontWeight(),
                             fontStyle: styles.getFontStyle(),
@@ -293,7 +296,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     bool result = false;
 
     // multi 모드 일 때 && 발화 중일 때에만
-    if (_sttService is WebSocketMultipleSTTService &&
+    if (_sttService is WebSocketMultipleSpeechService &&
         _currentTranslations.isNotEmpty) {
       //lang 키 가져오기
       final settings = Provider.of<LanguageSettingProvider>(
@@ -366,13 +369,17 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
         // ko와 ko-KR 매칭
         if (key.startsWith(googleCode) || googleCode.startsWith(key)) {
           serverKey = key;
-          debugPrint("[DEBUG] 부분 매핑 성공: '$displayLanguage' ($googleCode) → '$key'");
+          debugPrint(
+            "[DEBUG] 부분 매핑 성공: '$displayLanguage' ($googleCode) → '$key'",
+          );
           break;
         }
         // ko-KR과 ko 매칭
         if (key.contains('-') && key.split('-')[0] == googleCode) {
           serverKey = key;
-          debugPrint("[DEBUG] 접두사 매핑 성공: '$displayLanguage' ($googleCode) → '$key'");
+          debugPrint(
+            "[DEBUG] 접두사 매핑 성공: '$displayLanguage' ($googleCode) → '$key'",
+          );
           break;
         }
       }
@@ -383,7 +390,9 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
       for (String key in availableKeys) {
         if (key.contains(googleCode) || googleCode.contains(key)) {
           serverKey = key;
-          debugPrint("[DEBUG] 최종 부분 매핑: '$displayLanguage' ($googleCode) ↔ '$key'");
+          debugPrint(
+            "[DEBUG] 최종 부분 매핑: '$displayLanguage' ($googleCode) ↔ '$key'",
+          );
           break;
         }
       }
@@ -490,13 +499,13 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
 
     // 연결 성공 시
     if (connectd) {
-      if (_sttService is WebSocketSTTService) {
+      if (_sttService is WebSocketSingleSpeechService) {
         // 싱글 모드
         await _sttService.startSession(
           inputLanguage: inputLanguageCodes[0],
           targetLanguages: outputLanguageCodes,
         );
-      } else if (_sttService is WebSocketMultipleSTTService) {
+      } else if (_sttService is WebSocketMultipleSpeechService) {
         // 멀티 모드
         await _sttService.startSession(
           inputLanguages: inputLanguageCodes,
@@ -509,7 +518,7 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
   // [2] 콜백 함수 : 현재 출력 자막 변경 알림 콜백 (isFinal : recognized, recognizing 문장 판별)
   void _setupCallbacks() {
     // 1) 번역 결과 콜백
-    if (_sttService is WebSocketMultipleSTTService) {
+    if (_sttService is WebSocketMultipleSpeechService) {
       //multi 모드
       _sttService.onTranslationReceived = (
         translations,

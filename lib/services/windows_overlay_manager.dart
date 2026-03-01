@@ -120,7 +120,7 @@ class WindowsOverlayManager {
     calloc.free(wc);
   }
 
-  /// 2. [업데이트] OS에 자막 업데이트 요청
+  /// 2. OS에 자막 업데이트 요청
   void update({
     required List<String> languages,
     required Map<String, String> currentTranslations,
@@ -244,8 +244,7 @@ class WindowsOverlayManager {
 
           for (final lang in langs) {
             final textConfirmed = _findSubtitleText(lang, true, settings!);
-            final String processedText =
-                textConfirmed;
+            final String processedText = textConfirmed;
 
             if (processedText.isNotEmpty && processedText != "...") {
               currentY = _drawTextWithBackground(
@@ -307,10 +306,7 @@ class WindowsOverlayManager {
   }
 
   /// 6. Flutter 설정을 Win32 GDI 폰트로 변환
-  static int _createGdiFont(
-    SubtitleStyleProvider styles,
-    Size screenSize,
-  ) {
+  static int _createGdiFont(SubtitleStyleProvider styles, Size screenSize) {
     final lf = calloc<LOGFONT>();
 
     final hdc = GetDC(NULL);
@@ -348,7 +344,7 @@ class WindowsOverlayManager {
   static String _findSubtitleText(
     String displayLanguage,
     bool isConfirmedLine,
-    LanguageSettingProvider settings
+    LanguageSettingProvider settings,
   ) {
     final targetTranslations =
         isConfirmedLine ? _lastConfirmedTranslations : _lastCurrentTranslations;
