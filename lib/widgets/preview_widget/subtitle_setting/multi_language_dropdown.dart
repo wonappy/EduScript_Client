@@ -4,10 +4,9 @@ import 'package:client/core/styles/size_core.dart';
 import 'package:client/providers/mode_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/styles/size_core.dart';
 import 'multi_language_select_dialog.dart';
 
-/// 언어 다중 선택 드롭다운
+/// ### 언어 다중 선택 드롭다운
 // 드롭다운 위젯
 class MultiLanguageDropdown extends StatelessWidget {
   final String title;

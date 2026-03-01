@@ -1,3 +1,4 @@
+import 'package:client/providers/language_setting_provider.dart';
 import 'package:client/screens/start_screen.dart';
 import 'package:client/services/websocket_multiple_speech_service.dart';
 import 'package:client/services/websocket_stt_service.dart';
@@ -23,7 +24,7 @@ void main() async {
   WindowOptions windowOptions = WindowOptions(
     size: const Size(1180, 620),  //초기 창 크기
     minimumSize: Size(1180, 620), //최소 크기
-    center: true,                 // 화면 중간에서 start
+    center: true,                 // 화면 중앙에서 start
     skipTaskbar: false,
     titleBarStyle: TitleBarStyle.normal,
     title: "EduScript",
@@ -38,8 +39,9 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => SubtitleStyleProvider()),
         ChangeNotifierProvider(create: (context) => ModeProvider()),
+        ChangeNotifierProvider(create: (context) => LanguageSettingProvider()),
+        ChangeNotifierProvider(create: (context) => SubtitleStyleProvider()),
         Provider<WebSocketSTTService>(create: (_) => WebSocketSTTService()),
         Provider<WebSocketMultipleSTTService>(
           create: (_) => WebSocketMultipleSTTService(),

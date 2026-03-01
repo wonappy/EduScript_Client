@@ -1,4 +1,5 @@
 import 'dart:ffi' hide Size; // 네이티브 함수 호출
+import 'package:client/providers/language_setting_provider.dart';
 import 'package:ffi/ffi.dart'; // C 타입 메모리 관리
 import 'package:win32/win32.dart'; // Win32 API
 import 'package:flutter/material.dart';
@@ -21,7 +22,8 @@ class WindowsOverlayManager {
   static Pointer<NativeFunction<WNDPROC>>? _wndProcPtr;
 
   // static 변수 선언(자막 데이터와 설정값)
-  static SubtitleStyleProvider? _lastSettings;
+  static SubtitleStyleProvider? _lastStyles;
+  static LanguageSettingProvider? _lastSettings;
   static Size? _lastScreenSize;
   static Map<String, String> _lastCurrentTranslations = {};
   static Map<String, String> _lastConfirmedTranslations = {};
@@ -123,7 +125,8 @@ class WindowsOverlayManager {
     required List<String> languages,
     required Map<String, String> currentTranslations,
     required Map<String, String> confirmedTranslations,
-    required SubtitleStyleProvider settings,
+    required LanguageSettingProvider settings,
+    required SubtitleStyleProvider styles,
     required Size screenSize,
     String? currentSpeakingLanguage,
   }) {
@@ -131,6 +134,7 @@ class WindowsOverlayManager {
 
     // 기본 정보 저장
     _lastSettings = settings;
+    _lastStyles = styles;
     _lastScreenSize = screenSize;
     _lastLanguages = languages;
     _lastCurrentTranslations = Map.from(currentTranslations);
@@ -197,11 +201,12 @@ class WindowsOverlayManager {
     FillRect(hdc, rcClient, hTempBrush);
     DeleteObject(hTempBrush);
 
+    final styles = _lastStyles;
     final settings = _lastSettings;
     final screenSize = _lastScreenSize;
 
-    if (settings != null && screenSize != null) {
-      final hFont = _createGdiFont(settings, screenSize);
+    if (styles != null && screenSize != null) {
+      final hFont = _createGdiFont(styles, screenSize);
       final hBrushBackground = CreateSolidBrush(RGB(0, 0, 0));
 
       final hOldFont = SelectObject(hdc, hFont);
@@ -209,8 +214,8 @@ class WindowsOverlayManager {
         SetBkMode(hdc, TRANSPARENT);
         SetTextColor(hdc, _flutterColorToWin32Color(Colors.white));
 
-        final alignment = settings.getAlignment();
-        final horizontalAlignment = settings.getHorizontalAlignment();
+        final alignment = styles.getAlignment();
+        final horizontalAlignment = styles.getHorizontalAlignment();
 
         int textAlignFlag;
         switch (horizontalAlignment) {
@@ -238,9 +243,9 @@ class WindowsOverlayManager {
               isUpwards ? _lastLanguages.reversed.toList() : _lastLanguages;
 
           for (final lang in langs) {
-            final textConfirmed = _findSubtitleText(lang, true, settings);
+            final textConfirmed = _findSubtitleText(lang, true, settings!);
             final String processedText =
-                textConfirmed; //_truncateText(textConfirmed);
+                textConfirmed;
 
             if (processedText.isNotEmpty && processedText != "...") {
               currentY = _drawTextWithBackground(
@@ -269,7 +274,7 @@ class WindowsOverlayManager {
           int totalHeight = 0;
           final rcCalc = calloc<RECT>();
           for (final lang in _lastLanguages) {
-            final textConfirmed = _findSubtitleText(lang, true, settings);
+            final textConfirmed = _findSubtitleText(lang, true, settings!);
             final String processedText =
                 textConfirmed; //_truncateText(textConfirmed);
             if (processedText.isNotEmpty && processedText != "...") {
@@ -303,7 +308,7 @@ class WindowsOverlayManager {
 
   /// 6. Flutter 설정을 Win32 GDI 폰트로 변환
   static int _createGdiFont(
-    SubtitleStyleProvider settings,
+    SubtitleStyleProvider styles,
     Size screenSize,
   ) {
     final lf = calloc<LOGFONT>();
@@ -313,7 +318,7 @@ class WindowsOverlayManager {
     ReleaseDC(NULL, hdc);
 
     // 1. 폰트 크기 (요청대로 크기만 설정)
-    final fontSize = settings.getFontSize(screenSize.width);
+    final fontSize = styles.getFontSize(screenSize.width);
     lf.ref.lfHeight = -(fontSize * logicalScreenHeight / 72).round();
 
     // 2. 폰트 굵기 (기본값)
@@ -343,7 +348,7 @@ class WindowsOverlayManager {
   static String _findSubtitleText(
     String displayLanguage,
     bool isConfirmedLine,
-    SubtitleStyleProvider settings,
+    LanguageSettingProvider settings
   ) {
     final targetTranslations =
         isConfirmedLine ? _lastConfirmedTranslations : _lastCurrentTranslations;

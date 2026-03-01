@@ -3,8 +3,8 @@ import 'package:client/core/styles/color_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-/// [위젯] 로딩 스피너 & 상태 메시지 출력
-
+/// ### 서버 연결 상태 바
+/// - 로딩 스피너 & 상태 메시지 출력
 class ConnectionStatusBar extends StatelessWidget {
   final ServerConnectionState serverConnectionState; // 서버 연결 상태
   final String statusMessage; // 서버 연결 상태 메시지

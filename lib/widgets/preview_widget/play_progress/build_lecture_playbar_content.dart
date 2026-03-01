@@ -5,6 +5,7 @@
 /// 3) SaveDialog로 이동
 library;
 
+import 'package:client/providers/language_setting_provider.dart';
 import 'package:client/screens/subtitles_only_screen.dart';
 import 'package:client/services/websocket_multiple_speech_service.dart';
 import 'package:flutter/material.dart';
@@ -99,56 +100,6 @@ class _BuildLecturePlayBarContentState
     super.dispose();
   }
 
-  //🔴🔴 지금 호출되고 있지 않는 코드입니다!!!!! provider를 통해서 service를 확인하고 있기 때문에 사용되고 있지 않음!
-  //multiple에서는 동작 하는듯...?
-  // 근데 의문점... subtitle only screen에 service provider를 적용하기 전에는 이 코드가 출력됐었는데 ... 뭐지
-  // [콜백] stt 서비스 초기화
-  // void _initializeSTTService() {
-  //   final service = currentService;
-  //
-  //   if (service is WebSocketSTTService) {
-  //     // 일반 강의 모드
-  //     service.onTranslationReceived = (translations, isFinal) {
-  //       // 1) 번역 결과 처리
-  //       debugPrint("번역 결과 처리");
-  //       translations.forEach((language, result) {
-  //         // forEach : 번역 결과 순회하면 출력
-  //         debugPrint(">> UI [$language] ${result.resultText}"); // UI 로그
-  //       });
-  //     };
-  //
-  //     // 2) 상태 변화 콜백
-  //     service.onStatusUpdate = (status) {
-  //       debugPrint("STT Status : $status");
-  //     };
-  //
-  //     // 3) 에러 코드 콜백
-  //     service.onError = (message, errorCode) {
-  //       debugPrint(
-  //         "STT Error : $message ${errorCode != null ? '($errorCode)' : ''}",
-  //       );
-  //     };
-  //   } else if (service is WebSocketMultipleSTTService) {
-  //     // 다국어 회의 모드
-  //     service.onTranslationReceived = (translations, isFinal) {
-  //       debugPrint("번역 결과 처리 (다국어 회의)");
-  //       translations.forEach((language, result) {
-  //         debugPrint(">> UI [$language] ${result.resultText}");
-  //       });
-  //     };
-  //
-  //     service.onStatusUpdate = (status) {
-  //       debugPrint("STT Status (회의): $status");
-  //     };
-  //
-  //     service.onError = (message, errorCode) {
-  //       debugPrint(
-  //         "STT Error (회의): $message ${errorCode != null ? '($errorCode)' : ''}",
-  //       );
-  //     };
-  //   }
-  // }
-
   @override
   Widget build(BuildContext context) {
     return LecturePlayBarComponents.buildPlayBarContainer(
@@ -213,16 +164,16 @@ class _BuildLecturePlayBarContentState
         debugPrint("기존 연결로 녹음 재시작");
       } else {
         // Provider에서 언어 설정 가져오기
-        final subtitleSettings = context.read<SubtitleStyleProvider>();
-        final inputLanguageCodes = subtitleSettings.getInputLanguageCodes();
-        final outputLanguageCodes = subtitleSettings.getOutputLanguageCodes();
+        final settings = context.read<LanguageSettingProvider>();
+        final inputLanguageCodes = settings.getInputLanguageCodes();
+        final outputLanguageCodes = settings.getOutputLanguageCodes();
 
         debugPrint("🌐 언어 설정:");
         debugPrint(
-          "  입력: ${subtitleSettings.selectedInputLanguages} -> $inputLanguageCodes",
+          "  입력: ${settings.selectedInputLanguages} -> $inputLanguageCodes",
         );
         debugPrint(
-          "  출력: ${subtitleSettings.selectedOutputLanguages} -> $outputLanguageCodes",
+          "  출력: ${settings.selectedOutputLanguages} -> $outputLanguageCodes",
         );
 
         await _startSTTService(

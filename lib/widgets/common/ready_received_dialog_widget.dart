@@ -1,6 +1,3 @@
-/// [위젯 - 다이얼로그]  서버로부터 "ready"를 수신했을 때 발화를 시작하도록
-library;
-
 import 'dart:io';
 import 'package:provider/provider.dart';
 import 'package:client/core/styles/color_core.dart';
@@ -11,6 +8,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../core/enum_core.dart';
 
+/// ### 발화 시작 안내 창
+/// - 서버로부터 "ready"를 수신했을 때 발화를 시작하도록 안내
 class ReadyReceivedDialog extends StatefulWidget {
   // [콜백 등록] ready 수신 -> 외부에 알림
   final VoidCallback onReadyConfirmed;
@@ -22,7 +21,6 @@ class ReadyReceivedDialog extends StatefulWidget {
 }
 
 class _ReadyReceivedDialogState extends State<ReadyReceivedDialog> {
-  // [상태 변수]
   bool _isReadyReceived = false; // ready 수신 여부
   late dynamic _sttService; // STT 서비스 인스턴스
 
@@ -45,14 +43,14 @@ class _ReadyReceivedDialogState extends State<ReadyReceivedDialog> {
 
       child: Center(
         child: Container(
-          padding: const EdgeInsets.all(24), // 내부 여백
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: Colors.black.withOpacity(0.8),
             borderRadius: BorderRadius.circular(10),
           ),
           constraints: const BoxConstraints(
-            maxWidth: 300, // 다이얼로그 최대 너비
-            minHeight: 100, // 최소 높이
+            maxWidth: 300,
+            minHeight: 100,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -61,16 +59,16 @@ class _ReadyReceivedDialogState extends State<ReadyReceivedDialog> {
               // 1) 상태 아이콘
               _isReadyReceived
                   ? // ready 수신 O
-              const Icon(
-                Icons.task_alt,
-                color: AppColors.greenColor,
-                size: 48,
-              )
+                    const Icon(
+                      Icons.task_alt,
+                      color: AppColors.greenColor,
+                      size: 48,
+                    )
                   : // ready 수신 X
-              const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                strokeWidth: 3,
-              ),
+                    const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      strokeWidth: 3,
+                    ),
               const SizedBox(height: 16),
 
               // 2) 상태 멘트
@@ -115,12 +113,12 @@ class _ReadyReceivedDialogState extends State<ReadyReceivedDialog> {
         listen: false,
       );
     }
-    debugPrint("[🍒 DEBUG 1] 서비스 할당 완료.");
+    debugPrint("[DEBUG] 서비스 할당 완료.");
 
     // 2) onStatusUpdate 콜백 등록
     // 서비스가 변경될 때마다 다시 등록됨
     _sttService.onStatusUpdate = (status) {
-      debugPrint("[🍒 DEBUG 1] status 수신 - $status");
+      debugPrint("[DEBUG] status 수신 - $status");
 
       // "ready" 수신 확인
       if (status.contains("ready") || status.contains("준비 완료")) {
@@ -139,7 +137,7 @@ class _ReadyReceivedDialogState extends State<ReadyReceivedDialog> {
 
     //  3)서비스의 isSessionReady가 이미 true일 때
     if (_sttService.isSessionReady) {
-      debugPrint("[🍒 DEBUG 1] 서비스가 이미 ready 상태입니당.");
+      debugPrint("[DEBUG] 서비스가 이미 ready 상태입니당.");
       if (!_isReadyReceived) {
         setState(() {
           _isReadyReceived = true;
@@ -151,11 +149,11 @@ class _ReadyReceivedDialogState extends State<ReadyReceivedDialog> {
 
   // [2] ready 수신 후 처리
   void _onReadyReceived() {
-    debugPrint("[🍒 DEBUG 2] ready 수신 완료");
+    debugPrint("[DEBUG] ready 수신 완료");
     // ready 상태 확인 후, 콜백 호출
     widget.onReadyConfirmed();
 
-    // 다이얼로그 닫기 (🔴 UI 수정)
+    // 다이얼로그 닫기
     Future.delayed(Duration(seconds: 1), () {
       if (mounted) {
         Navigator.of(context).pop();

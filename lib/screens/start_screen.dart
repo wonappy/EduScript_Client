@@ -57,10 +57,10 @@ class _StartScreenState extends State<StartScreen> {
     final bool isWideScreen = screenWidth > screenHeight * 1.5;
 
     return Scaffold(
-      backgroundColor: AppColors.whiteColor1, // 🔴 배경색
+      backgroundColor: AppColors.whiteColor1,
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(AppSizes.smallPadding), // 🔵 패딩 크기
+          padding: EdgeInsets.all(AppSizes.smallPadding),
           child: Stack(
             children: [
               Column(

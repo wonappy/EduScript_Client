@@ -1,11 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-/// # 언어 국가 설정 다이얼로그
-
+/// ### 언어 설정 다이얼로그
 class SelectLanguagesDialogue extends StatefulWidget {
-  final List<String> availableLanguages; // 선택 가능한 국가 리스트
-  final List<String> selectedLanauges;   // 선택된 국가 리스트
+  final List<String> availableLanguages; // 선택 가능한 언어 리스트
+  final List<String> selectedLanauges;   // 선택된 언어 리스트
 
   const SelectLanguagesDialogue({super.key, required this.availableLanguages, required this.selectedLanauges});
 
