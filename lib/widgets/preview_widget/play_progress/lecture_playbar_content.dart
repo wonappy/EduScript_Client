@@ -1,9 +1,8 @@
-// UI - 재생, 취소, 일시정지 버튼 컴포넌트들
-
 import 'package:client/core/styles/color_core.dart';
 import 'package:client/core/styles/size_core.dart';
 import 'package:flutter/material.dart';
 
+/// ### UI - 재생, 취소, 일시정지 버튼 컴포넌트들
 class LecturePlayBarComponents {
   // 메인 플레이바 컨테이너
   static Widget buildPlayBarContainer({
@@ -13,7 +12,7 @@ class LecturePlayBarComponents {
     required VoidCallback onPlayPause,
     required VoidCallback onCancel,
     required VoidCallback onStop,
-    bool hasStarted = false, // 강의가 시작되었는지 여부
+    bool hasStarted = false,    // 강의가 시작되었는지 여부
   }) {
     return Container(
       padding: EdgeInsets.symmetric(

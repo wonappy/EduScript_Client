@@ -44,7 +44,6 @@ class MultiLanguageDropdown extends StatelessWidget {
     final mode = Provider.of<ModeProvider>(context, listen: false).currentMode;
     final bool isLectureMode = mode == Mode.lecture; // 강의 모드 true, 토론 모드 false
 
-    debugPrint("[DEBUG] 언어 선택 다이얼로그 열기 전 ... [$mode모드 / $selectedLanguages]");
     final result = await showDialog<List<String>>(
       context: context,
       builder:
@@ -56,12 +55,10 @@ class MultiLanguageDropdown extends StatelessWidget {
           ),
     );
 
-    debugPrint("[DEBUG] 언어 선택 후 ... [$result]");
+    debugPrint("[DEBUG] 현재 선택된 언어 - ${result}");
 
     if (result != null) {
-      debugPrint("[DEBUG] onChanged 전 ... [$result]");
       onChanged(result);
-      debugPrint("[DEBUG] onChanged 후 ... [$result]");
     }
   }
 

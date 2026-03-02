@@ -1,10 +1,3 @@
-// [widgets/preview_widget/play_progress/lecture_playbar_content.dart]
-/// [로직]
-/// 1) 재생 관련 로직 돌리는 위젯
-/// 2) TimeManger 연동
-/// 3) SaveDialog로 이동
-library;
-
 import 'package:client/providers/language_setting_provider.dart';
 import 'package:client/screens/subtitles_only_screen.dart';
 import 'package:client/services/websocket_multiple_speech_service.dart';
@@ -22,18 +15,18 @@ import '../../preview_widget/play_progress/lecture_playbar_content.dart';
 import '../../../screens/end_lecture_and_save_screen.dart';
 import '../../../services/websocket_single_speech_service.dart';
 
+// [widgets/preview_widget/play_progress/lecture_playbar_content.dart]
+/// ###  재생 관련 로직 돌리는 위젯
+/// - TimeManger 연동
+/// - SaveDialog로 이동
 class BuildLecturePlayBarContent extends StatefulWidget {
   final double screenWidth;
-  final double screenHeight;
-  final VoidCallback? onLectureEnd;
-  final int? counterValue;
+  final double screenHeight; // 이거 왜 씀
 
   const BuildLecturePlayBarContent({
     super.key,
     required this.screenWidth,
     required this.screenHeight,
-    this.onLectureEnd,
-    this.counterValue,
   });
 
   @override
@@ -41,18 +34,15 @@ class BuildLecturePlayBarContent extends StatefulWidget {
       _BuildLecturePlayBarContentState();
 }
 
-class _BuildLecturePlayBarContentState
-    extends State<BuildLecturePlayBarContent> {
+class _BuildLecturePlayBarContentState extends State<BuildLecturePlayBarContent> {
+
+  Mode? _currentMode;                                   // 현재 모드 저장
+  WebSocketSingleSpeechService? _sttService;            // 싱글 STT 서비스
+  WebSocketMultipleSpeechService? _multipleSTTService;  // 멀티 STT 서비스
+  bool hasStarted = false;                              // STT 이미 시작되었는지 여부
   DateTime? _lastUpdate;
 
-  //서비스 설정
-  WebSocketSingleSpeechService? _sttService;
-  WebSocketMultipleSpeechService? _multipleSTTService;
-
-  Mode? _currentMode; // 현재 모드 저장
-  bool hasStarted = false;
-
-  // 현재 모드에 따른 서비스 반환 (기본 lecture)
+  // 현재 서비스 할당 (기본 lecture)
   dynamic get currentService {
     if (_currentMode == Mode.conference) {
       return _multipleSTTService ??= WebSocketMultipleSpeechService();
@@ -61,11 +51,11 @@ class _BuildLecturePlayBarContentState
     }
   }
 
-  void _updateUI() {
+  // 타이머 UI 업데이트
+  void _updateTimerUI() {
     final now = DateTime.now();
     // 너무 자주 업데이트하지 않도록 제한
-    if (_lastUpdate == null ||
-        now.difference(_lastUpdate!).inMilliseconds > 100) {
+    if (_lastUpdate == null || now.difference(_lastUpdate!).inMilliseconds > 100) {
       if (mounted) {
         setState(() {});
         _lastUpdate = now;
@@ -76,7 +66,7 @@ class _BuildLecturePlayBarContentState
   @override
   void initState() {
     super.initState();
-    TimerManager.addListener(_updateUI);
+    TimerManager.addListener(_updateTimerUI);
   }
 
   @override
@@ -84,19 +74,16 @@ class _BuildLecturePlayBarContentState
     super.didChangeDependencies();
     // 페이지 진입 시 모드 설정 (한 번만)
     if (_currentMode == null) {
-      _currentMode =
-          Provider.of<ModeProvider>(context, listen: false).currentMode;
+      _currentMode = Provider.of<ModeProvider>(context, listen: false).currentMode;
       debugPrint("페이지 진입 - 현재 모드: ${_currentMode.toString()}");
-      //_initializeSTTService();
     }
   }
 
   @override
   void dispose() {
-    TimerManager.removeListener(_updateUI);
-    // dispose 시, 서비스도 dispose
-    _sttService?.dispose();
-    _multipleSTTService?.dispose();
+    TimerManager.removeListener(_updateTimerUI); // 타이머 삭제
+    _sttService?.dispose();                      // 싱글 STT 서비스 해제
+    _multipleSTTService?.dispose();              // 멀티 STT 서비스 해제
     super.dispose();
   }
 
@@ -113,22 +100,16 @@ class _BuildLecturePlayBarContentState
     );
   }
 
-  // ============================================================================
-  // 비즈니스 로직 메서드들
-  // ============================================================================
-
   // [Button 처리]
   // [1] 재생/일시정지
   void _handlePlayPause() async {
-    // 1) 재생 버튼 눌렀을 때
+    // 1) 재생
     if (!TimerManager.isPlaying) {
-      // 자막 모드 확인 (화면 공유 or 자막 ONLY)
-      final subtitleSettings = context.read<SubtitleStyleProvider>();
-      // -> "화면 공유" 모드가 켜져 있는데
-      if (subtitleSettings.screenSharedEnabled) {
-        // -> 사용자 PC의 OS 확인 (윈도우가 아닐 때)
+      // 화면 공유 ON 시, 사용자 PC가 윈도우가 아닐 때 경고창 띄우기
+      // (Mac/Linux면 Win32 API를 호출할 수 없음)
+      final styles = context.read<SubtitleStyleProvider>();
+      if (styles.screenSharedEnabled) {
         if (!Platform.isWindows) {
-          // -> 경고창 띄우기 (Mac/Linux면 Win32 API를 호출할 수 없음)
           if (mounted) {
             showDialog(
               context: context,
@@ -144,51 +125,48 @@ class _BuildLecturePlayBarContentState
                         child: const Text('확인'),
                       ),
                     ],
-                  ),
+                 ),
             );
           }
           // Navigator.push 전에 return (강의 시작 중단)
           return;
         }
       }
-      TimerManager.start(); // 타이머 실행
+
+      // 타이머 실행
+      TimerManager.start();
       setState(() {
-        hasStarted = true;
+        hasStarted = true; // 시작 상태 변경
       });
-      debugPrint('강의 시작 - 모드: ${_currentMode.toString()}');
 
-      final service = currentService; // 현재 서비스 가져오기
+      // 현재 서비스 가져오기
+      final service = currentService;
 
+      // STT 재시작
       if (service.isConnected) {
         await service.startRecording();
-        debugPrint("기존 연결로 녹음 재시작");
-      } else {
-        // Provider에서 언어 설정 가져오기
+        debugPrint("[DEBUG] 기존 연결로 녹음 재시작");
+      }
+      else {
+        // 선택된 언어 설정 가져오기
         final settings = context.read<LanguageSettingProvider>();
         final inputLanguageCodes = settings.getInputLanguageCodes();
         final outputLanguageCodes = settings.getOutputLanguageCodes();
-
-        debugPrint("언어 설정:");
-        debugPrint(
-          "  입력: ${settings.selectedInputLanguages} -> $inputLanguageCodes",
-        );
-        debugPrint(
-          "  출력: ${settings.selectedOutputLanguages} -> $outputLanguageCodes",
-        );
 
         await _startSTTService(
           inputLanguageCodes: inputLanguageCodes,
           outputLanguageCodes: outputLanguageCodes,
         );
+
+        debugPrint('[DEBUG] 강의 시작, 현재 모드 - ${_currentMode.toString()}');
       }
 
       // 화면 전환 및 상태 업데이트
       if (mounted) {
         dynamic result; // 상태 변수 (Close 버튼 클릭 여부)
-
         // 화면 공유 모드 && 윈도우 환경일 때
         // 1) 화면 공유 모드 (오버레이) 화면 전환
-        if (subtitleSettings.screenSharedEnabled && Platform.isWindows) {
+        if (styles.screenSharedEnabled && Platform.isWindows) {
           result = await Navigator.push(
             context,
             MaterialPageRoute(
@@ -196,7 +174,7 @@ class _BuildLecturePlayBarContentState
             ),
           );
         }
-        // 2) 자막 only 화면 전환
+        // 2) 자막 ONLY 화면 전환
         else {
           result = await Navigator.push(
             context,
@@ -206,7 +184,7 @@ class _BuildLecturePlayBarContentState
                     subWordFont: "default",
                     backgroundColor: Colors.black,
                     subSpacing: 20,
-                  ),
+                 ),
             ),
           );
         }
@@ -214,71 +192,71 @@ class _BuildLecturePlayBarContentState
         // [UI UPDATE] UI 화면 갱신
         // (Close 버튼 클릭으로 true를 받았을 때)
         if (result == true) {
-          debugPrint("[UI UPDATE] Close 버튼 클릭 -> 녹음 일시 정지");
           TimerManager.pause(); // 타이머 일시 정지
           setState(() {});
         }
       }
     }
-    // 2) 일시 정지 상태일 때
+
+    // 2) 일시정지
     else {
-      TimerManager.pause(); // 타이머 일시정지
-      final service = currentService;
-      await service.stopRecording();
+      TimerManager.pause();           // 타이머 일시정지
+      final service = currentService; // 현재 서비스
+      await service.stopRecording();  // 녹음 중단
       debugPrint('일시정지');
     }
   }
 
-  // [2] 취소 -> 타이머 리셋
+  // [2] 취소 -> 타이머 리셋 (아예 종료)
   void _handleCancel() {
-    final service = currentService; // 현재 활성화된 STT/MultipleSTT 서비스 인스턴스를 가져옵니다.
+    // 서비스 데이터 초기화 및 연결 종료
+    final service = currentService;
+    service.clearAllData();
+    service.disconnect();
 
-    // 1) 서버 연결 종료 및 데이터 초기화
-    service.clearAllData(); // 누적된 모든 데이터 (텍스트 기록 등) 초기화
-    service.disconnect(); // WebSocket 연결 끊기
-
-    // 2) 타이머 및 UI 상태 초기화
-    TimerManager.reset(); // 타이머를 0으로 리셋
+    // 타이머 및 UI 상태 초기화
+    TimerManager.reset(); // 타이머 리셋
     setState(() {
-      hasStarted = false; // UI의 '시작됨' 상태를 리셋합니다.
+      hasStarted = false; // 시작 상태 false로 변경
     });
 
-    debugPrint('[DEBUG] _handleCancel() - 취소 및 서비스 연결 해제 완료');
+    debugPrint('[DEBUG] _handleCancel() - 서비스 취소 및 연결 해제 완료');
   }
 
   // [3] 종료 -> 다이얼로그 창
   void _handleStop() async {
+    // 자막 결과 및 통계 로그 출력
     final service = currentService;
+    final transcriptHistory = service.transcriptHistory;    // 발화 내용
+    final translationHistory = service.translationHistory;  // 번역 내용
+    final fullTranscript = service.fullTranscriptText;      // 전체 내용
 
-    // 1) 자막 결과 및 통계 로그 출력
-    final transcriptHistory = service.transcriptHistory;
-    final translationHistory = service.translationHistory;
-    final fullTranscript = service.fullTranscriptText;
-
-    debugPrint("강의 요약:");
-    debugPrint("  - 총 원문 개수: ${transcriptHistory.length}");
-    debugPrint("  - 총 번역 개수: ${translationHistory.length}");
+    debugPrint("[기록 통계]");
+    debugPrint("  - 총 원문 문장 수: ${transcriptHistory.length}개");
+    debugPrint("  - 총 번역 문장 수: ${translationHistory.length}개");
     debugPrint("  - 전체 원문 길이: ${fullTranscript.length}자");
 
+    // 디버깅 용도인가 .. 필요한건가 ..
     if (fullTranscript.isNotEmpty) {
       final sample =
           fullTranscript.length > 200
               ? "${fullTranscript.substring(0, 200)}..."
               : fullTranscript;
-      debugPrint("  - 원문 샘플: $sample");
+      debugPrint("  - 원문 샘플: ${sample}");
     }
 
-    // 2) 재연결 관련 변수 초기화
+    // STT 데이터 초기화 및 연결 종료
     service.clearAllData();
     service.disconnect();
 
-    // 3) 타이머 삭제
+    // 타이머 리셋
     TimerManager.reset();
-    debugPrint('[DEBUG] _handelStop() - 강의 종료');
+    debugPrint('[DEBUG] _handelStop() - 서비스 종료 및 연결 해제 완료');
     setState(() {
       hasStarted = false;
     });
 
+    // 파일 저장 다이얼로그
     _navigateToSaveDialog(
       transcriptHistory,
       translationHistory,
@@ -286,7 +264,7 @@ class _BuildLecturePlayBarContentState
     );
   }
 
-  // [4] 다이얼로그 (저장 옵션 선택)
+  // [4] 파일 저장 다이얼로그
   Future<void> _navigateToSaveDialog(
     List<String> transcriptHistory,
     List<Map<String, String>> translationHistory,
@@ -311,28 +289,17 @@ class _BuildLecturePlayBarContentState
     required List<String> outputLanguageCodes,
   }) async {
     final service = currentService;
+    bool sessionStarted = false; // 세션 시작
 
-    debugPrint("[DEBUG] _startSTT 메서드 실행");
-    bool connected = await service.connectToServer();
-    debugPrint("[DEBUG] [1] connectToServer 결과 - $connected");
-
-    if (!connected) {
-      debugPrint("[DEBUG] 서버 연결 실패 ㅠ.ㅠ");
-      return;
-    }
-
-    // 2) 세션 시작 (서비스 타입에 따라 분기)
-    debugPrint("[DEBUG] [2] startSesion 호출 준비");
-    bool sessionStarted = false;
-
-    // 세션 - 싱글 모드
+    // 세션 - 싱글 STT
     if (service is WebSocketSingleSpeechService) {
       debugPrint("[DEBUG] 싱글 모드 세션 시작");
       sessionStarted = await service.startSession(
         inputLanguage: inputLanguageCodes[0],
         targetLanguages: outputLanguageCodes,
       );
-    } // 세션 - 멀티 모드
+    }
+    // 세션 - 멀티 STT
     else if (service is WebSocketMultipleSpeechService) {
       debugPrint("[DEBUG] 멀티 모드 세션 시작");
       sessionStarted = await service.startSession(
@@ -341,15 +308,14 @@ class _BuildLecturePlayBarContentState
       );
     }
 
+    // 없어도 되지 않ㅇ나?
     // 세션 결과
-    debugPrint("[DEBUG] [2] startSession 결과 - $sessionStarted");
-    if (!sessionStarted) {
-      debugPrint("[DEBUG] 세션 시작 실패");
-    }
-
-    debugPrint(
-      "[DEBUG] 입력 언어 - $inputLanguageCodes, 출력 언어 - $outputLanguageCodes",
-    );
-    debugPrint("[DEBUG] STT 서비스 시작 완료 (모드 - ${_currentMode.toString()})");
+    // debugPrint("[DEBUG] [2] startSession 결과 - $sessionStarted");
+    // if (!sessionStarted) {
+    //   debugPrint("[DEBUG] 세션 시작 실패");
+    // }
+    //
+    // debugPrint("[DEBUG] 입력 언어 - $inputLanguageCodes, 출력 언어 - $outputLanguageCodes",);
+    // debugPrint("[DEBUG] STT 서비스 시작 완료 (모드 - ${_currentMode.toString()})");
   }
 }
