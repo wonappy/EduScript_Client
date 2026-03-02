@@ -2,12 +2,9 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:client/core/global_core.dart';
 import 'package:flutter/foundation.dart';
-import 'package:client/services/postprocessor_service.dart';
 import 'package:client/services/websocket_single_speech_service.dart';
 import 'package:client/services/websocket_multiple_speech_service.dart';
-import 'package:client/screens/end_lecture_and_save_screen.dart';
 import 'package:http/http.dart' as http;
-import 'package:client/core/enum_core.dart';
 
 // end_lecture_and_save_screen 으로 넘길때 _llm-service로 넘김
 abstract class BasePostProcessorService {
@@ -51,7 +48,7 @@ class LecturePostProcessorService implements BasePostProcessorService {
     return await _postToServer(body, "lecture");
   }
 
-  // 자녀 클래스에서 구현된 언어 목록을 반환
+  // 싱글 STT 서비스에서 구현된 언어 목록을 반환
   @override
   List<String> resolvedLanguages() {
     return WebSocketSingleSpeechService().currentTargetLanguages ?? ['ko'];
@@ -83,7 +80,7 @@ class ConferencePostProcessorService implements BasePostProcessorService {
     return await _postToServer(body, "conference");
   }
 
-  // 자녀 클래스에서 구현된 언어 목록을 반환
+  // 멀티 STT 서비스에서 구현된 언어 목록을 반환
   @override
   List<String> resolvedLanguages() {
     return WebSocketMultipleSpeechService().currentTargetLanguages ?? ['ko'];
@@ -112,11 +109,11 @@ Future<Map<String, dynamic>?> _postToServer(
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      debugPrint("서버 오류: ${response.body}");
+      debugPrint("[ERROR] 서버 오류 - ${response.body}");
       return null;
     }
   } catch (e) {
-    debugPrint("네트워크 오류: $e");
+    debugPrint("[ERROR] 네트워크 오류 - $e");
     return null;
   }
 }

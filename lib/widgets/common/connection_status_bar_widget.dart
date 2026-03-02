@@ -44,8 +44,8 @@ class ConnectionStatusBar extends StatelessWidget {
         backgroundColor = Colors.grey; // 디폴트
     }
 
-    debugPrint("[🌟 DEBUG]  loadingSpinner - $loadingSpinner");
-    debugPrint("[🌟 DEBUG] 상태 메시지 - $statusMessage");
+    debugPrint("[DEBUG]  loadingSpinner - $loadingSpinner");
+    debugPrint("[DEBUG] 서버 연결 상태 메시지 - $statusMessage");
 
     return Container(
       width: double.infinity,

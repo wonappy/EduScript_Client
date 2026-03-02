@@ -138,7 +138,6 @@ class _SubtitlesOnlyScreenState extends State<SubtitlesOnlyScreen> {
     final Size screenSize = MediaQuery.of(context).size;
     final double screenWidth = screenSize.width;
     final double screenHeight = screenSize.height;
-
     final double scaleFactor = screenWidth / referenceScreenWidth;
 
     return Scaffold(

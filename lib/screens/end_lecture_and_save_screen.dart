@@ -1,16 +1,14 @@
-//강의 끝나고 나서 나오는 dialog 화면
 import 'dart:io';
 import 'dart:convert';
-import 'package:client/services/websocket_multiple_speech_service.dart';
 import 'package:flutter/material.dart';
 import '../widgets/end_screen/save_dialog_components.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/postprocessor_service.dart';
-import '../services/websocket_single_speech_service.dart';
 import 'package:provider/provider.dart';
 import '../providers/mode_provider.dart';
 import '../core/enum_core.dart';
 
+/// 파일 저장 관련 화면
 class SaveDialogScreen extends StatefulWidget {
   final List<String> transcriptHistory;
   final List<Map<String, String>> translationHistory;
@@ -28,44 +26,41 @@ class SaveDialogScreen extends StatefulWidget {
 }
 
 class _SaveDialogScreenState extends State<SaveDialogScreen> {
-  // 상태 변수들
+  // 상태 변수
   bool isContentFile = false;
-  bool isSummaryFile = false; //내용 파일인지 요약 파일인지
-  bool isMajorFile = false; //주요 파일인지 여부
-  String selectedLocation = ''; //저장 위치
-  String? selectedFilePath; //선택된 파일 경로
-  String fileName = ''; //파일 이름
-  String fileFormat = '.txt'; //파일 형식 (기본값은 .txt)
-  String emailAddress = ''; //이메일 주소
+  bool isSummaryFile = false;       // 요약 파일인지 여부
+  bool isMajorFile = false;         // 키포인트 파일인지 여부
+  String selectedLocation = '';     //저장 위치
+  String? selectedFilePath;         // 선택된 파일 경로
+  String fileName = '';             // 파일명
+  String fileFormat = '.txt';       // 파일 형식 (기본 .txt)
+  String emailAddress = '';         //이메일 주소
   String emailDomain = 'naver.com'; //이메일 도메인 기본값
   bool _isSaving = false;
   String _savingMessage = '';
 
+  // LLM 서비스
   late final BasePostProcessorService _llmService;
 
+  //
   bool _isProcessing = false;
   String _statusMessage = '';
+
   Map<String, dynamic>? _refinedData;
   Mode? _currentMode;
 
   @override
   void initState() {
     super.initState();
-    debugPrint('=== SaveDialogScreen initState ===');
-    debugPrint('초기 isContentFile: $isContentFile');
-    debugPrint('초기 isSummaryFile: $isSummaryFile');
-    debugPrint('초기 isMajorFile: $isMajorFile');
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // 모드 설정 (한 번만)
+    // 모드에 따른 LLM 서비스 할당
     if (_currentMode == null) {
-      _currentMode =
-          Provider.of<ModeProvider>(context, listen: false).currentMode;
-      debugPrint("[DEBUG] 현재 모드 - ${_currentMode.toString()}");
+      _currentMode = Provider.of<ModeProvider>(context, listen: false).currentMode;
 
       switch (_currentMode) {
         case Mode.lecture:
@@ -75,7 +70,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
           _llmService = ConferencePostProcessorService();
           break;
         default:
-          _llmService = LecturePostProcessorService(); // 기본값 설정
+          _llmService = LecturePostProcessorService(); // 기본값
       }
 
       _processTranscriptAutomatically();
@@ -86,15 +81,16 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
   Future<void> _processTranscriptAutomatically() async {
     final transcriptText = widget.fullTranscript;
 
-    debugPrint('[DEBUG] STT 텍스트 확인:');
-    debugPrint('  - 모드: ${_currentMode.toString()}');
-    debugPrint('  - 텍스트 길이: ${transcriptText.length}');
-    debugPrint('  - 텍스트 내용: "$transcriptText"');
+    debugPrint('[DEBUG] STT 길이/내용 확인');
+    debugPrint('  - 현재 모드 : ${_currentMode.toString()}');
+    debugPrint('  - 텍스트 길이 : ${transcriptText.length}');
+    debugPrint('  - 텍스트 내용 : "$transcriptText"');
 
     if (transcriptText.trim().isEmpty) {
       setState(() {
         _statusMessage = '정제할 텍스트가 없습니다';
       });
+
       return;
     }
 
@@ -115,15 +111,15 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
         enableSummarize: isSummaryFile,
         enableKeypoints: isMajorFile,
         enableScript: isContentFile,
-        enableNote: isSummaryFile, // 요약 파일이면 노트도 활성화
+        enableNote: isSummaryFile,                  // 요약 파일이면 노트도 활성화
       );
 
-      debugPrint("[DEBUG] 응답 결과: $result");
+      debugPrint("[DEBUG] 응답 결과 - $result");
       if (result != null) {
         debugPrint(
-          "[DEBUG] script_results 존재: ${result.containsKey('script_results')}",
+          "[DEBUG] script_results 존재 - ${result.containsKey('script_results')}",
         );
-        debugPrint("[DEBUG] total_files: ${result['total_files']}");
+        debugPrint("[DEBUG] total_files - ${result['total_files']}");
       }
 
       if (result != null) {
@@ -158,24 +154,21 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
             _isSaving
                 ? Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     CircularProgressIndicator(),
                     SizedBox(height: 20),
-                    Text('저장중 ...', style: TextStyle(fontSize: 16)),
+                    Text(_savingMessage, style: TextStyle(fontSize: 16)),
                   ],
                 )
                 : Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SaveDialogComponents.buildMainSection(
-                      isContentFileSelected: isContentFile, //첫번째 체크박스
-                      isSummaryFileSelected: isSummaryFile, //두번째 체크박스
-                      isMajorFileSelected:
-                          isMajorFile, //세번째 체크박스 (이 체크박스의 경우 회의모드에선 필요하지 않음)
-                      showMajorFileCheckbox:
-                          _currentMode == Mode.lecture, // 강의 모드에서만 표시
-                      contentLabel:
-                          _currentMode == Mode.lecture
+                      isContentFileSelected: isContentFile,
+                      isSummaryFileSelected: isSummaryFile,
+                      isMajorFileSelected: isMajorFile,
+                      showMajorFileCheckbox: _currentMode == Mode.lecture, // 강의 모드에서만 표시
+                      contentLabel: _currentMode == Mode.lecture
                               ? '정제된 발화 내용 파일'
                               : '정제된 토론 발화 내용',
                       summaryLabel:
@@ -184,7 +177,7 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
                               : '토론 정리본',
                       majorLabel:
                           _currentMode == Mode.lecture
-                              ? '주요 내용 파일 (과제 마감일 혹은 학사일정에 관련된 내용입니다.)'
+                              ? '주요 내용 파일 (과제 마감일 혹은 학사 일정에 관련된 내용입니다.)'
                               : '', // null이면 표시 X
                       selectedLocation: selectedLocation,
                       fileName: fileName,
@@ -259,7 +252,6 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
   void _handleEmailSend() {
     Navigator.of(context).pop();
     _showSuccessMessage('이메일이 $emailAddress@$emailDomain로 전송되었습니다');
-    //_navigateToEndScreen('이메일 전송 완료');
   }
 
   // 파일 저장 버튼 클릭 시 처리 (LLM 데이터 포함)
