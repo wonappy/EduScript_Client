@@ -34,14 +34,7 @@ class _StartScreenState extends State<StartScreen> {
     //mode 설정 (UI 재빌드 false)
     Provider.of<ModeProvider>(context, listen: false).setMode(mode);
 
-    late final BasePostProcessorService postProcessorService;
-    if (mode == Mode.lecture) {
-      postProcessorService = LecturePostProcessorService();
-    } else if (mode == Mode.conference) {
-      postProcessorService = ConferencePostProcessorService();
-    }
-
-    debugPrint("선택된 모드: ${mode.name} → API 모드: ${mode.apiValue}");
+    debugPrint("선택된 모드: ${mode.toString()}");
 
     Navigator.push(
       context,

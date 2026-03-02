@@ -278,6 +278,7 @@ class _BuildLecturePlayBarContentState extends State<BuildLecturePlayBarContent>
           transcriptHistory: transcriptHistory,
           translationHistory: translationHistory,
           fullTranscript: fullTranscript,
+          mode: _currentMode!,
         );
       },
     );

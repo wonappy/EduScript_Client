@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import '../widgets/end_screen/save_dialog_components.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/postprocessor_service.dart';
-import 'package:provider/provider.dart';
-import '../providers/mode_provider.dart';
 import '../core/enum_core.dart';
 
 /// 파일 저장 관련 화면
@@ -13,12 +11,14 @@ class SaveDialogScreen extends StatefulWidget {
   final List<String> transcriptHistory;
   final List<Map<String, String>> translationHistory;
   final String fullTranscript;
+  final Mode mode;
 
   const SaveDialogScreen({
     super.key,
     required this.transcriptHistory,
     required this.translationHistory,
     required this.fullTranscript,
+    required this.mode,
   });
 
   @override
@@ -26,8 +26,11 @@ class SaveDialogScreen extends StatefulWidget {
 }
 
 class _SaveDialogScreenState extends State<SaveDialogScreen> {
+  
+  final PostProcessorService _postProcessorService = PostProcessorService();
+
   // 상태 변수
-  bool isContentFile = false;
+  bool isContentFile = false;       // 정제된 발화 내용 파일 여부
   bool isSummaryFile = false;       // 요약 파일인지 여부
   bool isMajorFile = false;         // 키포인트 파일인지 여부
   String selectedLocation = '';     //저장 위치
@@ -38,108 +41,13 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
   String emailDomain = 'naver.com'; //이메일 도메인 기본값
   bool _isSaving = false;
   String _savingMessage = '';
-
-  // LLM 서비스
-  late final BasePostProcessorService _llmService;
-
-  //
-  bool _isProcessing = false;
-  String _statusMessage = '';
-
   Map<String, dynamic>? _refinedData;
-  Mode? _currentMode;
+  late final Mode _currentMode;
 
   @override
   void initState() {
     super.initState();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    // 모드에 따른 LLM 서비스 할당
-    if (_currentMode == null) {
-      _currentMode = Provider.of<ModeProvider>(context, listen: false).currentMode;
-
-      switch (_currentMode) {
-        case Mode.lecture:
-          _llmService = LecturePostProcessorService();
-          break;
-        case Mode.conference:
-          _llmService = ConferencePostProcessorService();
-          break;
-        default:
-          _llmService = LecturePostProcessorService(); // 기본값
-      }
-
-      _processTranscriptAutomatically();
-    }
-  }
-
-  // 자동으로 STT 내용을 LLM으로 정제
-  Future<void> _processTranscriptAutomatically() async {
-    final transcriptText = widget.fullTranscript;
-
-    debugPrint('[DEBUG] STT 길이/내용 확인');
-    debugPrint('  - 현재 모드 : ${_currentMode.toString()}');
-    debugPrint('  - 텍스트 길이 : ${transcriptText.length}');
-    debugPrint('  - 텍스트 내용 : "$transcriptText"');
-
-    if (transcriptText.trim().isEmpty) {
-      setState(() {
-        _statusMessage = '정제할 텍스트가 없습니다';
-      });
-
-      return;
-    }
-
-    setState(() {
-      _isProcessing = true;
-      _statusMessage = 'AI가 내용을 정제 중입니다...';
-    });
-
-    try {
-      final apiMode = _currentMode!.apiValue;
-      debugPrint("[DEBUG] API 모드: $apiMode");
-
-      // 요약과 핵심 포인트 모두 활성화하여 정제
-      final result = await _llmService.refineText(
-        fullText: transcriptText,
-        fileName: fileName,
-        fileFormat: fileFormat.replaceAll('.', ''), // 확장자에서 '.' 제거
-        enableSummarize: isSummaryFile,
-        enableKeypoints: isMajorFile,
-        enableScript: isContentFile,
-        enableNote: isSummaryFile,                  // 요약 파일이면 노트도 활성화
-      );
-
-      debugPrint("[DEBUG] 응답 결과 - $result");
-      if (result != null) {
-        debugPrint(
-          "[DEBUG] script_results 존재 - ${result.containsKey('script_results')}",
-        );
-        debugPrint("[DEBUG] total_files - ${result['total_files']}");
-      }
-
-      if (result != null) {
-        setState(() {
-          _refinedData = result;
-          _statusMessage = 'AI 정제 완료! 저장 옵션을 선택하세요.';
-          _isProcessing = false;
-        });
-      } else {
-        setState(() {
-          _statusMessage = 'AI 정제에 실패했습니다';
-          _isProcessing = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _statusMessage = 'AI 정제 중 오류가 발생했습니다: $e';
-        _isProcessing = false;
-      });
-    }
+    _currentMode = widget.mode;
   }
 
   @override
@@ -254,31 +162,26 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
     _showSuccessMessage('이메일이 $emailAddress@$emailDomain로 전송되었습니다');
   }
 
-  // 파일 저장 버튼 클릭 시 처리 (LLM 데이터 포함)
+  // 2. 통합된 파일 저장 핸들러
   Future<void> _handleFileSave() async {
-    if (_currentMode == Mode.lecture) {
-      await handleLectureFileSave();
-    } else if (_currentMode == Mode.conference) {
-      await handleConferenceFileSave();
-    }
-  }
-
-  // 강의모드에서 파일 저장 처리
-  Future<void> handleLectureFileSave() async {
     if (!_validateBeforeSave()) return;
 
     final transcriptText = widget.fullTranscript;
-    _startSaving('AI가 강의 내용을 정제 중입니다...');
+    final bool isConf = _currentMode == Mode.conference;
+    
+    _startSaving('AI가 내용을 정제 중입니다...');
 
     try {
-      final result = await _llmService.refineText(
+      // 서비스의 통합 메소드 호출
+      final result = await _postProcessorService.refineText(
+        mode: _currentMode!,
         fullText: transcriptText,
-        fileFormat: fileFormat.replaceAll('.', ''),
         fileName: fileName,
+        fileFormat: fileFormat.replaceAll('.', ''),
         enableSummarize: isSummaryFile,
         enableKeypoints: isMajorFile,
         enableScript: isContentFile,
-        enableNote: isSummaryFile, // 요약 파일이면 노트도 활성화
+        enableNote: isSummaryFile, // 회의에선 요약 선택 시 노트 활성화
       );
 
       if (result == null) return _failSave('파일 생성에 실패했습니다');
@@ -286,93 +189,45 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
 
       List<String> savedFiles = [];
 
-      // 정제된 내용 파일
-      if (isContentFile) {
-        await _saveResultGroup(
-          singleKey: 'refined_result',
-          listKey: 'refined_results',
-          label: '정제된내용',
-          resultList: savedFiles,
-        );
-      }
+      // 3. 모드별 데이터 키(Key) 매핑 설정
+      // [체크박스여부, 단일키, 리스트키, 라벨]
+      final List<Map<String, dynamic>> saveConfigs = [
+        {
+          'selected': isContentFile,
+          'single': isConf ? 'script_result' : 'refined_result',
+          'list': isConf ? 'script_results' : 'refined_results',
+          'label': isConf ? '스크립트' : '정제된내용'
+        },
+        {
+          'selected': isSummaryFile,
+          'single': isConf ? 'note_result' : 'summarized_result',
+          'list': isConf ? 'note_results' : 'summarized_results',
+          'label': isConf ? '요약노트' : '요약'
+        },
+        if (!isConf) // 강의 모드일 때만 핵심 포인트 추가
+          {
+            'selected': isMajorFile,
+            'single': 'keypoints_result',
+            'list': 'keypoints_results',
+            'label': '핵심포인트'
+          },
+      ];
 
-      // 요약 파일
-      if (isSummaryFile) {
-        await _saveResultGroup(
-          singleKey: 'summarized_result',
-          listKey: 'summarized_results',
-          label: '요약',
-          resultList: savedFiles,
-        );
-      }
-
-      // 핵심 포인트 파일
-      if (isMajorFile) {
-        await _saveResultGroup(
-          singleKey: 'keypoints_result',
-          listKey: 'keypoints_results',
-          label: '핵심포인트',
-          resultList: savedFiles,
-        );
-      }
-
-      _finishSave(savedFiles);
-    } catch (e) {
-      _failSave('강의 파일 저장 중 오류 발생: $e');
-    }
-  }
-
-  // 토론 모드에서 파일 저장 처리
-  Future<void> handleConferenceFileSave() async {
-    if (!_validateBeforeSave()) return;
-
-    final transcriptText = widget.fullTranscript;
-    _startSaving('AI가 회의 스크립트를 정제 중입니다...');
-
-    try {
-      final result = await _llmService.refineText(
-        fullText: transcriptText,
-        fileName: fileName,
-        fileFormat: fileFormat.replaceAll('.', ''),
-        enableNote: isSummaryFile, // note
-        // 회의 모드는 현재 스크립트/노트 중심이라
-        // enableScript 등은 서버 설계에 맞춰 필요 시 추가 가능
-      );
-
-      if (result == null) return _failSave('파일 생성에 실패했습니다');
-      _refinedData = result;
-
-      debugPrint("서버 응답 전체: ${jsonEncode(result)}");
-      debugPrint(
-        "script_results runtimeType: ${result['script_results']?.runtimeType}",
-      );
-      debugPrint("script_results 내용: ${result['script_results']}");
-
-      List<String> savedFiles = [];
-
-      // 토론 스크립트
-      if (isContentFile) {
-        await _saveResultGroup(
-          singleKey: 'script_result',
-          listKey: 'script_results',
-          label: '스크립트',
-          resultList: savedFiles,
-        );
-      }
-
-      // 요약 노트
-      if (isSummaryFile) {
-        await _saveResultGroup(
-          singleKey: 'note_result',
-          listKey: 'note_results',
-          label: '요약노트',
-          resultList: savedFiles,
-        );
+      // 4. 매핑된 설정대로 순회하며 저장
+      for (var config in saveConfigs) {
+        if (config['selected'] == true) {
+          await _saveResultGroup(
+            singleKey: config['single'],
+            listKey: config['list'],
+            label: config['label'],
+            resultList: savedFiles,
+          );
+        }
       }
 
       _finishSave(savedFiles);
     } catch (e) {
-      _failSave('회의 파일 저장 중 오류 발생: $e');
+      _failSave('파일 저장 중 오류 발생: $e');
     }
   }
 
@@ -488,42 +343,29 @@ class _SaveDialogScreenState extends State<SaveDialogScreen> {
     String fileType,
     String basePath,
   ) async {
-    // 서버 파일 정보
-    //String fileName = fileData['filename']; // 서버에서 생성한 파일명
     String base64Data = fileData['data'];
-
-    // Base64 디코딩
     List<int> bytes = base64Decode(base64Data);
 
     // 서버에서 전달한 원래 파일명 예: hello_ko_정제된내용.txt
     String serverFileName = fileData['filename'];
 
     // 언어코드 추출 (예: hello_ko_정제된내용 → ko)
-    // 파일명이 예측 가능하다는 전제 하에
     String langCode = 'unknown';
     try {
       List<String> parts = serverFileName.split('_');
       if (parts.length >= 2) {
-        langCode = parts[parts.length - 2]; // 마지막에서 두 번째 부분이 언어코드일 확률 높음
+        langCode = parts[parts.length - 2];
       }
     } catch (_) {}
 
-    // 타임스탬프
     DateTime now = DateTime.now();
     String timestamp =
         '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
 
-    // 확장자 처리
     String extension = fileFormat.startsWith('.') ? fileFormat : '.$fileFormat';
-
-    // 사용자 친화적이고 유니크한 파일명 구성
-    String userFileName =
-        '${fileName}_${fileType}_${langCode}_$timestamp$extension';
-
-    // 전체 경로
+    String userFileName = '${fileName}_${fileType}_${langCode}_$timestamp$extension';
     String fullPath = '$basePath/$userFileName';
 
-    // 파일 저장
     final file = File(fullPath);
     await file.writeAsBytes(bytes);
 
