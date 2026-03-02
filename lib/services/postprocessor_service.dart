@@ -5,27 +5,13 @@ import 'package:flutter/foundation.dart';
 import 'package:client/services/websocket_single_speech_service.dart';
 import 'package:client/services/websocket_multiple_speech_service.dart';
 import 'package:http/http.dart' as http;
+import 'package:client/core/enum_core.dart';
 
-// end_lecture_and_save_screen 으로 넘길때 _llm-service로 넘김
-abstract class BasePostProcessorService {
+// end_lecture_and_save_screen 으로 넘길때 postprocessor-service로 넘김
+class PostProcessorService {
+  // 텍스트 정제 메소드 (통합)
   Future<Map<String, dynamic>?> refineText({
-    required String fullText,
-    required String fileName,
-    required String fileFormat,
-    bool enableSummarize,
-    bool enableKeypoints,
-    bool enableScript,
-    bool enableNote,
-  });
-
-  // 언어 목록을 반환하는 메소드 (ko, en)
-  List<String> resolvedLanguages();
-}
-
-// 강의용 정제 요청 서비스
-class LecturePostProcessorService implements BasePostProcessorService {
-  @override
-  Future<Map<String, dynamic>?> refineText({
+    required Mode mode,
     required String fullText,
     required String fileName,
     required String fileFormat,
@@ -34,77 +20,49 @@ class LecturePostProcessorService implements BasePostProcessorService {
     bool enableScript = false,
     bool enableNote = false,
   }) async {
-    final body = {
+    final bool isConference= mode == Mode.conference;
+
+    // 1. 모드에 따른 동적 설정
+    final String endpoint = isConference
+        ? "/api/routes/language/refinement/conference"
+        : "/api/routes/language/refinement";
+
+    final List<String> languages = isConference
+        ? (WebSocketMultipleSpeechService().currentTargetLanguages ?? ['ko'])
+        : (WebSocketSingleSpeechService().currentTargetLanguages ?? ['ko']);
+    
+    final Map<String, dynamic> body = {
       "full_text": fullText,
       "fileName": fileName,
       "fileFormat": fileFormat,
-      "language_list": resolvedLanguages(),
-      "enable_refine": true,
-      "enable_summarize": enableSummarize,
-      "enable_keypoints": enableKeypoints,
-      "processing_mode": "lecture",
-    };
+      "language_list": languages,
+      "processing_mode": mode.apiValue,
 
-    return await _postToServer(body, "lecture");
-  }
-
-  // 싱글 STT 서비스에서 구현된 언어 목록을 반환
-  @override
-  List<String> resolvedLanguages() {
-    return WebSocketSingleSpeechService().currentTargetLanguages ?? ['ko'];
-  }
-}
-
-// 회의용 정제 요청 서비스
-class ConferencePostProcessorService implements BasePostProcessorService {
-  @override
-  Future<Map<String, dynamic>?> refineText({
-    required String fullText,
-    required String fileName,
-    required String fileFormat,
-    bool enableSummarize = false, // note
-    bool enableKeypoints = false, // 무시됨
-    bool enableScript = true,
-    bool enableNote = false,
-  }) async {
-    final body = {
-      "full_text": fullText,
-      "fileName": fileName,
-      "fileFormat": fileFormat,
-      "language_list": resolvedLanguages(),
-      "enable_script": enableScript,
-      "enable_note": enableNote,
-      "processing_mode": "conference",
-    };
-
-    return await _postToServer(body, "conference");
-  }
-
-  // 멀티 STT 서비스에서 구현된 언어 목록을 반환
-  @override
-  List<String> resolvedLanguages() {
-    return WebSocketMultipleSpeechService().currentTargetLanguages ?? ['ko'];
+      if (!isConference) ...{
+        "enable_refine": true,
+        "enable_summarize": enableSummarize,
+        "enable_keypoints": enableKeypoints,
+      } else ...{
+        "enable_script": enableScript,
+        "enable_note": enableNote,
+      },
+    };    
+    
+    return await _postToServer(endpoint, body);
   }
 }
 
-// 서버에 정제 POST 요청을 보내는 메소드
-Future<Map<String, dynamic>?> _postToServer(
-  Map<String, dynamic> body,
-  String processingMode,
+  // 서버에 정제 POST 요청을 보내는 메소드
+Future<Map<String, dynamic>?> _postToServer(String endpoint,
+  Map<String, dynamic> body
 ) async {
   try {
-    final mode = body['processing_mode'] ?? processingMode;
-    // 회의면 위, 강의면 아래
-    final endpoint =
-        mode == 'conference'
-            ? "/api/routes/language/refinement/conference"
-            : "/api/routes/language/refinement";
-
-    final response = await http.post(
-      Uri.parse("${GlobalCore.httpBaseUrl.trim()}$endpoint"),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(body),
-    );
+    final url = Uri.parse("${GlobalCore.httpBaseUrl.trim()}$endpoint");
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
